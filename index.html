@@ -1,0 +1,61 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>CS50P — Interactive Lecture Notes</title>
+<link rel="icon" href="data:,">
+<link rel="stylesheet" href="assets/notes.css">
+<script>try{var t=localStorage.getItem('cs50p-theme');if(t)document.documentElement.setAttribute('data-theme',t);}catch(e){}</script>
+<style>
+  .lec-list { list-style: none; padding: 0; margin: 1.5rem 0; display: grid; gap: .7rem; }
+  .lec-list a, .lec-list .soon {
+    display: flex; align-items: baseline; gap: .8rem; text-decoration: none;
+    border: 1px solid var(--rule); border-radius: 11px; padding: .85rem 1.1rem; color: var(--fg);
+  }
+  .lec-list a:hover { border-color: var(--accent); background: var(--code-bg); }
+  .lec-list .soon { opacity: .55; }
+  .lec-num { font-family: var(--mono); color: var(--accent); font-weight: 700; min-width: 2.2rem; }
+  .lec-title { font-weight: 600; }
+  .lec-sub { color: var(--muted); font-size: .92rem; }
+  .badge { margin-left: auto; font-size: .72rem; text-transform: uppercase; letter-spacing: .05em; color: var(--muted); }
+  .badge.ready { color: var(--accent); }
+</style>
+</head>
+<body>
+<div id="progress"></div>
+<header class="site">
+  <span class="brand">CS50P · Interactive Notes</span>
+  <span class="spacer"></span>
+  <button class="theme-toggle" type="button" aria-pressed="false">🌙 Dark</button>
+</header>
+
+<div class="wrap" style="grid-template-columns: minmax(0,1fr);">
+<main>
+  <h1>CS50P — Interactive Lecture Notes</h1>
+  <p class="lead subtitle">Readable, runnable notes for Harvard's Introduction to Programming with Python. Every example runs in your browser — edit it and press Run.</p>
+
+  <div class="callout note">
+    <span class="tag">How to use</span>
+    <p style="margin-bottom:0">Just open a lecture and press <strong>▶ Run</strong> on any code box — Python runs right in your browser (it downloads once from the web on first run, ~10&nbsp;s, then works offline). If Run ever fails to load Python, double-click <code>serve.command</code> instead (or run <code>python3 -m http.server</code> here) and open <code>http://localhost:8000/</code>.</p>
+  </div>
+
+  <ol class="lec-list">
+    <li><a href="lecture0.html"><span class="lec-num">00</span><span><span class="lec-title">Functions &amp; Variables</span><br><span class="lec-sub">print, input, types, f-strings, def, return, scope</span></span><span class="badge ready">Ready</span></a></li>
+    <li class="soon"><span class="lec-num">01</span><span><span class="lec-title">Conditionals</span><br><span class="lec-sub">if / elif / else, comparisons, boolean logic</span></span><span class="badge">Soon</span></li>
+    <li class="soon"><span class="lec-num">02</span><span><span class="lec-title">Loops</span><br><span class="lec-sub">while, for, ranges, lists</span></span><span class="badge">Soon</span></li>
+    <li class="soon"><span class="lec-num">03</span><span><span class="lec-title">Exceptions</span><br><span class="lec-sub">try / except, raising, validation</span></span><span class="badge">Soon</span></li>
+    <li class="soon"><span class="lec-num">04</span><span><span class="lec-title">Libraries</span><br><span class="lec-sub">modules, packages, pip, APIs</span></span><span class="badge">Soon</span></li>
+    <li class="soon"><span class="lec-num">05</span><span><span class="lec-title">Unit Tests</span><br><span class="lec-sub">pytest, assertions, test-driven habits</span></span><span class="badge">Soon</span></li>
+    <li class="soon"><span class="lec-num">06</span><span><span class="lec-title">File I/O</span><br><span class="lec-sub">reading/writing files, CSV</span></span><span class="badge">Soon</span></li>
+    <li class="soon"><span class="lec-num">07</span><span><span class="lec-title">Regular Expressions</span><br><span class="lec-sub">re, patterns, validation</span></span><span class="badge">Soon</span></li>
+    <li class="soon"><span class="lec-num">08</span><span><span class="lec-title">Object-Oriented Programming</span><br><span class="lec-sub">classes, attributes, methods</span></span><span class="badge">Soon</span></li>
+    <li class="soon"><span class="lec-num">09</span><span><span class="lec-title">Et Cetera</span><br><span class="lec-sub">style, type hints, comprehensions, more</span></span><span class="badge">Soon</span></li>
+  </ol>
+</main>
+</div>
+
+<footer class="site">Built as a study companion. New lecture = copy <code>_TEMPLATE.html</code>.</footer>
+<script src="assets/notes.js" defer></script>
+</body>
+</html>

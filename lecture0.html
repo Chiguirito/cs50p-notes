@@ -1,0 +1,373 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Lecture 0 — Functions &amp; Variables · CS50P Notes</title>
+<link rel="icon" href="data:,">
+<link rel="stylesheet" href="assets/notes.css">
+<script>try{var t=localStorage.getItem('cs50p-theme');if(t)document.documentElement.setAttribute('data-theme',t);}catch(e){}</script>
+</head>
+<body>
+<div id="progress"></div>
+
+<header class="site">
+  <a class="brand" href="index.html">← CS50P Notes</a>
+  <span class="spacer"></span>
+  <button class="theme-toggle" type="button" aria-pressed="false">🌙 Dark</button>
+</header>
+
+<div class="wrap">
+<nav class="toc" aria-label="On this page">
+  <details open>
+    <summary>Contents</summary>
+    <p class="toc-title">On this page</p>
+    <ol></ol>
+  </details>
+</nav>
+
+<main>
+  <h1>Lecture 0 — Functions &amp; Variables</h1>
+  <p class="subtitle lead">The foundation: running code, calling functions, storing values, and writing your own functions that hand results back.</p>
+
+  <div class="callout note">
+    <span class="tag">How to use these notes</span>
+    <p>Every code box below is <strong>live</strong> — edit it and press <strong>▶ Run</strong> to execute real Python right here in your browser (the first run downloads Python once, ~10&nbsp;seconds). Break things on purpose. When an example uses <code>input()</code>, a small pop-up appears asking for what to type.</p>
+    <p style="margin-bottom:0">After you understand a piece here, re-type it in your own editor and run it with <code>python file.py</code> — that muscle memory matters.</p>
+  </div>
+
+  <div class="objectives">
+    <h2>What you'll be able to do</h2>
+    <ul>
+      <li>Run a Python program and read its error messages without panicking</li>
+      <li>Store input in a variable — and know it always arrives as a <code>str</code></li>
+      <li>Convert values with <code>int()</code>/<code>float()</code> and format output with f-strings</li>
+      <li>Write a <code>def</code> with parameters that <strong>returns</strong> a value (not just prints it)</li>
+      <li>Explain why a variable made inside a function vanishes outside it</li>
+    </ul>
+  </div>
+
+  <h2>Your first program: <code>print</code></h2>
+  <p>Python is an <em>interpreted</em> language: you write instructions in a <code>.py</code> file and run them with <code>python file.py</code>. The classic first program calls the <code>print</code> <strong>function</strong> to put text on the screen:</p>
+
+  <textarea class="py">print("hello, world")</textarea>
+
+  <p><code>print</code> is a function — an action Python already knows how to do. The value in the parentheses, <code>"hello, world"</code>, is an <strong>argument</strong>: the input you hand the function to shape what it does.</p>
+
+  <h3>Bugs are normal — read the message</h3>
+  <p>Every programmer writes bugs constantly. The interpreter is on your side: it tells you what went wrong and where. Run this broken line (a missing closing parenthesis) and read what comes back:</p>
+
+  <textarea class="py">print("hello, world"</textarea>
+
+  <div class="callout gotcha">
+    <span class="tag">Read errors bottom-up</span>
+    <p style="margin-bottom:0">A red error is <em>information</em>, not a verdict. The last line names the problem (here, <code>SyntaxError</code> — a parenthesis was never closed). Get used to reading it; it's the fastest way to fix your code.</p>
+  </div>
+
+  <div class="callout later">
+    <span class="tag">Aside · interactive mode</span>
+    <p style="margin-bottom:0">Running <code>python</code> with no filename opens an interactive prompt (<code>&gt;&gt;&gt;</code>) where each line runs immediately — handy for quick experiments. The live boxes in these notes play that same role.</p>
+  </div>
+
+  <div class="quiz">
+    <p class="quiz-q">What does <code>print("a", "b")</code> print?</p>
+    <div class="opts">
+      <button class="opt" type="button" data-correct><code>a b</code> &nbsp;— with a space</button>
+      <button class="opt" type="button"><code>ab</code> &nbsp;— no space</button>
+      <button class="opt" type="button"><code>"a" "b"</code></button>
+    </div>
+    <div class="why">A <strong>comma</strong> between arguments tells <code>print</code> to separate them with a space. (Joining with <code>+</code> instead would give <code>ab</code> — you'll see that next.)</div>
+  </div>
+
+  <h2>Variables and <code>input</code></h2>
+  <p>A <strong>variable</strong> is a named container for a value. The <code>input</code> function asks the user for text and hands it back; we store it in a variable with <code>=</code>:</p>
+
+  <textarea class="py">name = input("What's your name? ")
+print("hello,", name)</textarea>
+
+  <div class="callout note">
+    <span class="tag">= is not algebra</span>
+    <p style="margin-bottom:0"><code>=</code> means: <em>take the value on the right, store it in the name on the left</em>. It's an instruction, read right-to-left — not a statement of equality. That's why this is perfectly normal in code but impossible in math:</p>
+  </div>
+
+  <textarea class="py">x = 1
+x = x + 1
+print(x)</textarea>
+
+  <details class="predict">
+    <summary>Predict first: what does this print? <code>a = 5; b = a; a = 9; print(b)</code></summary>
+    <pre>5
+
+b copied the *value* of a (which was 5) at that moment.
+Re-assigning a later doesn't reach back and change b — they are not linked.</pre>
+  </details>
+
+  <p>Because the name being assigned must sit on the left, this is a syntax error — run it and see:</p>
+  <textarea class="py">x = 1
+x + 1 = x</textarea>
+
+  <h2>Comments and pseudocode</h2>
+  <p>Anything after a <code>#</code> is a <strong>comment</strong> — a note for humans that Python ignores. A powerful habit is <strong>pseudocode</strong>: write your plan as comments first, then fill in the code under each step.</p>
+
+  <textarea class="py"># Ask the user for their name
+name = input("What's your name? ")
+
+# Greet them by name
+print("hello,", name)</textarea>
+
+  <div class="quiz">
+    <p class="quiz-q">In the program above, which line does Python actually <em>execute</em>?</p>
+    <div class="opts">
+      <button class="opt" type="button">The <code># Ask the user…</code> line</button>
+      <button class="opt" type="button" data-correct>The <code>name = input(…)</code> and <code>print(…)</code> lines</button>
+      <button class="opt" type="button">All four lines</button>
+    </div>
+    <div class="why">Comments (lines starting with <code>#</code>) are skipped entirely. Only the two real statements run.</div>
+  </div>
+
+  <h2>Strings: combining, quotes, and <code>end</code></h2>
+  <p>Text values have the type <code>str</code> (string). You can join strings with <code>+</code> (you control spacing yourself) or pass several arguments separated by commas (auto-spaced):</p>
+
+  <textarea class="py">name = "David"
+print("hello, " + name)
+print("hello,", name)</textarea>
+
+  <p>Need a quote <em>inside</em> a string? Use the other kind of quote, or escape it with a backslash:</p>
+  <textarea class="py">print("she said 'hi'")
+print("she said \"hi\"")</textarea>
+
+  <p>By default <code>print</code> ends with a newline. You can change that with the <code>end</code> parameter:</p>
+  <textarea class="py">print("a", end="")
+print("b")</textarea>
+
+  <details class="predict">
+    <summary>Predict: what does <code>print("hello, {name}")</code> print — with no <code>f</code> in front?</summary>
+    <pre>hello, {name}
+
+Literally, braces and all. Without the f prefix it's just text.
+This is a *silent* bug — no error, just wrong output. The fix is next.</pre>
+  </details>
+
+  <h2>f-strings: formatting values into text</h2>
+  <p>An <strong>f-string</strong> (note the <code>f</code> before the quote) lets you drop variables straight into text using <code>{curly braces}</code>. It's the modern, preferred way:</p>
+
+  <textarea class="py">name = "David"
+print(f"hello, {name}")</textarea>
+
+  <div class="callout gotcha">
+    <span class="tag">The #1 f-string bug</span>
+    <p style="margin-bottom:0">Forget the <code>f</code> and you get the braces printed literally — and no error to warn you. Compare these two lines:</p>
+  </div>
+  <textarea class="py">name = "David"
+print("hi, {name}")
+print(f"hi, {name}")</textarea>
+
+  <p>Inside the braces you can also add a <strong>format spec</strong> after a colon — e.g. thousands separators and fixed decimals:</p>
+  <textarea class="py">price = 1234.5
+print(f"{price:,}")
+print(f"{price:,.2f}")</textarea>
+
+  <div class="callout note">
+    <span class="tag">Display vs value</span>
+    <p style="margin-bottom:0"><code>f"{x:.2f}"</code> only changes how a number is <em>displayed</em> (the value of <code>x</code> is untouched). <code>round(x, 2)</code> changes the <em>value</em> itself. Different tools for different jobs.</p>
+  </div>
+
+  <div class="quiz">
+    <p class="quiz-q">What does <code>f"{1234.5:,.2f}"</code> produce?</p>
+    <div class="opts">
+      <button class="opt" type="button" data-correct><code>1,234.50</code></button>
+      <button class="opt" type="button"><code>1234.5</code></button>
+      <button class="opt" type="button"><code>1,234.5</code></button>
+    </div>
+    <div class="why">The <code>,</code> adds a thousands separator and <code>.2f</code> forces exactly two decimals → <code>1,234.50</code>.</div>
+  </div>
+
+  <h2>Numbers: <code>int</code>, operators, and the <code>input()</code> trap</h2>
+  <p>Here's the single most common beginner bug. <code>input()</code> <strong>always</strong> returns a <code>str</code>, even if the user types digits. So <code>+</code> joins the text instead of adding. Run this and type <code>1</code> then <code>2</code>:</p>
+
+  <textarea class="py">x = input("x? ")
+y = input("y? ")
+print(x + y)</textarea>
+
+  <details class="predict">
+    <summary>Predict: you typed 1 and 2 — what printed, and why?</summary>
+    <pre>12
+
+x and y are the strings "1" and "2", so "1" + "2" joins them into "12".
+Strings don't add — they concatenate.</pre>
+  </details>
+
+  <p>The fix: convert the text to a number with <code>int()</code> (a "type cast"). The calls nest — the inner <code>input()</code> runs first, then <code>int()</code> wraps its result:</p>
+  <textarea class="py">x = int(input("x? "))
+y = int(input("y? "))
+print(x + y)</textarea>
+
+  <p>Python's arithmetic operators. Note that <code>/</code> always gives a <code>float</code>, <code>//</code> floors to a whole number, and <code>%</code> gives the remainder:</p>
+  <textarea class="py">print(7 + 2)
+print(7 - 2)
+print(7 * 2)
+print(7 / 2)
+print(7 // 2)
+print(7 % 2)</textarea>
+
+  <p>Converting has rules worth knowing. <code>int()</code> <strong>truncates</strong> toward zero (it does not round), and it refuses text that isn't a whole number — run this to see the error:</p>
+  <textarea class="py">print(int(3.9))
+print(int("3.5"))</textarea>
+
+  <div class="callout gotcha">
+    <span class="tag">Boss fight · the Stringy Adder</span>
+    <p style="margin-bottom:0"><code>int(3.9)</code> is <code>3</code>, not <code>4</code> (truncation). And <code>int("3.5")</code> raises <code>ValueError</code> because <code>"3.5"</code> isn't a whole number — convert with <code>float()</code> first if you need the decimal. Whenever a comparison or sum behaves strangely, ask: <em>is this secretly a string?</em></p>
+  </div>
+
+  <h2>Floats and rounding</h2>
+  <p>Numbers with decimals are <code>float</code>s. Convert input with <code>float()</code>, and tidy up with <code>round()</code>:</p>
+  <textarea class="py">x = float(input("A number: "))
+print(round(x, 2))</textarea>
+
+  <p>One surprise that trips everyone up once: decimals aren't stored exactly in binary, so:</p>
+  <textarea class="py">print(0.1 + 0.2)</textarea>
+
+  <div class="callout later">
+    <span class="tag">Don't worry (yet)</span>
+    <p style="margin-bottom:0">That <code>0.30000000000000004</code> is normal floating-point behaviour, not a bug in your code. It's exactly why <code>round()</code> and <code>:.2f</code> exist. The deep details are out of scope for now.</p>
+  </div>
+
+  <h2>Writing your own functions: <code>def</code></h2>
+  <p>You can define your own functions with <code>def</code>. The colon opens a block, and the body <strong>must be indented</strong> (4 spaces). The value you pass at the call is the <strong>argument</strong>; the name in the definition is the <strong>parameter</strong>:</p>
+
+  <textarea class="py">def hello(to):
+    print("hello,", to)
+
+hello("David")</textarea>
+
+  <div class="callout note">
+    <span class="tag">Parameter vs argument</span>
+    <div class="mm-diagram" style="margin-top:.4rem">
+      <div class="mm-card"><b>def hello(to):</b><span><code>to</code> is the <strong>parameter</strong> — a placeholder name inside the function.</span></div>
+      <div class="mm-card"><b>hello("David")</b><span><code>"David"</code> is the <strong>argument</strong> — the actual value you pass in.</span></div>
+    </div>
+  </div>
+
+  <p>Parameters can have <strong>default values</strong>, used when you don't pass one:</p>
+  <textarea class="py">def hello(to="world"):
+    print("hello,", to)
+
+hello("David")
+hello()</textarea>
+
+  <p><strong>Defining</strong> a function isn't the same as <strong>calling</strong> it. This program defines <code>main</code> but never calls it — so it prints nothing. Run it (notice the empty output), then add a line at the bottom to call it:</p>
+  <textarea class="py">def main():
+    print("This only runs when called!")</textarea>
+
+  <div class="callout gotcha">
+    <span class="tag">Order matters: call <code>main()</code> at the bottom</span>
+    <p style="margin-bottom:0">Python reads top to bottom. If you call a function before it's defined, you get a <code>NameError</code>. The common pattern: define <code>main</code> and your helpers first, then call <code>main()</code> on the last line. Run this to see the error, then move <code>main()</code> below the <code>def</code>:</p>
+  </div>
+  <textarea class="py">main()
+
+def main():
+    print("hello")</textarea>
+
+  <h2>Return values: <code>print</code> vs <code>return</code></h2>
+
+  <div class="mental-model">
+    <span class="tag">Mental model — the most important idea in this lecture</span>
+    <p style="margin-bottom:.2rem"><code>print</code> and <code>return</code> feel similar but do completely different things:</p>
+    <div class="mm-diagram">
+      <div class="mm-card"><b>print(x) <span class="arrow">→</span> screen</b><span>Shows a value to a <strong>human</strong>. Your code can't catch it. The function still hands back <code>None</code>.</span></div>
+      <div class="mm-card"><b>return x <span class="arrow">→</span> caller</b><span>Hands a value <strong>back to your code</strong>, so you can store and use it.</span></div>
+    </div>
+  </div>
+
+  <p>Watch the difference. This function only <em>prints</em>, so the value it hands back is <code>None</code>:</p>
+  <textarea class="py">def square(n):
+    print(n * n)
+
+result = square(5)
+print("result is", result)</textarea>
+
+  <p>Add <code>return</code> and the value comes back to you — now <code>result</code> actually holds <code>25</code>:</p>
+  <textarea class="py">def square(n):
+    return n * n
+
+result = square(5)
+print("result is", result)</textarea>
+
+  <details class="predict">
+    <summary>Predict: if <code>square</code> only <code>print</code>s (no return), what is <code>r</code> after <code>r = square(5)</code>?</summary>
+    <pre>None
+
+The function printed 25 to the screen, but handed nothing back,
+so r is None. To capture a value, you must return it.</pre>
+  </details>
+
+  <div class="quiz">
+    <p class="quiz-q">Which statement is true?</p>
+    <div class="opts">
+      <button class="opt" type="button"><code>print</code> gives the value back to your code so you can store it</button>
+      <button class="opt" type="button" data-correct><code>print</code> only shows a value; <code>return</code> hands it back to your code</button>
+      <button class="opt" type="button"><code>print</code> and <code>return</code> are interchangeable</button>
+    </div>
+    <div class="why"><code>print</code> is for showing things to a person. To use a result elsewhere in your program, the function must <code>return</code> it.</div>
+  </div>
+
+  <h2>Scope: where variables live</h2>
+  <p>A variable created <strong>inside</strong> a function lives and dies inside it. Trying to use it outside gives a <code>NameError</code>:</p>
+  <textarea class="py">def compute():
+    total = 42
+
+compute()
+print(total)</textarea>
+
+  <p>To get a value <em>out</em> of a function, <code>return</code> it and catch it at the call:</p>
+  <textarea class="py">def compute():
+    total = 42
+    return total
+
+answer = compute()
+print(answer)</textarea>
+
+  <details class="predict">
+    <summary>Predict: after <code>def f(): n = 5</code> then <code>f(); print(n)</code> — what happens?</summary>
+    <pre>NameError: name 'n' is not defined
+
+n only existed inside f(). Once f() finished, n was gone.
+The outside world never knew about it.</pre>
+  </details>
+
+  <div class="callout later">
+    <span class="tag">Later</span>
+    <p style="margin-bottom:0">There is a way to share variables across functions (<code>global</code>), but it's almost always better to <code>return</code> values and pass them as arguments. We'll lean on <code>return</code>.</p>
+  </div>
+
+  <h2>Readability wins</h2>
+  <p>Code is read far more often than it's written. Favour clear names and obvious steps over clever one-liners. The goal isn't to impress the computer — it's to be understood by the next person (often future-you).</p>
+
+  <div class="gotcha-list">
+    <h2 id="gotchas">Common mistakes at a glance</h2>
+    <ul>
+      <li><code>input()</code> <strong>always</strong> returns a <code>str</code> — wrap it in <code>int()</code>/<code>float()</code> to do math.</li>
+      <li><code>print</code> shows a value; it returns <code>None</code>. Use <code>return</code> to hand a value back to your code.</li>
+      <li>Forgetting the <code>f</code> on an f-string prints <code>{braces}</code> literally — and gives no error.</li>
+      <li>Defining a function isn't calling it — calling needs the parentheses: <code>main()</code>.</li>
+      <li>Call <code>main()</code> at the <strong>bottom</strong>; calling before a definition is a <code>NameError</code>.</li>
+      <li><code>int("3.5")</code> raises <code>ValueError</code>; <code>int(3.9)</code> truncates to <code>3</code> (no rounding).</li>
+      <li>A variable made inside a function doesn't exist outside it (scope).</li>
+      <li><code>/</code> always returns a <code>float</code> (<code>6 / 2</code> is <code>3.0</code>); use <code>//</code> for whole-number division.</li>
+    </ul>
+  </div>
+
+  <h2>Recap &amp; next step</h2>
+  <p>You can now run programs and read errors, store input (always a <code>str</code>), convert and format numbers, write functions with parameters and defaults, <code>return</code> values instead of just printing them, and reason about scope. That's the whole toolkit Problem Set 0 exercises.</p>
+  <p>You've already submitted Pset 0 — when you're ready, ask Claude for a layered review of your <code>tip.py</code>, <code>faces.py</code>, and the rest. For a fast refresher before the next pset, skim the <a href="#gotchas">Common mistakes</a> above.</p>
+  <p><a href="index.html">← Back to all lectures</a></p>
+</main>
+</div>
+
+<footer class="site">
+  CS50P interactive notes · Lecture 0 · run, edit, and break things freely.
+</footer>
+
+<script src="assets/notes.js" defer></script>
+</body>
+</html>

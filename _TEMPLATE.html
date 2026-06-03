@@ -1,0 +1,110 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<!-- TEMPLATE FOR A NEW LECTURE.
+     To add Lecture N:
+       1. Copy this file to lectureN.html
+       2. Replace TITLE / topics / the 5 "what you'll be able to do" lines
+       3. For each concept, follow the pattern: short prose -> a live <textarea class="py"> cell
+          -> sometimes a <details class="predict"> or a <div class="quiz">.
+       4. Add the lecture to index.html.
+     The CSS/JS engine handles cells, quizzes, TOC, theme, progress automatically.
+     PATTERNS CHEAT-SHEET is at the bottom of this file (inside a comment). -->
+<title>Lecture N — TITLE · CS50P Notes</title>
+<link rel="icon" href="data:,">
+<link rel="stylesheet" href="assets/notes.css">
+<script>try{var t=localStorage.getItem('cs50p-theme');if(t)document.documentElement.setAttribute('data-theme',t);}catch(e){}</script>
+</head>
+<body>
+<div id="progress"></div>
+
+<header class="site">
+  <a class="brand" href="index.html">← CS50P Notes</a>
+  <span class="spacer"></span>
+  <button class="theme-toggle" type="button" aria-pressed="false">🌙 Dark</button>
+</header>
+
+<div class="wrap">
+<nav class="toc" aria-label="On this page">
+  <details open><summary>Contents</summary><p class="toc-title">On this page</p><ol></ol></details>
+</nav>
+
+<main>
+  <h1>Lecture N — TITLE</h1>
+  <p class="subtitle lead">One-line summary of what this lecture is about.</p>
+
+  <div class="callout note">
+    <span class="tag">How to use these notes</span>
+    <p style="margin-bottom:0">Every code box is live — edit it and press ▶ Run. The first run downloads Python once.</p>
+  </div>
+
+  <div class="objectives">
+    <h2>What you'll be able to do</h2>
+    <ul>
+      <li>Objective 1</li>
+      <li>Objective 2</li>
+      <li>Objective 3</li>
+      <li>Objective 4</li>
+      <li>Objective 5</li>
+    </ul>
+  </div>
+
+  <h2>First concept</h2>
+  <p>Plain-English explanation, no jargon.</p>
+  <textarea class="py">print("a runnable example")</textarea>
+
+  <h2>Recap &amp; next step</h2>
+  <p>Short recap. Link back: <a href="index.html">← Back to all lectures</a></p>
+</main>
+</div>
+
+<footer class="site">CS50P interactive notes · Lecture N</footer>
+<script src="assets/notes.js" defer></script>
+
+<!--  PATTERNS CHEAT-SHEET  (copy these snippets into the body above)
+
+  LIVE CODE CELL  (code must start right after the tag and be flush-left; real indentation is Python's):
+    <textarea class="py">def square(n):
+        return n * n
+
+    print(square(5))</textarea>
+
+  STATIC (non-runnable) CODE BLOCK with a copy button:
+    <div class="codeblock"><pre><code>some code to show, not run</code></pre></div>
+
+  PREDICT-THEN-REVEAL:
+    <details class="predict">
+      <summary>Predict: what does this print?</summary>
+      <pre>the answer + a one-line why</pre>
+    </details>
+
+  MULTIPLE-CHOICE QUIZ  (mark the right one with data-correct):
+    <div class="quiz">
+      <p class="quiz-q">Question text, may include <code>code</code>.</p>
+      <div class="opts">
+        <button class="opt" type="button" data-correct>Right answer</button>
+        <button class="opt" type="button">Wrong answer</button>
+      </div>
+      <div class="why">Explanation shown after they answer.</div>
+    </div>
+
+  CALLOUTS:
+    <div class="callout note">   <span class="tag">Tip</span>   <p>...</p></div>
+    <div class="callout gotcha"> <span class="tag">Watch out</span> <p>...</p></div>
+    <div class="callout later">  <span class="tag">Later</span>  <p>...</p></div>
+
+  MENTAL-MODEL BOX (for the hardest idea of the lecture):
+    <div class="mental-model"><span class="tag">Mental model</span>
+      <div class="mm-diagram">
+        <div class="mm-card"><b>code</b><span>explanation</span></div>
+        <div class="mm-card"><b>code</b><span>explanation</span></div>
+      </div>
+    </div>
+
+  GOTCHAS RECAP near the end:
+    <div class="gotcha-list"><h2 id="gotchas">Common mistakes at a glance</h2><ul><li>...</li></ul></div>
+-->
+</body>
+</html>
