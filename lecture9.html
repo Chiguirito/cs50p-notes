@@ -1,0 +1,300 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Lecture 9 — Et Cetera · CS50P Notes</title>
+<link rel="icon" href="data:,">
+<link rel="stylesheet" href="assets/notes.css">
+<script>try{var t=localStorage.getItem('cs50p-theme');if(t)document.documentElement.setAttribute('data-theme',t);}catch(e){}</script>
+</head>
+<body>
+<div id="progress"></div>
+
+<header class="site">
+  <a class="brand" href="index.html">← CS50P Notes</a>
+  <span class="spacer"></span>
+  <button class="theme-toggle" type="button" aria-pressed="false">🌙 Dark</button>
+</header>
+
+<div class="wrap">
+<nav class="toc" aria-label="On this page">
+  <details open><summary>Contents</summary><p class="toc-title">On this page</p><ol></ol></details>
+</nav>
+
+<main>
+<h1>Lecture 9 — Et Cetera</h1>
+  <p class="subtitle lead">A toolbox of small polish features that make your Python shorter, safer, and friendlier. CS50 lists them flat; these notes group them to help you remember — first, polish you apply to code you already write; then a run of tools that compute <em>on demand</em> (eager vs lazy).</p>
+  <div class="objectives"><h2>What you'll be able to do</h2><ul><li>Reach for a <strong>set</strong> for distinct, unordered items (<code>.add</code>, <code>set()</code> for empty, <code>sorted()</code> before printing), and build a list, dict, or set in one readable line with a comprehension</li><li>Manage state cleanly — know that <em>reading</em> a global is fine but <em>reassigning</em> one needs <code>global</code>, trace the <code>UnboundLocalError</code> that follows when you forget, and prefer a small <strong>class</strong> as the fix</li><li>Document and polish code with ALL_CAPS constants, type hints (<code>n: int</code>, <code>-&gt; str</code>) that mypy checks but Python ignores at runtime, and triple-quoted docstrings that <code>help()</code> reads</li><li>Pass arguments fluently: <code><em>list</code>/<code><strong>dict</code> to </strong>spread<strong> into a call, <code></em>args</code>/<code></strong>kwargs</code> to <strong>collect</strong> inside a <code>def</code>, and <code>argparse</code> for free <code>--help</code> and validation</li><li>Tell <strong>eager</strong> from <strong>lazy</strong> — comprehensions (eager, replayable) versus <code>map</code>, <code>filter</code>, <code>enumerate</code>, and generators (<code>yield</code>, lazy), knowing the iterators are one-shot and compute on demand</li></ul></div>
+  <div class="callout note"><span class="tag">How these notes work</span><p><strong>White box, Run button</strong> = real Python, runs right here. Edit it, press <strong>Run</strong> (or <strong>Cmd/Ctrl + Enter</strong>); <strong>Esc</strong> steps back out. The first run downloads Python once (about 10 seconds), then it's instant — you can't break anything, so change a line and re-Run freely. Every box <strong>hard-codes its values</strong> (e.g. <code>number = 3</code>, a fixed <code>students</code> list) so you can <em>predict</em> the output before you Run, and each box is <strong>self-contained</strong> — it defines <em>and</em> uses everything, so you never scroll up.</p><p><strong>Greyed box, Copy only</strong> = code that needs a real terminal, not a browser tab. A greyed box can't run here because it reads the command line, installs a tool, or plays audio — each one tells you exactly what to type and why it's greyed when you reach it.</p></div>
+  <p>This last lecture is a <strong>toolbox of small polish</strong> — features that make your code shorter, safer, and friendlier. CS50 lists them flat as "et cetera," but to help you <em>remember</em> them, these notes group them loosely into two halves:</p><ul><li><strong>First half — polish you apply to code you already write:</strong> each is a quick, standalone upgrade to skills you already have.</li><li><strong>Second half — tools that compute <em>on demand</em>:</strong> <code>map</code>, comprehensions, <code>filter</code>, <code>enumerate</code>, and generators. They share one idea (<strong>eager vs lazy</strong>) that we'll name right where it first matters.</li></ul><p>The students from <strong>Lecture 2</strong> come back in the collection-heavy sections; the other sections use the smallest possible toy — a meowing cat, a bank <code>balance</code>, a name to split — so each example stays tiny.</p>
+  <div class="callout note"><span class="tag">These all run on older Python too</span><p>Everything here runs on the older <strong>Python 3.9</strong> that ships on many Macs, not just the 3.12 in these cells — check yours with <code>python --version</code>. The one outsider is <strong><code>mypy</code></strong>, a separate tool you <code>pip install</code> and run in your terminal (its section says so when we get there).</p></div>
+  <h2>set: a collection with no duplicates</h2>
+  <p>A <strong>set</strong> is like a list with two rules: it holds only <strong>unique</strong> items (add the same thing twice and the second is ignored), and it has <strong>no order</strong> — no <code>set[0]</code>, because there's no "first." Build one empty with <code>set()</code>, then <code>.add(...)</code> freely; duplicates just vanish on their own. That makes it the natural tool for collecting the <strong>distinct houses</strong> the students belong to. Predict <strong>which houses</strong> end up in the set.</p>
+  <p class="cell-note">Run it — four students, three of them Gryffindor, but the set keeps each house once. Same Hermione/Harry/Ron/Draco list of dicts from Lecture 2, read with student["house"]. We sort before printing.</p><textarea class="py">students = [
+    {"name": "Hermione", "house": "Gryffindor"},
+    {"name": "Harry",    "house": "Gryffindor"},
+    {"name": "Ron",      "house": "Gryffindor"},
+    {"name": "Draco",    "house": "Slytherin"},
+]
+
+houses = set()                 # an EMPTY set — note: set(), not {}
+for student in students:
+    houses.add(student["house"])   # duplicates are silently ignored
+
+for house in sorted(houses):   # sets have no order, so sort first
+    print(house)</textarea>
+  <p>The clumsy way to do the same thing is a list plus a membership check before every add — <code>if s["house"] not in houses: houses.append(...)</code>. The set makes that check disappear: it enforces uniqueness for you. And because a set has no order, we wrap it in <strong><code>sorted(...)</code></strong> before printing — the everyday way to put any collection in a predictable order (you met <code>sorted</code> in Lecture 6, there with a <code>key=</code>; here the items are plain strings, so no <code>key</code> is needed).</p>
+  <div class="callout gotcha"><span class="tag">Empty {} is a dict, not a set</span><p>This trips up everyone once: <code>houses = {}</code> makes an empty <strong>dict</strong>, not an empty set ( <code>{}</code> is <em>defined</em> as the empty-dict literal; there is no empty-set literal). For an empty set you must write <code>set()</code>. A <em>non-empty</em> set literal like <code>{"Gryffindor", "Slytherin"}</code> is fine — it's only the empty one that's ambiguous. And since a set has no positions, <code>houses[0]</code> raises a <code>TypeError</code>: loop over a set, don't index it.</p></div>
+  <details class="predict"><summary>You write <code>colors = {"red", "blue", "red"}</code>. What does <code>print(len(colors))</code> show?</summary><div style="margin:.2rem 0 .6rem"><p><strong><code>2</code>.</strong> The duplicate <code>"red"</code> collapses, so <code>colors</code> is <code>{"red", "blue"}</code> — length <strong>2</strong>. That's the whole point of a set: same item twice, kept once. (Which order the two would print in is unspecified — that's why we <code>sort</code> a set before showing it.)</p></div></details>
+  <h2>global variables (and why a class is better)</h2>
+  <p>Imagine a running <code>balance</code> that two functions update. You might reach for a <strong>global variable</strong> — a name defined at the top of the file, outside any function — and the keyword <code>global</code> to reassign it from inside a function. It <em>works</em>, but it's <strong>discouraged</strong>: loose shared state is easy to clobber from anywhere. So we'll spend most of our effort on the better tool — a class — and just enough on <code>global</code> to recognize the classic error it causes. First, watch that error happen. Predict: does this print a number, or raise an error?</p>
+  <p class="cell-note">No <code>global</code> here. Predict first — number, or error? — then Run.</p><textarea class="py">balance = 0
+
+def deposit(n):
+    balance += n        # no `global` declared
+
+deposit(100)
+print(balance)
+
+# Fix: add  global balance  as the first line of deposit, then re-run.</textarea>
+  <div class="callout gotcha"><span class="tag">Why it raises: a 3-step trace</span><p>The error is <code>UnboundLocalError</code>. Trace it in three steps:</p><p>1. <code>balance += n</code> means <code>balance = balance + n</code> — an <strong>assignment</strong>. 2. An assignment to a name inside a function tells Python <em>"balance is local to this function."</em> 3. But step 1 has to <strong>read</strong> <code>balance</code> first to add <code>n</code> to it — and the local doesn't exist yet. Reading a not-yet-set local is the <code>UnboundLocalError</code>.</p><p>The one-line fix is to add <code>global balance</code> as the function's first line — then <code>balance</code> means the outer one and the <code>+=</code> works. <em>Reading</em> a global with no assignment never hits this; only an assignment makes the name local.</p></div>
+  <details class="predict"><summary>You write <code>def show(): print(balance)</code> with NO <code>global</code> line, and <code>balance = 100</code> at the top. Does <code>show()</code> raise an error, or print <code>100</code>?</summary><div style="margin:.2rem 0 .6rem"><p>It prints <strong><code>100</code></strong>. <em>Reading</em> a top-level variable inside a function is always fine — <code>global</code> is only needed to <strong>reassign</strong> it (see the 3-step trace above). No assignment in the function, no <code>UnboundLocalError</code>.</p></div></details>
+  <p><code>global</code> fixes the error, but you already have the cleaner tool. Put the balance <strong>on an object</strong> and there's no global to trip over. The next cell is a deliberate <strong>reuse of Lecture 8's pattern</strong> — a private <code>_balance</code> guarded by a read-only <code>@property</code>, exactly the <code>_house</code> + <code>@property</code> shape from L8, now on a new <code>Account</code>. Not new syntax — just L8 applied here. Predict the final balance.</p>
+  <p class="cell-note">Run it — the recommended fix: balance lives on the object, not in a global. The @property gives a read-only view (the L8 pattern).</p><textarea class="py">class Account:
+    def __init__(self):
+        self._balance = 0
+
+    @property
+    def balance(self):           # read-only view of the balance
+        return self._balance
+
+    def deposit(self, n):
+        self._balance += n       # on THIS object, not global
+
+    def withdraw(self, n):
+        self._balance -= n
+
+account = Account()
+account.deposit(100)
+account.withdraw(25)
+print(account.balance)</textarea>
+  <h2>constants: ALL_CAPS (by convention)</h2>
+  <p>A <strong>constant</strong> is a value you don't intend to change — the number of meows, a tax rate, the four houses. Python has no special keyword for this. The convention is to <strong>NAME it in ALL_CAPS</strong> so any reader knows <em>"don't reassign me."</em> That's a message to humans, not a rule Python enforces. Constants also live nicely <strong>on a class</strong> (like Lecture 8's class variable), where a method can read them through <code>self</code>. Predict how many <code>meow</code>s print.</p>
+  <p class="cell-note">Run it — MEOWS is a constant by naming convention; the Cat class reads its own Cat.MEOWS via self.</p><textarea class="py">MEOWS = 3                  # ALL_CAPS says "constant" to a reader
+for _ in range(MEOWS):     # `_` = a loop var we don't use (Lecture 2)
+    print("meow")
+
+print("---")
+
+class Cat:
+    MEOWS = 3              # a constant living on the class
+
+    def meow(self):
+        for _ in range(self.MEOWS):   # read the class constant via self
+            print("meow")
+
+Cat().meow()</textarea>
+  <div class="callout gotcha"><span class="tag">ALL_CAPS is a signal, not a lock</span><p>Python will happily let you write <code>MEOWS = 5</code> on the next line — nothing stops the reassignment, no error. The capital letters are purely a <strong>convention</strong> that signals intent to other programmers (and future-you). Like the leading underscore you saw in Lecture 8's <code>_house</code>, it's a polite convention, not something Python enforces.</p></div>
+  <h2>type hints + mypy: name the types</h2>
+  <p>A <strong>type hint</strong> annotates what type a value should be: <code>number: int = 3</code> says <em>number is an int</em>, and <code>def meow(n: int) -&gt; str:</code> says <em>n is an int and the function returns a str</em> (<code>-&gt; str</code>). Hints are <strong>documentation</strong> — they make code self-explaining and let editors and a tool called <strong>mypy</strong> catch type mistakes <em>before</em> you run. But here's the crucial part: <strong>Python ignores them at runtime.</strong> The annotation is just attached as data; nothing checks it when the program runs. That's why this cell runs live.</p>
+  <p class="cell-note">Run it — hints document the types (n: int, -&gt; str) but Python does NOT enforce them at runtime.</p><textarea class="py">def meow(n: int) -&gt; str:         # n is an int; returns a str
+    return "meow\n" * n
+
+number: int = 3                  # a hinted variable (hard-coded)
+print(meow(number), end="")
+
+# Python just stored the hints as a plain dict and never looks at them when running:
+print(meow.__annotations__)      # extra peek: {'n': &lt;class 'int'&gt;, 'return': &lt;class 'str'&gt;}</textarea>
+  <details class="predict"><summary><code>def describe(n: int) -&gt; str: return "got " + str(n)</code>. You call <code>describe("hello")</code> — a string, not the <code>int</code> the hint promised, and no mypy involved. Does Python raise a <code>TypeError</code>?</summary><div style="margin:.2rem 0 .6rem"><p><strong>No</strong> — it prints <code>got hello</code> and runs fine. Type hints are <em>not</em> checked at runtime; Python treats them as comments and runs the code regardless. The hint was <em>wrong</em> about the value, and nothing stopped it. That's the whole point of the <strong><code>mypy</code></strong> tool below: hints do nothing on their own, but a <em>separate</em> checker reads them and flags mismatches <strong>before</strong> you run.</p></div></details>
+  <div class="callout later"><span class="tag">Terminal only — install and run mypy</span><p>To actually <em>check</em> the hints, install the <strong>mypy</strong> tool and run it on your file. This is a terminal command, not Python you run in a box:</p><p><code>pip install mypy</code> <code>mypy meows.py</code></p><p>If a call disagrees with a hint (like <code>describe("hello")</code> above), mypy prints an error like <code>Argument 1 to "describe" has incompatible type "str"; expected "int"</code> (exact wording may vary by mypy version) — <em>without running your program</em>. Python itself would never warn, because it ignores hints. That's how a hint earns its keep.</p></div>
+  <p class="cell-note">Copy only — <code>mypy</code> is a terminal tool, not Python you run here.</p><div class="codeblock"><pre><code># In your terminal (not in this browser):
+
+pip install mypy
+mypy meows.py
+
+# mypy reads your type hints and reports mismatches
+# BEFORE the program runs. Python itself still ignores them.</code></pre></div>
+  <div class="quiz"><p class="quiz-q">You hint <code>def meow(n: int) -&gt; None:</code> and then call <code>meow("hello")</code> with no mypy involved. What does Python do at runtime?</p><div class="opts"><button class="opt" type="button" data-correct>It tries to run the body with n = "hello" — the hint is ignored, so any error comes from the body, not the hint</button><button class="opt" type="button">It immediately raises a TypeError because "hello" is not an int</button><button class="opt" type="button">It silently converts "hello" to an int</button><button class="opt" type="button">It refuses to define meow at all, since the hint is violated</button></div><div class="why"><strong>Python ignores type hints at runtime</strong> — they're documentation for humans and for mypy, not a runtime check. So <code>meow("hello")</code> runs the body with <code>n = "hello"</code>; any error then comes from what the body <em>does</em> (here <code>range("hello")</code> fails), not from the hint. The hint is only enforced if you run the separate <code>mypy</code> tool. That separation — code runs live, tooling lives in the terminal — is the theme behind several of this lecture's Copy-only boxes.</div></div>
+  <h2>docstrings: built-in documentation</h2>
+  <p>A <strong>docstring</strong> is a triple-quoted string placed as the <strong>first line inside</strong> a <code>def</code> (or class). It documents what the thing does — and unlike a <code>#</code> comment, it's <em>real data</em>: tools like <code>help()</code>, your editor, and doc generators (Sphinx) read it back out of the function. A short one fits on one line; longer ones describe each parameter and the return value. Predict the two things this prints.</p>
+  <p class="cell-note">Run it — the docstring is the first statement under <code>def</code>; help() and __doc__ read it back.</p><textarea class="py">def meow(n):
+    """Meow n times."""
+    return "meow\n" * n
+
+print(meow(3), end="")
+print("doc:", meow.__doc__)   # the docstring is readable as data
+
+
+def bark(n):
+    """Bark n times.
+
+    :param n: how many times to bark
+    :return: a string of n barks
+    """
+    return "woof\n" * n
+
+print(bark.__doc__)</textarea>
+  <details class="predict"><summary>You put a triple-quoted string as the SECOND statement under <code>def</code> (after a line of real code). Does <code>help()</code> / <code>__doc__</code> still show it?</summary><div style="margin:.2rem 0 .6rem"><p><strong>No</strong> — <code>__doc__</code> is <code>None</code>. Only the <strong>very first</strong> statement under <code>def</code> is captured as the docstring. Placed anywhere else, a triple-quoted string is just an ignored string sitting in the body — Python evaluates it and throws it away. That's the load-bearing rule: docstring = <em>first</em> statement, triple-quoted.</p></div></details>
+  <div class="callout gotcha"><span class="tag">A docstring is NOT a # comment</span><p>Two rules people miss: (1) it must be the <strong>very first statement</strong> under the <code>def</code>, before any code; (2) it must be <strong>triple-quoted</strong>, not a <code>#</code> comment. A <code>#</code> comment is invisible to <code>help()</code>, editors, and Sphinx; only a docstring is stored on the function (as <code>__doc__</code>) and read back by tools. The longer <code>:param</code> / <code>:return</code> form is what documentation generators turn into web pages — but a one-line summary is plenty for now.</p></div>
+  <h2>argparse: friendly command-line arguments</h2>
+  <p>When you run a program from the terminal, you often want to pass options: <code>python meows.py -n 3</code>. The <strong><code>argparse</code></strong> module turns those command-line words into named, validated arguments — and gives you <code>--help</code> for <em>free</em>. (It's the friendly cousin of Lecture 4's <code>sys.argv</code>: argparse handles the conversion and length-checks you'd otherwise do by hand.) You declare each option once; in return you get type checking (<code>type=int</code>), a default (<code>default=1</code>), and an automatic usage screen. It reads the actual command line, which a browser tab doesn't have, so this one is <strong>copy-only</strong>.</p>
+  <div class="callout later"><span class="tag">Terminal only — run argparse from the command line</span><p>Save the next box as <code>meows.py</code>, then in your terminal run:</p><p><code>python meows.py -n 3</code>  → meows three times <code>python meows.py</code>  → meows once (the <code>default=1</code>) <code>python meows.py --help</code>  → prints usage info, then exits</p><p>Notice what you get for free: <code>--help</code>, the <code>-n</code> flag, and <code>type=int</code> (which rejects <code>-n cat</code> with a friendly error instead of crashing). That's argparse's payoff over hand-parsing input yourself.</p></div>
+  <p class="cell-note">Copy only — argparse reads the command line. Save as meows.py, then: python meows.py -n 3</p><div class="codeblock"><pre><code>import argparse
+
+parser = argparse.ArgumentParser(description="Meow like a cat")
+parser.add_argument("-n", default=1, type=int, help="number of times to meow")
+args = parser.parse_args()
+
+for _ in range(args.n):
+    print("meow")</code></pre></div>
+  <h2>Unpacking: spread a list or dict into a call</h2>
+  <p>The <code>*</code> and <code><strong></code> symbols let you </strong>spread** a collection back <em>out</em> into a function's arguments at a call:</p><ul><li>Put <code>*</code> before a <strong>list</strong> to fill positional slots in order.</li><li>Put <code><strong></code> before a </strong>dict** to fill them by keyword (its keys must match the parameter names exactly).</li></ul><p>Here's CS50's wizard-coin example: <code>total</code> takes three coins, and we spread a list (then a dict) into it. Predict: do <code>total(*coins_list)</code> and <code>total(**coins_dict)</code> print the same number?</p>
+  <p class="cell-note">Run it — *coins spreads a LIST into positional args; **coins spreads a DICT into keyword args (keys must match the parameter names).</p><textarea class="py">def total(galleons, sickles, knuts):
+    return (galleons * 17 + sickles) * 29 + knuts
+
+coins_list = [100, 50, 25]
+print(total(*coins_list))            # * spreads -&gt; total(100, 50, 25)
+
+coins_dict = {"galleons": 100, "sickles": 50, "knuts": 25}
+print(total(**coins_dict))           # ** spreads -&gt; total(galleons=100, ...)</textarea>
+  <div class="callout note"><span class="tag">Recall: unpacking a split, from Lecture 6</span><p>Lecture 6 unpacked a CSV line with <code>name, house = line.rstrip().split(",")</code> — naming <strong>both</strong> pieces with <code>=</code>. <code><em>coins_list</code> / <code><strong>coins_dict</code> point that same unpacking idea the </em>other<em> way: instead of </em>receiving<em> pieces into names, you </em>spread* a list or dict back </strong>into<strong> a call's arguments. And Python never spreads automatically — passing the list itself, <code>total(coins_list)</code>, sends </strong>one** argument (the whole list) where three are expected, a <code>TypeError</code>. The <code>*</code> is what asks for the spread.</p></div>
+  <div class="quiz"><p class="quiz-q">Given <code>def total(galleons, sickles, knuts): ...</code> and <code>coins = [100, 50, 25]</code>, what does <code>total(coins)</code> (no <code>*</code>) do?</p><div class="opts"><button class="opt" type="button" data-correct>Raises a TypeError: it passes ONE argument (the whole list) but total expects three</button><button class="opt" type="button">Works the same as total(*coins) — Python spreads the list automatically</button><button class="opt" type="button">Returns the list [100, 50, 25] unchanged</button><button class="opt" type="button">Fills galleons with the list and leaves the rest as None</button></div><div class="why">Without the <code><em></code>, the list is passed as a <strong>single</strong> argument — so <code>galleons</code> becomes the whole <code>[100, 50, 25]</code> and the other two parameters get nothing, a <code>TypeError</code> for missing arguments. The <code></em></code> is what <strong>spreads</strong> the items into the slots. Python never spreads automatically; you have to ask with <code>*</code> (positional) or <code>**</code> (keyword).</div></div>
+  <h2>*args / **kwargs: collect extra arguments</h2>
+  <p>At a <strong>call</strong>, <code><em></code>/<code><strong></code> </em>spread<em> a collection out (last section). In a </strong>def<strong>, they point the </em>other* way — they </strong>collect** leftover arguments <em>in</em>:</p><ul><li><code>def f(<em>args, <strong>kwargs)</code> — <code></em>args</code> gathers extra positional arguments into a </strong>tuple<strong>; <code></strong>kwargs</code> gathers extra keyword arguments into a <strong>dict</strong>.</li></ul><p>The names <code>args</code>/<code>kwargs</code> are just convention; the <code>*</code>/<code>**</code> is what matters. Predict the two printed lines.</p>
+  <p class="cell-note">Run it — *args collects extra positionals into a tuple, **kwargs collects extra keywords into a dict.</p><textarea class="py">def f(*args, **kwargs):
+    print("Positional:", args)    # a tuple
+    print("Named:", kwargs)       # a dict
+
+f("David", "Malan", house="Gryffindor")</textarea>
+  <div class="callout gotcha"><span class="tag">Same symbols, opposite direction</span><p>This is the easiest pair to confuse, so anchor it. In a <strong>call</strong>, <code><em>list</code>/<code><strong>dict</code> </strong>spread<strong> a collection </em>out<em> into arguments. In a </strong>def<strong>, <code></em>args</code>/<code></strong>kwargs</code> <strong>collect</strong> leftover arguments <em>in</em> — <code>args</code> is always a <strong>tuple</strong>, <code>kwargs</code> always a <strong>dict</strong>, never lists. Same symbols, opposite direction. One ordering rule: <code><strong>kwargs</code> must come </strong>last** in the def — putting it before <code>*args</code> is a <code>SyntaxError</code>.</p></div>
+  <div class="quiz"><p class="quiz-q">In <code>def f(*args, **kwargs): ...</code>, after calling <code>f("David", "Malan", house="Gryffindor")</code>, what are the types of <code>args</code> and <code>kwargs</code>?</p><div class="opts"><button class="opt" type="button" data-correct>args is a tuple ("David", "Malan"); kwargs is a dict {"house": "Gryffindor"}</button><button class="opt" type="button">args is a list ["David", "Malan"]; kwargs is a list ["Gryffindor"]</button><button class="opt" type="button">Both are tuples</button><button class="opt" type="button">args is a dict; kwargs is a tuple</button></div><div class="why"><code><em>args</code> always gathers the extra <strong>positional</strong> arguments into a <strong>tuple</strong> — here <code>("David", "Malan")</code>. <code><strong>kwargs</code> always gathers the extra </strong>keyword<strong> arguments into a </strong>dict<strong> — here <code>{"house": "Gryffindor"}</code>, keyed by the keyword name. The names are just convention; the <code></em></code>/<code></strong></code> decide the behavior, and the containers are always tuple/dict, never lists.</div></div>
+  <div class="callout note"><span class="tag">Pause — that's the first half</span><p>Take a breath. <strong>First half done:</strong> <code>set</code>, <code>global</code>/class, constants, type hints + mypy, docstrings, <code>argparse</code>, unpacking, and <code>*args</code>/<code>**kwargs</code> — eight independent polish tools, each a small upgrade to code you already write. They don't depend on each other, so nothing here needs to be held in your head for what comes next.</p><p>The <strong>second half</strong> is five tools (<code>map</code>, comprehensions, <code>filter</code>, <code>enumerate</code>, generators) that all share <strong>one</strong> new idea. If you're tired, this is a clean place to stop and come back fresh.</p></div>
+  <h2>map: apply a function to every item</h2>
+  <p><code>map(function, sequence)</code> applies a function to <strong>every</strong> item in a sequence. CS50's example wraps it in a <code>yell</code> function that upper-cases its words — and <code>yell(<em>words)</code> even reuses the <code></em>args</code> collect form you just met. Run it and it prints <code>THIS IS CS50</code>. But there's a twist in <em>how</em> <code>map</code> does its work — and that twist is the idea the whole second half turns on. Predict the output, then read the mental model below.</p>
+  <p class="cell-note">Run it — yell collects its words with <em>args, then map(str.upper, words) upper-cases each one. </em> spreads them back out to print.</p><textarea class="py">def yell(*words):                 # *args collects the words into a tuple
+    uppercased = map(str.upper, words)   # apply str.upper to every word
+    print(*uppercased)            # * spreads the results out to print
+
+yell("This", "is", "CS50")</textarea>
+  <div class="mental-model"><span class="tag">Mental model — eager list vs lazy iterator</span><p><code>map</code> didn't build a list — it handed back a lazy iterator, and that one distinction unifies the rest of the lecture (comprehensions, filter, enumerate, generators). The for-loop you already know still drives all of these; what's new is that a lazy iterator computes each value only when asked, and can be walked through only once. One picture all the way through: a printed list you keep versus a roll of tickets you pull through once.</p><div class="mm-diagram"><div class="mm-card"><b>EAGER = a printed list you keep</b><pre style="margin:.4rem 0;font-family:var(--mono);font-size:.84rem;white-space:pre-wrap;overflow-x:auto">result = []
+for s in words:
+    result.append(s.upper())</pre><span>Every value is <strong>computed up front</strong> and kept in memory. It's a real <code>list</code> (the comprehension below is the one-line version): you can index it, check its length, and <strong>reuse</strong> it as many times as you like.</span></div><div class="mm-card"><b>LAZY = a roll of tickets</b><pre style="margin:.4rem 0;font-family:var(--mono);font-size:.84rem;white-space:pre-wrap;overflow-x:auto">map(str.upper, words)</pre><span><strong>Nothing is computed yet.</strong> Each value is produced the instant you pull the next ticket — so only one exists at a time. That's why it stays <strong>memory-light</strong> even for huge or endless streams, and why <code>print(it)</code> shows <code>&lt;map object ...&gt;</code>, not the values.</span></div><div class="mm-card"><b>The roll runs out ONCE</b><span>Pulling a lazy roll — with <code>list(it)</code>, a <code>for</code>, or <code><em>it</code> (the <strong>same</strong> <code></em></code> you used to spread a list, now pulling every value out of the roll) — <strong>empties</strong> it. Pull again and you get nothing back. You'll see exactly this in the next cell. To keep the values, print them onto a list: <code>list(map(...))</code>.</span></div></div></div>
+  <p class="cell-note">Run it — predict the first line before the second, then watch the SECOND print of the same iterator.</p><textarea class="py">words = ["this", "is", "cs50"]
+
+mapped = map(str.upper, words)
+print(mapped)        # the lazy object — nothing computed yet
+print(*mapped)       # * pulls every ticket -&gt; THIS IS CS50
+print(*mapped)       # pull again -&gt; the roll is empty</textarea>
+  <div class="quiz"><p class="quiz-q">After the first <code>print(<em>mapped)</code> prints THIS IS CS50, what does the SECOND <code>print(</em>mapped)</code> print?</p><div class="opts"><button class="opt" type="button" data-correct>Nothing — a blank line. The iterator was already walked once and is now exhausted</button><button class="opt" type="button">THIS IS CS50 again — map objects can be reused freely</button><button class="opt" type="button">this is cs50 — the original lowercase values</button><button class="opt" type="button">A StopIteration error that crashes the program</button></div><div class="why">This is the <strong>one-shot</strong> rule, the single most important gotcha in the second half. A <code>map</code> object is a <strong>lazy, one-shot ticket roll</strong>. The first <code>print(*mapped)</code> pulls every ticket, <strong>emptying</strong> it; the second finds nothing left and prints an empty line — no error, just silence. If you need the values more than once, keep them: <code>values = list(map(...))</code>, then reuse <code>values</code> freely.</div></div>
+  <h2>List comprehensions: the eager one-liner</h2>
+  <p>You half-know the <strong>eager</strong> side already — it's the <code>for</code>-loop-with-<code>append</code> from the mental model. A <strong>list comprehension</strong> is that loop in one readable line: <code>[expression for item in sequence if condition]</code>. Read it left-to-right: <em>take <code>s["name"]</code>, for each <code>s</code> in students, but only if the house is Gryffindor.</em> Unlike <code>map</code>'s ticket roll, it gives you a <strong>real list</strong> you can sort and reuse. Predict the three names.</p>
+  <p class="cell-note">Run it — one line builds the list of Gryffindor names. The <code>if</code> filters (it comes after the for). A real list, so it's sortable and reusable.</p><textarea class="py">students = [
+    {"name": "Hermione", "house": "Gryffindor"},
+    {"name": "Harry",    "house": "Gryffindor"},
+    {"name": "Ron",      "house": "Gryffindor"},
+    {"name": "Draco",    "house": "Slytherin"},
+]
+
+gryffindors = [s["name"] for s in students if s["house"] == "Gryffindor"]
+
+for name in sorted(gryffindors):   # a real list -&gt; sortable
+    print(name)</textarea>
+  <div class="callout gotcha"><span class="tag">The filtering `if` goes at the END</span><p>To <strong>filter</strong> items, the <code>if</code> goes at the <strong>end</strong>: <code>[s["name"] for s in students if s["house"] == "Gryffindor"]</code> — exactly as in the cell. (There's a second <code>if</code> shape for <em>choosing between two values</em> per item, a ternary that goes at the <strong>front</strong> — but you won't need it yet; it's in the footer gotchas if you're curious.)</p></div>
+  <h2>Dictionary comprehensions: build a dict in one line</h2>
+  <p>The same one-line idea builds a <strong>dict</strong> — just write a <code>key: value</code> pair instead of a single expression: <code>{key: value for item in sequence}</code>. CS50's example assigns every student to the same house. Note the colon — that <code>key: value</code> shape is what makes it a <em>dict</em> comprehension rather than a <em>set</em> one. Predict the dict that prints.</p>
+  <p class="cell-note">Run it — {student: "Gryffindor" for student in students} pairs each name with a house. The colon makes it a DICT comprehension.</p><textarea class="py">students = ["Hermione", "Harry", "Ron"]
+
+gryffindors = {student: "Gryffindor" for student in students}
+
+print(gryffindors)
+print(gryffindors["Harry"])   # look one up by key</textarea>
+  <div class="callout gotcha"><span class="tag">Colon = dict, no colon = set</span><p>One symbol decides the type inside the braces: <code>{k: v for ...}</code> (with a <strong>colon</strong>) builds a <strong>dict</strong>; <code>{expr for ...}</code> (no colon) builds a <strong>set</strong>. Easy to mix up — and a dict comprehension silently keeps only the <strong>last</strong> value for any repeated key, the same collapse a plain dict does.</p></div>
+  <h2>filter: keep the items that match</h2>
+  <p>Where a comprehension's <code>if</code> filters inline, <strong><code>filter(predicate, sequence)</code></strong> is the dedicated lazy tool — a <em>predicate</em> is just a function that returns a True/False test. <code>filter</code> keeps only the items for which that test returns <strong>True</strong>. Like <code>map</code>, it's a one-shot ticket roll, and it <em>keeps</em> matching items — it doesn't transform them. CS50's canonical predicate is a one-line <strong><code>lambda</code></strong> (Lecture 6's no-name function). Note that <code>filter</code> yields the <strong>whole dicts</strong>, so we read <code>s["name"]</code>. Predict which names survive.</p>
+  <p class="cell-note">Run it — filter keeps the students whose lambda returns True. It yields the dicts, so sorted() needs a key= (you can't compare two dicts with &lt;). Lazy + one-shot, like map.</p><textarea class="py">students = [
+    {"name": "Hermione", "house": "Gryffindor"},
+    {"name": "Harry",    "house": "Gryffindor"},
+    {"name": "Ron",      "house": "Gryffindor"},
+    {"name": "Draco",    "house": "Slytherin"},
+]
+
+# canonical CS50 form: a one-line lambda predicate (Lecture 6)
+gryffindors = filter(lambda s: s["house"] == "Gryffindor", students)
+
+for s in sorted(gryffindors, key=lambda s: s["name"]):   # items are dicts -&gt; need key=
+    print(s["name"])</textarea>
+  <div class="callout note"><span class="tag">Recall: the lambda is Lecture 6's no-name function</span><p><code>lambda s: s["house"] == "Gryffindor"</code> reuses the <strong><code>lambda</code></strong> from <strong>Lecture 6</strong> — a <code>def</code> shrunk to one line, the kind you handed to <code>sorted(..., key=lambda s: s["name"])</code>. Here the lambda must <strong>return a bool</strong>: <code>filter</code> keeps each item where that bool is <code>True</code> and drops the rest. And since <code>filter</code> yields whole <strong>dicts</strong>, you can't bare-<code>sorted()</code> them — Python can't compare two dicts with <code>&lt;</code> — so the cell passes the same <code>key=lambda s: s["name"]</code> to sort by name. A named function works identically if you prefer one: <code>def is_gryffindor(s): return s["house"] == "Gryffindor"</code>.</p></div>
+  <h2>enumerate: index AND value in one loop</h2>
+  <p>When you need both the <strong>position</strong> and the <strong>item</strong> in a loop, the clumsy way is <code>for i in range(len(seq)): ... seq[i]</code> — looping over indexes, then indexing back in. <strong><code>enumerate(seq)</code></strong> hands you both at once as <code>(index, value)</code> pairs: <code>for i, student in enumerate(...)</code>. It counts from <strong>0</strong>, so add <code>1</code> for human numbering (or pass <code>start=1</code>). Predict the first printed line.</p>
+  <p class="cell-note">Run it — enumerate gives (index, value) pairs. It starts at 0, so we print i + 1; or pass start=1 and let it do the +1.</p><textarea class="py">for i, student in enumerate(["Hermione", "Harry", "Ron"]):
+    print(i + 1, student)
+
+print("---")
+
+# Or let enumerate do the +1 for you:
+for i, student in enumerate(["Hermione", "Harry", "Ron"], start=1):
+    print(i, student)</textarea>
+  <div class="callout note"><span class="tag">Recall: this replaces range(len(...)) from Lecture 2</span><p>In <strong>Lecture 2</strong> you numbered items with <code>for i in range(len(students)): print(i + 1, students[i])</code> — looping over indexes, then indexing back in. <code>enumerate</code> hands you the index <strong>and</strong> the value together, so that clumsy double step disappears. (Like <code>map</code> and <code>filter</code>, <code>enumerate</code> is technically a one-shot lazy iterator — but you'll almost always consume it in a single <code>for</code> loop, so that rarely bites here.)</p></div>
+  <div class="quiz"><p class="quiz-q">You write <code>for pair in enumerate(["a", "b"]): print(pair)</code> — a SINGLE loop variable, not two. What prints?</p><div class="opts"><button class="opt" type="button" data-correct>(0, 'a') then (1, 'b') — each item is the whole (index, value) tuple</button><button class="opt" type="button">a then b — just the values</button><button class="opt" type="button">0 then 1 — just the indexes</button><button class="opt" type="button">A TypeError, because enumerate needs two loop variables</button></div><div class="why"><code>enumerate</code> yields a <strong><code>(index, value)</code> tuple</strong> for each item. With two loop variables (<code>for i, name in ...</code>) Python unpacks the tuple for you. With a single variable, that whole tuple lands in <code>pair</code>, so you see <code>(0, 'a')</code> and <code>(1, 'b')</code>. It's not an error — just un-unpacked. (You'd only get an unpack error with the <em>wrong number</em> of variables, like three.)</div></div>
+  <h2>Generators (yield): values one at a time</h2>
+  <p>A <strong>generator</strong> is the purest form of the lazy idea. CS50 builds it in two steps. First the <strong>eager</strong> version: a normal function that builds the <em>whole</em> list of sheep up front, then returns it. (<code>"🐑" * 0</code> is the empty string and <code>range</code> starts at 0, so the first printed line is blank — then one sheep, then two.)</p>
+  <p class="cell-note">Run it — the FIRST output line is blank on purpose ("🐑" * 0 == ""), then one sheep, then two. This eager version holds the whole list in memory at once.</p><textarea class="py">def sheep_list(n):
+    flock = []
+    for i in range(n):
+        flock.append("🐑" * i)   # i=0 -&gt; "" (blank line), i=1 -&gt; "🐑", ...
+    return flock                 # the WHOLE list exists before we loop
+
+for s in sheep_list(3):
+    print(s)</textarea>
+  <p>Now the lazy refactor — the move CS50 makes next. Keep the same shape, but use <strong><code>yield</code></strong> instead of building a list: each <code>yield</code> hands back <strong>one</strong> value and <em>pauses</em> the function, resuming where it left off when you ask for the next. For <code>n = 3</code> the output is identical (blank line, one sheep, two), but this version holds only one sheep at a time.</p>
+  <p class="cell-note">Run it — same output as above (blank, one, two), but yield emits one value per loop, holding only one at a time. n = 3 keeps it finite.</p><textarea class="py">def sheep(n):
+    for i in range(n):
+        yield "🐑" * i    # hand back one value, then pause here
+
+for s in sheep(3):
+    print(s)</textarea>
+  <div class="callout note"><span class="tag">yield pauses; return exits</span><p>The one-line difference that changes everything: <code>return</code> ends the function and hands back a single value, done. <code>yield</code> hands back a value and <strong>pauses</strong>, keeping its place so the <em>next</em> request resumes right after it. That's how a generator emits a stream. And like <code>map</code>/<code>filter</code>/<code>enumerate</code>, a generator is <strong>one-shot</strong> — exhausted after one pass. The payoff is memory: a generator never builds the whole list, so it works for sequences too big (or endless) to fit in memory.</p></div>
+  <details class="predict"><summary>Both <code>sheep(n)</code> (yield) and <code>sheep_list(n)</code> (builds a list) print the same lines for n = 3. If you needed it to feed an ENDLESS stream of sheep, which one could you use — and why?</summary><div style="margin:.2rem 0 .6rem"><p>Only the <strong>generator</strong> (<code>yield</code>). The eager <code>sheep_list</code> would try to <code>append</code> forever and build an infinite list — it never finishes and runs out of memory. The generator holds just <strong>one</strong> value at a time and produces the next only when asked, so it can feed an endless stream cheaply. That memory-light, on-demand behavior is the whole reason <code>yield</code> exists. (We still hard-code <code>n = 3</code> in the live cell so it terminates — never write an endless generator behind a bare <code>for s in sheep(): ...</code>, or the loop never ends.)</p></div></details>
+  <h2>Capstone: a talking cow</h2>
+  <p>CS50 ends the course with something silly: a cow that says — out loud — whatever you type. The official program is wonderfully minimal: read a line with <code>input()</code>, hand it to <code>cowsay.cow(...)</code>, and speak it with <code>pyttsx3</code>. It needs <code>pip install</code> and a speaker, so it's <strong>copy-only</strong>. But first, a tiny live cell that pays off the second half — and one synthesis question to close the lecture.</p>
+  <p class="cell-note">Run it — a set comprehension dedupes; a list comprehension upper-cases the sorted result. Both build real (eager) lists. No pip needed.</p><textarea class="py">words = ["this", "is", "is", "cs50"]
+
+unique = {w for w in words}                   # set comprehension -&gt; drops the duplicate
+shouts = [w.upper() for w in sorted(unique)]  # list comprehension -&gt; upper-case, sorted
+
+print(len(unique))                            # how many distinct words?
+print(" ".join(shouts))                       # one phrase, built once</textarea>
+  <details class="predict"><summary><code>unique = {w for w in words}</code> is a set comprehension; <code>shouts = [...]</code> is a list comprehension. The talking cow needs to both PRINT the phrase and SPEAK it — i.e. use the result twice. Are these the right tools for that, and why?</summary><div style="margin:.2rem 0 .6rem"><p><strong>Yes — because both are eager.</strong> A set comprehension and a list comprehension each build a <strong>real collection</strong> that's computed up front and stays in memory, so you can use <code>shouts</code> (or the joined phrase) as many times as you like — print it <em>and</em> speak it. Had you reached for a lazy <code>map</code>/<code>filter</code> instead, the first use would empty the ticket roll and the second would get nothing. When you need a value more than once, the eager comprehension is exactly right; save the lazy tools for huge or one-pass data.</p></div></details>
+  <div class="callout later"><span class="tag">Terminal only — pip install cowsay pyttsx3</span><p>To hear the cow, install two packages and run it on your own machine (it needs a speaker):</p><p><code>pip install cowsay pyttsx3</code> <code>python speak.py</code></p><p>The box below shows CS50's bare original first — <code>input()</code>, <code>cowsay.cow</code>, <code>pyttsx3</code>. Below it, commented out, is an optional <strong>toolbox remix</strong> that swaps <code>input()</code> for <code>argparse</code> and dedupes with a set comprehension, if you want to see the lecture's tools combined.</p></div>
+  <p class="cell-note">Copy only — needs <code>pip install cowsay pyttsx3</code> and audio. Save as speak.py.</p><div class="codeblock"><pre><code># CS50's bare original:
+import cowsay
+import pyttsx3
+
+this = input("What's this? ")
+cowsay.cow(this)
+
+engine = pyttsx3.init()
+engine.say(this)
+engine.runAndWait()
+
+# Optional toolbox remix (argparse + set + comprehension):
+#   import argparse, cowsay, pyttsx3
+#   parser = argparse.ArgumentParser(description="A cow that speaks your words")
+#   parser.add_argument("words", nargs="+", help="words for the cow to say")
+#   args = parser.parse_args()
+#   unique = {w for w in args.words}
+#   phrase = " ".join([w.upper() for w in sorted(unique)])
+#   cowsay.cow(phrase)
+#   engine = pyttsx3.init(); engine.say(phrase); engine.runAndWait()</code></pre></div>
+  <p>That's the whole course in one joke: a couple of imports and a cow that both prints <em>and</em> talks. You now have the toolkit to read other people's Python and to write clear, safe, friendly programs of your own.</p>
+  <div class="gotcha-list"><h2 id="gotchas">Common mistakes at a glance</h2><ul><li><strong>Empty <code>{}</code> is a dict, not a set.</strong> Use <code>set()</code> for an empty set ( <code>{}</code> is the empty-dict literal; there is no empty-set literal). A set is also <strong>unordered</strong> (no <code>set[0]</code> — that's a <code>TypeError</code>) and <strong>unique by equality</strong> (<code>2</code> and <code>2.0</code> collapse to one item), so <code>sorted()</code> it before printing if you want predictable output.</li><li><strong><code>balance += n</code> without <code>global</code> raises <code>UnboundLocalError</code>.</strong> The assignment makes the name local, so <code>+=</code> tries to read that local before it's set (see the 3-step trace). <em>Reading</em> a global is always fine; only <em>reassigning</em> needs <code>global balance</code>. Better still: put the state on a <strong>class</strong> (globals are discouraged).</li><li><strong>ALL_CAPS constants aren't enforced.</strong> Python will happily let you reassign <code>MEOWS = 5</code>, no error. The capitals are a <em>signal</em> to humans, not a lock — like the <code>_field</code> underscore from L8, a convention rather than a rule.</li><li><strong>Type hints are ignored at runtime.</strong> <code>def meow(n: int)</code> does <em>not</em> make Python check <code>n</code>; that's <code>mypy</code>'s job, run separately in your terminal. Hinted code runs live exactly as if the hints weren't there — Python just stores them in <code>__annotations__</code>.</li><li><strong>A docstring must be the first statement under <code>def</code>, triple-quoted.</strong> Placed second (after any code) it's an ignored string and <code>__doc__</code> is <code>None</code>. A <code>#</code> comment is invisible to <code>help()</code>/editors/Sphinx; only a docstring is stored on the function and read back by tools.</li><li><strong>Same symbols, opposite direction.</strong> In a <strong>call</strong>, <code>total(<em>list)</code>/<code>total(<strong>dict)</code> </em>spread<em> into arguments; in a </strong>def<strong>, <code></em>args</code>/<code></strong>kwargs</code> <em>collect</em> leftovers (a <strong>tuple</strong> and a <strong>dict</strong>, never lists). Passing the list itself (<code>total(coins)</code>) is a <code>TypeError</code>, and <code>**kwargs</code> must come last in a def.</li><li><strong><code>map</code>/<code>filter</code>/<code>enumerate</code>/generators are lazy AND one-shot.</strong> <code>print(mapped)</code> shows <code>&lt;map object ...&gt;</code>, not the values — use <code>print(*mapped)</code> or <code>list(mapped)</code>. And once you walk it, it's <strong>exhausted</strong>: a second pass yields nothing (no error, just silence). Prefer an eager comprehension, or capture with <code>list(...)</code>, if you need it twice.</li><li><strong><code>filter</code> yields the original items, unchanged.</strong> Its predicate (a True/False test, often a <code>lambda</code>) must return a <strong>bool</strong>; it <em>keeps</em> matches, it doesn't transform them. Since it yields whole dicts, you can't bare-<code>sorted()</code> the result — pass <code>key=...</code>.</li><li><strong>Comprehension <code>if</code> placement matters.</strong> A <em>filter</em> <code>if</code> goes at the <strong>end</strong> (<code>[x for x in xs if cond]</code>). A separate <em>choice</em> form is a ternary that goes at the <strong>front</strong> (<code>[a if cond else b for x in xs]</code>) — swapping the two is a <code>SyntaxError</code>. And inside braces, <code>{k: v ...}</code> (colon) is a dict while <code>{expr ...}</code> (no colon) is a set.</li><li><strong><code>enumerate</code> starts at 0 and yields a <code>(index, value)</code> tuple.</strong> Add <code>1</code> (or pass <code>start=1</code>) for human numbering; unpack with two loop variables (<code>for i, name in ...</code>), or a single variable catches the whole tuple <code>(0, 'Hermione')</code>.</li><li><strong><code>yield</code> pauses, <code>return</code> exits.</strong> A generator is one-shot like <code>map</code>; keep live demos finite (<code>n = 3</code>) — never write a bare endless <code>for s in sheep(): ...</code>, or the loop never ends.</li></ul></div>
+  <h2>Recap &amp; next step</h2><p><strong>Big picture:</strong> this lecture is a toolbox. CS50 lists its items flat; to make them stick, these notes group them. The <strong>first half</strong> is polish you apply to code you already write (<code>set</code>, <code>global</code>/class, constants, type hints, docstrings, <code>argparse</code>, unpacking, <code><em>args</code>/<code><strong>kwargs</code>) — eight independent tools. The </strong>second half<strong> is a run of tools that compute </em>on demand<em>, sharing one idea: </strong>eager vs lazy<strong>. A list/dict/set comprehension builds a finished collection up front (eager, replayable); <code>map</code>, <code>filter</code>, <code>enumerate</code>, and generators (<code>yield</code>) compute one value at a time on demand (lazy, memory-light, and </strong>one-shot<strong> — they print as objects and exhaust after one pass). When in doubt, reach for the eager comprehension; save the lazy tools for huge or endless data.\n\n</strong>What each piece does:<strong>\n- <code>set()</code> + <code>.add(...)</code> — a collection of </strong>unique<strong> (by equality), unordered items; <code>sorted()</code> before printing.\n- <code>global x</code> — reassign a module-level variable from inside a function (discouraged; prefer a class).\n- <code>NAME</code> in ALL_CAPS — a constant by </strong>convention<strong>, not enforcement.\n- <code>n: int</code> / <code>-&gt; str</code> — type hints: documentation that </strong>mypy<strong> checks but Python </strong>ignores<strong> at runtime.\n- <code>"""docstring"""</code> — first statement under <code>def</code>, readable by <code>help()</code>.\n- <code>argparse</code> — free <code>--help</code>, defaults, and type validation from the command line.\n- <code>total(</em>list)</code> / <code>total(</strong>dict)</code> — <strong>spread</strong> a collection into a call; <code>def f(<em>args, <strong>kwargs)</code> — </strong>collect<strong> extras into a tuple and dict.\n- <code>map(fn, seq)</code> — apply a function to every item (lazy); wrap in <code>list()</code> or unpack with <code></em></code> to see it.\n- <code>[x for x in seq if c]</code> / <code>{k: v for ...}</code> / <code>{x for ...}</code> — build a list, dict, or set in one line (eager).\n- <code>filter(pred, seq)</code> — keep matching items (lazy, one-shot).\n- <code>enumerate(seq)</code> — <code>(index, value)</code> pairs, cleaner than <code>range(len(...))</code>; starts at 0.\n- <code>yield</code> — a generator: values one at a time, even for endless streams.\n\nThis ties back where you've been — the </strong>list/dict<strong> of L2 (and the <code>range(len(...))</code> that <code>enumerate</code> replaces), the </strong>scope<strong> rule and the <code>_field</code> + <code>@property</code> </strong>class<strong> pattern of L8, the </strong><code>split</code> unpacking<strong> and </strong><code>lambda</code><strong> of L6, the <code>sorted</code> you first used in L6, and <code>sys.argv</code> of L4 (whose friendlier cousin is <code>argparse</code>).\n\n</strong>Next:** Problem Set 9 — reach for these tools where they fit: a <code>set</code> to dedupe, a comprehension or <code>map</code>/<code>filter</code> to reshape data, <code>enumerate</code> to number it, <code>argparse</code> for a real command-line program, and a class wherever loose globals tempt you. That's CS50P. Go build something.</p>
+  <p><a href="index.html">← Back to all lectures</a></p>
+</main>
+</div>
+
+<footer class="site">CS50P interactive notes · Lecture 9 — Et Cetera · run, edit, and break things freely.</footer>
+<script src="assets/notes.js" defer></script>
+</body>
+</html>
