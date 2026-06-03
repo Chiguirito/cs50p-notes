@@ -1,0 +1,327 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Lecture 7 — Regular Expressions · CS50P Notes</title>
+<link rel="icon" href="data:,">
+<link rel="stylesheet" href="assets/notes.css">
+<script>try{var t=localStorage.getItem('cs50p-theme');if(t)document.documentElement.setAttribute('data-theme',t);}catch(e){}</script>
+</head>
+<body>
+<div id="progress"></div>
+
+<header class="site">
+  <a class="brand" href="index.html">← CS50P Notes</a>
+  <span class="spacer"></span>
+  <button class="theme-toggle" type="button" aria-pressed="false">🌙 Dark</button>
+</header>
+
+<div class="wrap">
+<nav class="toc" aria-label="On this page">
+  <details open><summary>Contents</summary><p class="toc-title">On this page</p><ol></ol></details>
+</nav>
+
+<main>
+<h1>Lecture 7 — Regular Expressions</h1>
+  <p class="subtitle lead">A regex is a tiny language for a string's <strong>shape</strong>. With <code>re.search</code> you ask <em>does this shape fit?</em> — and once it fits, groups let you <em>pull the pieces out</em>. It replaces hand-written <code>in</code>/<code>split</code>/<code>endswith</code> checks that leak forever.</p>
+  <div class="objectives"><h2>What you'll be able to do</h2><ul><li>Use <code>re.search(pattern, string)</code> to test whether a pattern appears, reading its return as a <strong>match object</strong> (truthy) or <strong><code>None</code></strong> (falsy), and fold the test into one line with the walrus <code>if matches := re.search(...):</code></li><li>Build a pattern from metacharacters — <code>.</code> any char, <code>*</code> 0+, <code>+</code> 1+, <code>?</code> 0/1, <code>{m,n}</code> counts — written as a <strong>raw string</strong> <code>r"..."</code> so backslashes (<code>\.</code> literal dot, <code>\w</code>, <code>\d</code>, <code>\s</code>) reach the regex engine intact</li><li>Anchor with <code>^</code> (start) and <code>$</code> (end) to require the <strong>whole</strong> string match, and combine character classes <code>[...]</code>, negation <code>[^...]</code>, ranges <code>[a-z]</code>, alternation <code>A|B</code>, and groups <code>(...)</code> / non-capturing <code>(?:...)</code></li><li>Match case-insensitively with the <code>re.IGNORECASE</code> flag, and <strong>extract</strong> captured text with <code>.group(0)</code> (whole match), <code>.group(1)</code> (first capture, <strong>1-indexed</strong>), and <code>.groups()</code> (a tuple to unpack)</li><li><strong>Clean and rewrite</strong> text with <code>re.sub(pattern, repl, string)</code> — stripping a varying prefix that a fixed <code>.replace</code>/<code>.removeprefix</code> can't handle — instead of patching <code>in</code>/<code>split</code>/<code>endswith</code> checks that leak forever</li></ul></div>
+  <div class="callout note"><span class="tag">How these notes work</span><p><strong>White box, Run button</strong> = real Python, runs right here. Edit it, press <strong>Run</strong> (or <strong>Cmd/Ctrl + Enter</strong>); press <strong>Esc</strong> to step back out. The first run downloads Python once (about 10 seconds), then it's instant. You can't break anything — edit any box and Run again.</p></div>
+  <div class="callout note"><span class="tag">Do this before every Run: predict (and one note about the test strings)</span><p>Before you press Run, <strong>say out loud whether you expect <code>Valid</code> or <code>Invalid</code></strong> (or what gets printed). Regex is all about <em>which strings match the pattern</em> — so guess first, then watch.</p><p>One thing that holds for every box below: each one <strong>hard-codes its test string at the top</strong>. CS50's originals read it live with <code>input("...").strip()</code>; here it's a fixed value so you can predict it. To try your own, change that one line and Run again — that's the only place these notes differ from the lecture's programs, so I won't repeat it on each box.</p></div>
+  <h2>Why regex? Hand-checking an email gets silly fast</h2>
+  <p>Say you want to check that a string <em>looks like</em> an email address. With the tools you already have — <code>in</code>, <code>.split</code>, <code>.endswith</code> — you can almost get there, and watching it leak is the whole motivation for a real <strong>pattern language</strong>. The plainest first guess: 'an email has an <code>@</code> in it.' Predict what this prints for <code>"@@@"</code>, then Run.</p>
+  <p class="cell-note">Live — the naive check. Predict Valid or Invalid first.</p><textarea class="py">email = "@@@"
+
+if "@" in email:
+    print("Valid")
+else:
+    print("Invalid")</textarea>
+  <p><code>"@@@"</code> is <code>Valid</code> — clearly wrong. So you patch it: also require a <code>.</code>, then split on the <code>@</code> and demand a username and a dotted domain, then insist it ends in <code>.edu</code>. Each patch plugs one hole and opens another. The next box stacks all those checks and <em>still</em> waves through a broken address. Predict whether <code>"nonsense hi@there.edu"</code> passes.</p>
+  <div class="callout note"><span class="tag">What this next box is (and isn't)</span><p>In lecture, Malan's first naive attempt is the one-liner <code>if "@" in email and "." in email:</code> — the box you just ran is the heart of it. The <em>next</em> box is these notes <strong>expanding</strong> that idea into the full <code>split</code>/<code>endswith</code> ladder you'd naturally reach for, so you can watch every patch leak at once. It's an illustration of the leak, not a verbatim lecture program.</p></div>
+  <p class="cell-note">Live — every patch you'd reach for, stacked up. It STILL says Valid for junk with words before the @. Predict first, then Run.</p><textarea class="py">email = "nonsense hi@there.edu"
+
+if "@" in email and "." in email:
+    username, domain = email.split("@")
+    if username and "." in domain and domain.endswith(".edu"):
+        print("Valid")
+    else:
+        print("Invalid")
+else:
+    print("Invalid")</textarea>
+  <div class="callout note"><span class="tag">Echo of the leaky ifs from Lecture 1</span><p>Lecture 1 warned that a row of separate <code>if</code>s each fires on its own — <em>there</em> the danger was overlapping conditions <strong>double-firing</strong> (a 95 printing two lines). Here it's the mirror image: each loose check <strong>waves the string through</strong>, so junk like <code>"@@@"</code> and <code>"nonsense hi@there.edu"</code> passes. Same root cause — every test asked in isolation, nothing tying it to the <em>whole</em> string — opposite symptom.</p></div>
+  <p>Still <code>Valid</code> — even though <code>nonsense </code> is plainly not part of an email. The leak: <code>split("@")</code> dumps <em>everything</em> before the first <code>@</code> into <code>username</code>, which is non-empty, so the check passes. Nothing pins the <strong>start</strong> of the string, so junk hides there. You could keep patching forever. The honest fix is a language built for describing string <strong>shapes</strong>: <strong>regular expressions</strong>. One pattern will replace this entire ladder — and crucially, it can demand the <em>whole</em> string be well-formed, not just contain the right bits.</p>
+  <h2>re.search: does the pattern appear?</h2>
+  <p>Regex lives in the standard-library <strong><code>re</code></strong> module — <code>import re</code> (the same <code>import</code> from Lecture 4). The one function you'll use most is <strong><code>re.search(pattern, string)</code></strong>: it hunts for <code>pattern</code> inside <code>string</code> and returns a <strong>match object</strong> if it finds one, or <strong><code>None</code></strong> if it doesn't. A match object is <strong>truthy</strong> and <code>None</code> is <strong>falsy</strong> (the truthy/falsy idea these notes added in Lecture 1 — the same idea behind that bare <code>"Sun"</code> that always fired), so you drop the call straight into an <code>if</code>. Here the pattern is just the literal <code>"@"</code>. Predict the result before you Run.</p>
+  <p class="cell-note">Live — re.search returns a match object (truthy) or None (falsy). The literal "@" just asks: is there an @ anywhere? Predict first.</p><textarea class="py">import re
+
+email = "malan@harvard.edu"
+
+if re.search("@", email):
+    print("Valid")
+else:
+    print("Invalid")</textarea>
+  <p>It found the <code>@</code>, so the match object is truthy and we print <code>Valid</code>. Two things to carry forward. First, the <strong>pattern comes first, the string second</strong> — <code>re.search(pattern, string)</code>, easy to flip by accident. Second, that literal <code>"@"</code> is the floor: from here on we make the pattern <em>describe a shape</em>, not just a character, by adding <strong>metacharacters</strong>.</p>
+  <div class="mental-model"><span class="tag">Mental model — a pattern is a SHAPE, not a list of letters</span><div class="mm-diagram"><div class="mm-card"><b>Plain text = literal: must appear exactly</b><pre style="margin:.4rem 0;font-family:var(--mono);font-size:.84rem;white-space:pre-wrap;overflow-x:auto">re.search("cat", "the cat sat")</pre><span>Every character stands for itself. This finds the three letters <code>c</code>, <code>a</code>, <code>t</code> <strong>somewhere</strong> in the text — here, inside <code>the cat sat</code>. No machinery, no surprises. This is the <code>"@"</code> search you just ran.</span></div><div class="mm-card"><b>search slides — it hunts ANYWHERE</b><pre style="margin:.4rem 0;font-family:var(--mono);font-size:.84rem;white-space:pre-wrap;overflow-x:auto">re.search("cat", "a category")  # FOUND</pre><span>The stencil slides along the text until it fits. So <code>"cat"</code> is happily found <em>inside</em> <code>"a category"</code> — <code>re.search</code> answers 'does this appear <em>somewhere</em>?', not 'is the <em>whole</em> string this?'. Pinning it to the whole string takes anchors — coming up in a few sections.</span></div></div></div>
+  <h2>Metacharacters, set 1: . and +</h2>
+  <p>Here is the first machinery. Each one is a <em>quantity</em> or a <em>wildcard</em>, not a literal:</p><ul><li><code>.</code> — <strong>any single character</strong> (except a newline)</li><li><code>+</code> — the thing before it, <strong>1 or more</strong> times</li></ul><p>So <code>.+@.+</code> reads <strong>'one-or-more of anything, then a literal @, then one-or-more of anything'</strong> — something must sit on <em>both</em> sides of the @. This is your first real <em>shape</em>. Predict: does <code>"malan@harvard.edu"</code> match, and would a bare <code>"@"</code> (nothing on either side) match?</p>
+  <p class="cell-note">Live — .+@.+ requires at least one char on each side of the @. Try email = "@" and email = "a@b" to feel the +. Predict first.</p><textarea class="py">import re
+
+email = "malan@harvard.edu"
+
+if re.search(r".+@.+", email):
+    print("Valid")
+else:
+    print("Invalid")</textarea>
+  <p>Now feel the stencil <em>slide</em>. Because <code>re.search</code> looks <strong>anywhere</strong>, that same shape <code>.+@.+</code> is found <em>inside</em> a whole sentence — there's junk before and after the email, but the shape still fits somewhere in the middle. Predict: does <code>"hi malan@x.edu !!"</code> print <code>Valid</code>?</p>
+  <p class="cell-note">Live — the SHAPE .+@.+ sits INSIDE the sentence, so re.search finds it anyway. This is 'contains', not 'is'. Predict, then Run.</p><textarea class="py">import re
+
+email = "hi malan@x.edu !!"
+
+if re.search(r".+@.+", email):
+    print("Valid (the shape is in there somewhere!)")
+else:
+    print("Invalid")</textarea>
+  <p><code>Valid</code> — even though the <em>whole</em> string is plainly not an email. That's the mental model made concrete: <code>re.search</code> found the shape <em>somewhere inside</em>. Keep this leak in mind; <strong>anchors</strong> (two sections down) are the fix. First, more quantities.</p>
+  <h2>More quantities: * ? and counts {m,n}</h2>
+  <p>Three more pieces of machinery, all describing <em>how many</em>:</p><ul><li><code>*</code> — the thing before it, <strong>0 or more</strong> times</li><li><code>?</code> — the thing before it, <strong>0 or 1</strong> time (optional)</li><li><code>{m}</code> — <strong>exactly m</strong> times; <code>{m,n}</code> — <strong>between m and n</strong> times</li></ul><p>The <code><em></code>-vs-<code>+</code> difference is the one to feel: <code></em></code> lets the part <em>vanish</em>, <code>+</code> insists it's there. Predict the result of the box, then try the swaps in the predict below it.</p>
+  <p class="cell-note">Live — {2,3} is 'between 2 and 3', applied to the single 'a' before it. Try letters = "aaaa" (search still finds 3) and letters = "a" (too few). Predict first.</p><textarea class="py">import re
+
+letters = "aaa"
+
+if re.search(r"a{2,3}", letters):
+    print("Valid")
+else:
+    print("Invalid")</textarea>
+  <details class="predict"><summary>Take the pattern <code>r".<em>@.</em>"</code> (star, not plus) with <code>email = "@"</code>. Valid or Invalid — and why?</summary><div style="margin:.2rem 0 .6rem"><p><strong>Valid.</strong> <code><em></code> means <strong>0 or more</strong>, so <code>.</em></code> happily matches <em>nothing</em> on each side — <code>"@"</code> alone fits <code>.<em>@.</em></code> because zero characters before and after the <code>@</code> is allowed. Swap to <code>+</code> (<strong>1 or more</strong>) and <code>"@"</code> becomes <code>Invalid</code>, because <code>+</code> insists on at least one character on each side. That one-character difference between <code><em></code> and <code>+</code> is the whole point: <code></em></code> lets the part vanish, <code>+</code> demands it be there.</p></div></details>
+  <details class="predict"><summary>Now exercise <code>?</code>. With <code>re.search(r"colou?r", s)</code>, does it match both <code>s = "color"</code> and <code>s = "colour"</code>? What about <code>s = "colouur"</code>?</summary><div style="margin:.2rem 0 .6rem"><p>Both <code>"color"</code> and <code>"colour"</code> <strong>match</strong> — <code>u?</code> means 'zero or one <code>u</code>', so the <code>u</code> is optional: drop it and you get <code>color</code>, keep it and you get <code>colour</code>. But <code>"colouur"</code> does <strong>not</strong> match the anchored <code>r"^colou?r$"</code>, because <code>?</code> allows <em>at most one</em> <code>u</code>, never two. That's <code>?</code> in its pure form: the single token right before it appears <strong>0 or 1</strong> time — no more. (You'll reuse this exact move soon to make <code>https?</code> mean 'http or https'.)</p></div></details>
+  <div class="quiz"><p class="quiz-q">A quantifier applies only to the <strong>single token right before it</strong>. Given <code>re.fullmatch(r"ab{2,3}", s)</code> (whole-string match), which <code>s</code> does it accept?</p><div class="opts"><button class="opt" type="button" data-correct><code>"abbb"</code> — <code>{2,3}</code> repeats only the <code>b</code> (2 to 3 times), so an <code>a</code> then 3 b's fits</button><button class="opt" type="button"><code>"ababab"</code> — assuming <code>{2,3}</code> repeats the whole <code>ab</code> 2 to 3 times</button><button class="opt" type="button"><code>"aaabbb"</code> — assuming <code>{2,3}</code> applies to both the <code>a</code> and the <code>b</code></button><button class="opt" type="button"><code>"ab23"</code> — assuming <code>{2,3}</code> matches the literal characters <code>2</code> and <code>3</code></button></div><div class="why">A quantifier binds to the <strong>one token immediately before it</strong> — here just the <code>b</code>. So <code>b{2,3}</code> means 'between 2 and 3 b's', and <code>ab{2,3}</code> is an <code>a</code> then 2–3 b's: <code>"abb"</code> or <code>"abbb"</code>. With <code>re.fullmatch</code>, <code>"aaabbb"</code> fails because the whole string must fit (the leading <code>aa</code> has nowhere to go). (Heads-up: with <code>re.search</code> instead, <code>"aaabbb"</code> <em>would</em> match, since the stencil slides and finds the <code>abbb</code> at the end — that's the 'search hunts anywhere' idea. <code>fullmatch</code> is what makes this question single-answer.) To repeat a whole chunk like <code>ab</code>, wrap it: <code>(ab){2,3}</code>. And <code>{2,3}</code> is a <em>count</em>, never literal <code>2</code>/<code>3</code> characters.</div></div>
+  <h2>Escaping a literal dot, and raw strings</h2>
+  <p>Reach for the <code>.edu</code> ending and a trap springs. You might write <code>r".+@.+.edu"</code> — but that <code>.</code> before <code>edu</code> is the <strong>any-character</strong> wildcard, so it matches <code>"...Xedu"</code> too. To mean a <strong>literal dot</strong>, you <strong>escape</strong> it with a backslash: <code>\.</code>. Watch the broken version say Valid for a string with no real dot. Predict the result for <code>"malan@harvardXedu"</code> first.</p>
+  <p class="cell-note">Live — the BROKEN pattern: an unescaped . is any-char, so "malan@harvardXedu" sneaks through. Predict Valid/Invalid, then Run.</p><textarea class="py">import re
+
+email = "malan@harvardXedu"
+
+# WRONG: the . before edu is a wildcard, so any char (even X) passes
+if re.search(r".+@.+.edu", email):
+    print("Valid (but it should NOT be!)")
+else:
+    print("Invalid")</textarea>
+  <div class="callout gotcha"><span class="tag">A dot is NOT a dot here</span><p>Outside regex, <code>.</code> is just a period. <em>Inside</em> a pattern, <code>.</code> means <strong>any character except a newline</strong> — so <code>r".+@.+.edu"</code> happily matches <code>"malan@harvardXedu"</code>, because that last <code>.</code> swallows the <code>X</code>. To mean a <strong>literal</strong> period you must escape it: <code>\.</code>. Same symbol, completely different job — read it by <em>where it sits</em>.</p></div>
+  <p><code>"malan@harvardXedu"</code> slipped through, because the wildcard <code>.</code> matched the <code>X</code>. Escape it as <code>\.</code> and only a real dot will do. But there's a second wrinkle: that backslash is the same escape character from Lecture 0 (<code>\"</code> for a literal quote inside a string), so in an <em>ordinary</em> string Python tries to interpret <code>\.</code> itself before regex ever sees it. The fix is the <strong>raw string</strong> <code>r"..."</code>: the <code>r</code> tells Python to take backslashes <strong>at face value</strong> and pass them straight to the regex engine. That's why every pattern here starts with <code>r</code>. Predict: does the escaped, raw pattern reject <code>"malan@harvardXedu"</code>?</p>
+  <p class="cell-note">Live — \. is a LITERAL dot; the r"..." raw string hands the backslash straight to regex. Now the X version is rejected. Predict first.</p><textarea class="py">import re
+
+email = "malan@harvardXedu"
+
+# RIGHT: \. is a literal dot; r"..." stops Python eating the backslash
+if re.search(r".+@.+\.edu", email):
+    print("Valid")
+else:
+    print("Invalid")</textarea>
+  <div class="callout note"><span class="tag">Recall: the backslash escape, from Lecture 0</span><p>A backslash is the Lecture 0 <em>escape</em> character — Python grabs it <em>before</em> the regex engine ever sees the pattern. A <strong>raw string</strong> <code>r"..."</code> switches that off, handing the backslash through untouched — so <code>r"\."</code> reaches <code>re.search</code> as a real <code>\.</code> meaning a literal dot. Habit: <strong>every regex pattern is <code>r"..."</code></strong>, even before it has any backslash. (One footgun: a raw string can't <em>end</em> in a single backslash.)</p></div>
+  <h2>Anchors ^ and $: match the WHOLE string</h2>
+  <p>Time to fix the leak you saw earlier (the shape found <em>inside</em> a sentence). <code>re.search</code> finds the shape <strong>anywhere</strong>, so <code>r".+@.+\.edu"</code> still matches <code>"my email is malan@harvard.edu."</code>. To demand the <em>entire</em> string be the email, pin both ends: <strong><code>^</code></strong> means <strong>start of string</strong>, <strong><code>$</code></strong> means <strong>end of string</strong>. <code>r"^.+@.+\.edu$"</code> says 'from the very start to the very end, nothing but this shape.' Predict: with anchors, does <code>"my email is malan@harvard.edu."</code> pass?</p>
+  <p class="cell-note">Live — ^ pins the start, $ pins the end, so extra words before/after now fail. Try email = "malan@harvard.edu" to see it pass. Predict first.</p><textarea class="py">import re
+
+email = "my email is malan@harvard.edu."
+
+if re.search(r"^.+@.+\.edu$", email):
+    print("Valid")
+else:
+    print("Invalid")</textarea>
+  <p>Now it's <code>Invalid</code> — the leading <code>my email is </code> and the trailing <code>.</code> fall outside the anchored shape, so the whole string no longer fits the stencil. This is the single most common regex fix: <strong>anchor with <code>^...$</code></strong> to turn 'contains the shape' into 'is exactly the shape' — exactly the leak (junk before the <code>@</code>) that sank the hand-written ladder. (One caution: with a <em>bare</em> <code>.+@.+$</code> the greedy <code>.+</code> would still swallow surrounding junk; it's the literal <code>\.edu$</code> ending here that makes the anchor truly bite.)</p>
+  <div class="quiz"><p class="quiz-q">With <code>re.search(r"cat", s)</code> and <code>s = "a category"</code>, what happens — and how do you make it require the whole string to be just <code>cat</code>?</p><div class="opts"><button class="opt" type="button" data-correct>It <strong>matches</strong> (<code>cat</code> appears inside <code>category</code>); anchor it as <code>r"^cat$"</code> to require the entire string be exactly <code>cat</code></button><button class="opt" type="button">It does <strong>not</strong> match, because <code>re.search</code> always checks the whole string by default</button><button class="opt" type="button">It matches, and there is no way to require the full string with <code>re</code></button><button class="opt" type="button">It errors, because <code>cat</code> is not a valid pattern without metacharacters</button></div><div class="why"><code>re.search</code> looks for the pattern <strong>anywhere</strong>, so <code>r"cat"</code> is happily found inside <code>"a category"</code>. To insist the <em>whole</em> string is exactly <code>cat</code>, anchor both ends: <code>r"^cat$"</code> — <code>^</code> at the start, <code>$</code> at the end. That's the 'contains' vs 'is' distinction from the mental model.</div></div>
+  <h2>Character classes [...] and negation [^...]</h2>
+  <p>Even anchored, <code>r"^.+@.+\.edu$"</code> lets <code>"malan@@@harvard.edu"</code> through — <code>.+</code> cheerfully matches those extra <code>@</code>s. You want 'one or more characters that are <strong>not</strong> an @'. Square brackets build a <strong>character class</strong>: <code>[abc]</code> matches any <em>one</em> of <code>a</code>, <code>b</code>, or <code>c</code>. Put a <code>^</code> <strong>inside</strong> the brackets and it <strong>negates</strong> — <code>[^@]</code> means <strong>any one character that is NOT an @</strong>. Heads up before you read the pattern: the next box uses <code>^</code> in <strong>both</strong> its jobs — the anchor at the very front, and the negation inside <code>[...]</code>. Read it left-to-right by position. Predict: does <code>r"^[^@]+@[^@]+\.edu$"</code> reject <code>"malan@@@harvard.edu"</code>?</p>
+  <div class="callout gotcha"><span class="tag">^ means two different things — position vs negation</span><p>Before you parse the next pattern: the same <code>^</code> symbol wears two hats. <strong>Outside</strong> brackets, at the start of a pattern, <code>^</code> is the <strong>anchor</strong> for 'start of string' (<code>r"^cat"</code>). <strong>Inside</strong> square brackets, as the <em>first</em> character, <code>^</code> <strong>negates</strong> the class (<code>[^@]</code> = 'not an @'). Same glyph, completely different jobs — read where it sits. (<code>$</code> only ever means 'end of string'.) Also handy: most metacharacters lose their power inside a class — <code>[a-z.]</code> treats the <code>.</code> as a <em>literal</em> dot, no escape needed.</p></div>
+  <p class="cell-note">Live — [^@]+ is one-or-more NON-@ chars, so triple-@ fails. The FIRST ^ anchors the string start; the one inside [] negates. Predict first.</p><textarea class="py">import re
+
+email = "malan@@@harvard.edu"
+
+if re.search(r"^[^@]+@[^@]+\.edu$", email):
+    print("Valid")
+else:
+    print("Invalid")</textarea>
+  <h2>Ranges and predefined classes: \w \d \s</h2>
+  <p>Inside a class you can give a <strong>range</strong> with a dash: <code>[a-z]</code> is any lowercase letter, <code>[a-zA-Z0-9_]</code> is letters, digits, or underscore. Make that explicit pattern the username matcher first — it works, just verbosely. Predict: does <code>"malan@harvard.edu"</code> pass <code>r"^[a-zA-Z0-9_]+@[a-zA-Z0-9_]+\.edu$"</code>?</p>
+  <p class="cell-note">Live — the explicit class [a-zA-Z0-9_] spells out letters, digits, underscore. It works, but it's a mouthful; the next cell shows the shorthand. Predict first.</p><textarea class="py">import re
+
+email = "malan@harvard.edu"
+
+if re.search(r"^[a-zA-Z0-9_]+@[a-zA-Z0-9_]+\.edu$", email):
+    print("Valid")
+else:
+    print("Invalid")</textarea>
+  <p>That <code>[a-zA-Z0-9_]</code> set is so common it has a one-letter shorthand: <strong><code>\w</code></strong> (a 'word' character) equals <code>[a-zA-Z0-9_]</code> exactly. Its friends: <strong><code>\d</code></strong> is a digit <code>[0-9]</code>, <strong><code>\s</code></strong> is whitespace (space, tab, newline). Capitalize any of them to <strong>negate</strong>: <code>\W</code> non-word, <code>\D</code> non-digit, <code>\S</code> non-whitespace. So <code>r"^\w+@\w+\.edu$"</code> is the same shape as the cell above, just shorter. Predict: does <code>"malan@harvard.edu"</code> pass, and would <code>"ma lan@harvard.edu"</code> (a space) pass?</p>
+  <p class="cell-note">Live — \w is shorthand for [a-zA-Z0-9_]. A space is NOT a \w, so try email = "ma lan@harvard.edu" and watch it fail. Predict first.</p><textarea class="py">import re
+
+email = "malan@harvard.edu"
+
+if re.search(r"^\w+@\w+\.edu$", email):
+    print("Valid")
+else:
+    print("Invalid")</textarea>
+  <p>Now that <code>\d</code> and the anchors <code>^...$</code> are both on the table, here's the payoff example I promised back in 'More quantities': the count braces <code>{m,n}</code> get a satisfying use. A phone number is 'exactly three digits, a dash, exactly four digits' — anchored to the whole string, that's <code>r"^\d{3}-\d{4}$"</code>, built entirely from pieces you now know. Predict: does <code>"555-1234"</code> match, and would <code>"55-1234"</code> (only two leading digits)?</p>
+  <p class="cell-note">Live — {3} is EXACTLY three, anchored start-to-end. Try phone = "55-1234" to watch {3} reject it. Predict first.</p><textarea class="py">import re
+
+phone = "555-1234"
+
+if re.search(r"^\d{3}-\d{4}$", phone):
+    print("Valid")
+else:
+    print("Invalid")</textarea>
+  <div class="callout note"><span class="tag">Pocket cheat-sheet (so far) — quantities, one-char, anchors</span><p><strong>Quantities:</strong> <code><em></code> 0+ · <code>+</code> 1+ · <code>?</code> 0/1 · <code>{m}</code> exactly m · <code>{m,n}</code> m–n. <strong>One char:</strong> <code>.</code> any (not newline) · <code>[abc]</code> one of these · <code>[a-z]</code> range · <code>[^@]</code> </em>not* this. <strong>Shorthands:</strong> <code>\w</code> = <code>[a-zA-Z0-9_]</code> (digits and <code>_</code> too!) · <code>\d</code> digit · <code>\s</code> whitespace · capitals <code>\W \D \S</code> negate. <strong>Anchors:</strong> <code>^</code> start · <code>$</code> end. We'll add a second card for <code>|</code>, groups and <code>(?:...)</code> once you meet them.</p></div>
+  <details class="predict"><summary>With <code>r"^\w+@\w+\.edu$"</code>, predict Valid/Invalid for <code>email = "jane_doe@mit.edu"</code> and for <code>email = "jane.doe@mit.edu"</code>.</summary><div style="margin:.2rem 0 .6rem"><p><code>"jane_doe@mit.edu"</code> is <strong>Valid</strong> — the underscore <code>_</code> <em>is</em> a <code>\w</code> character. But <code>"jane.doe@mit.edu"</code> is <strong>Invalid</strong> with this pattern, because <code>.</code> is <strong>not</strong> a <code>\w</code> character, so the dot in <code>jane.doe</code> breaks the <code>\w+</code> run before the <code>@</code>. The takeaway here is <em>exactly which characters <code>\w</code> covers</em> — letters, digits, and underscore, and nothing else. (Real-world usernames do contain dots; a looser class like <code>[^@]+</code> would accept them, at the cost of accepting more junk too.)</p></div></details>
+  <div class="quiz"><p class="quiz-q">Which class matches a single character that is <strong>not</strong> a digit?</p><div class="opts"><button class="opt" type="button" data-correct><code>\D</code> — the capital form</button><button class="opt" type="button"><code>\d</code></button><button class="opt" type="button"><code>\w</code></button><button class="opt" type="button"><code>[0-9]</code></button></div><div class="why">Capitalizing a predefined class <strong>negates</strong> it: <code>\d</code> is a digit, <code>\D</code> is a non-digit (likewise <code>\w</code>/<code>\W</code>, <code>\s</code>/<code>\S</code>). The wrong options: lowercase <code>\d</code> matches a digit (the opposite of what's asked); <code>\w</code> <em>includes</em> digits (it's <code>[a-zA-Z0-9_]</code>), so it's not 'non-digit'; and <code>[0-9]</code> matches the digit characters themselves, not their opposite. Also note <code>\d</code> is a <em>single</em> digit, so use <code>\d+</code> for a whole number.</div></div>
+  <h2>Alternation | and groups (...)</h2>
+  <p>Real emails don't all end in <code>.edu</code>. The <strong>alternation</strong> bar <code>|</code> means <strong>'this OR that'</strong>: <code>com|edu|gov</code> matches any one of those. But <code>|</code> has the <strong>lowest precedence</strong> — left loose, <code>r"^\w+@\w+\.com|edu$"</code> actually means '(everything up to com) OR (just edu)', so the bare string <code>"edu"</code> would pass. Don't take that on faith — predict whether <code>"edu"</code> prints <code>Valid</code>, then Run the broken pattern and watch the leak.</p>
+  <p class="cell-note">Live — the BROKEN ungrouped pattern. | binds loosest, so this means (...com) OR (edu$), and a bare "edu" sneaks through. Predict first.</p><textarea class="py">import re
+
+email = "edu"
+
+# WRONG: | spans the whole pattern, so "edu" alone matches the right side
+if re.search(r"^\w+@\w+\.com|edu$", email):
+    print("Valid (but it should NOT be!)")
+else:
+    print("Invalid")</textarea>
+  <p><code>"edu"</code> slipped through — the <code>|</code> split the <em>entire</em> pattern in two. To confine the choices, wrap them in a <strong>group</strong> with parentheses <code>(...)</code>. Layering that group onto our same <code>\w+@\w+</code> shape gives <code>r"^\w+@\w+\.(com|edu|gov|net|org)$"</code>, which allows any of those endings — and notice that's exactly the previous <code>\.edu$</code> cell with <strong>only</strong> the ending swapped for <code>\.(...)</code>. Predict: does <code>"malan@harvard.org"</code> pass now, and would <code>"malan@harvard.xyz"</code>?</p>
+  <div class="callout note"><span class="tag">A small deviation from the lecture</span><p>CS50's lecture uses <code>(com|edu|gov)</code> — three endings. These notes use <code>(com|edu|gov|net|org)</code> (five) just for variety, so you see the <code>|</code> doing real work. Nothing conceptual changes; if you compare against the lecture's exact program, that's the one difference in this pattern.</p></div>
+  <p class="cell-note">Live — (com|edu|gov|net|org) means any ONE of those endings; the parens keep | from leaking over the whole pattern. Try email = "malan@harvard.xyz". Predict first.</p><textarea class="py">import re
+
+email = "malan@harvard.org"
+
+if re.search(r"^\w+@\w+\.(com|edu|gov|net|org)$", email):
+    print("Valid")
+else:
+    print("Invalid")</textarea>
+  <div class="callout note"><span class="tag">Parentheses do two jobs at once</span><p><code>(...)</code> both <strong>groups</strong> (so <code>|</code> and <code>+</code> apply to the whole chunk) <em>and</em> <strong>captures</strong> (it remembers what matched, for <code>.group()</code> later — coming up). If you only need the grouping and not the captured text, write <strong><code>(?:...)</code></strong> — a <strong>non-capturing group</strong>. Heads up: that <code>?</code> inside <code>(?:...)</code> is <em>punctuation</em>, part of the group's spelling — <strong>not</strong> the '0-or-1' quantifier you met earlier. We'll lean on <code>(?:...)</code> when we start counting groups.</p></div>
+  <h2>re.IGNORECASE: stop caring about case</h2>
+  <p>Patterns are <strong>case-sensitive</strong> by default, so the pattern rejects <code>"MALAN@HARVARD.EDU"</code> — the literal <code>edu</code> in the alternation only matches lowercase <code>edu</code>, not <code>EDU</code>. Rather than cram <code>[a-zA-Z]</code> everywhere, pass the <strong>flag</strong> <code>re.IGNORECASE</code> as a third argument: <code>re.search(pattern, string, re.IGNORECASE)</code> matches regardless of case. The pattern itself is <em>unchanged</em> from the last cell — the only new thing is the third argument. Predict: does the shouting address validate now?</p>
+  <p class="cell-note">Live — same pattern as before; the ONLY change is the re.IGNORECASE flag as a 3rd argument. Try removing the flag to watch the uppercase address fail. Predict first.</p><textarea class="py">import re
+
+email = "MALAN@HARVARD.EDU"
+
+if re.search(r"^\w+@\w+\.(com|edu|gov|net|org)$", email, re.IGNORECASE):
+    print("Valid")
+else:
+    print("Invalid")</textarea>
+  <h2>Optional pieces with ?: subdomains</h2>
+  <p>Some addresses have a <strong>subdomain</strong>: <code>malan@cs50.harvard.edu</code>. That's an <em>extra</em> <code>word.</code> chunk before <code>harvard</code>. Make a whole group <strong>optional</strong> by putting <code>?</code> after it — <code>?</code> is 'zero or one', the very quantifier you exercised on <code>colou?r</code> earlier, now applied to a whole group. <code>(\w+\.)?</code> means 'an optional word-then-dot chunk, appearing 0 or 1 time'. Slotting it in front of the domain gives <code>r"^\w+@(\w+\.)?\w+\.(com|edu|gov|net|org)$"</code> — again, exactly the IGNORECASE cell's pattern with <strong>one</strong> addition, the <code>(\w+\.)?</code> piece. It accepts both <code>malan@harvard.edu</code> and <code>malan@cs50.harvard.edu</code>. Predict: do <em>both</em> validate?</p>
+  <p class="cell-note">Live — (\w+\.)? is an OPTIONAL subdomain chunk (0 or 1), the only addition to the previous pattern. Try BOTH email = "malan@harvard.edu" and email = "malan@cs50.harvard.edu". Predict each first.</p><textarea class="py">import re
+
+email = "malan@cs50.harvard.edu"
+
+if re.search(r"^\w+@(\w+\.)?\w+\.(com|edu|gov|net|org)$", email, re.IGNORECASE):
+    print("Valid")
+else:
+    print("Invalid")</textarea>
+  <p>Both pass: with the subdomain present, the optional <code>(\w+\.)?</code> matches <code>cs50.</code>; without it, the <code>?</code> lets the group match <em>nothing</em>. That <code>?</code>-after-a-group move — 'this whole chunk is optional' — is one you'll reuse constantly. You now have the full <strong>matching</strong> toolkit, and the email pattern grew one honest step at a time: <code>\w+@\w+\.edu</code> → swap the ending for <code>\.(com|edu|...)</code> → add the <code>re.IGNORECASE</code> flag → add the optional <code>(\w+\.)?</code> subdomain. The rest of the lecture is about <strong>pulling text out</strong> of a match.</p>
+  <h2>Capturing groups and .group(): reformatting a name</h2>
+  <p>Beyond yes/no, regex can <strong>extract</strong> pieces. With plain string tools you'd write <code>last, first = name.split(", ")</code> — but that breaks the instant the spacing varies. Regex is sturdier: every <code>(...)</code> group <strong>captures</strong> the text it matched, and you read it back <strong>by number</strong> with <strong><code>.group(n)</code></strong> — <code>.group(1)</code> is the first parenthesized group, <code>.group(2)</code> the second, and <code>.group(0)</code> is the <em>whole</em> match. Note groups are <strong>1-indexed</strong> here, unlike lists. Say a name arrives as <code>"Last, First"</code>; the pattern <code>r"^(.+), (.+)$"</code> captures the last name in group 1 and the first in group 2, and we rebuild it as <code>group(2) + " " + group(1)</code>. Predict the greeting before you Run.</p>
+  <p class="cell-note">Live — two capturing groups read by number: .group(1) before the comma, .group(2) after; .group(0) is the whole match. Predict the greeting.</p><textarea class="py">import re
+
+name = "Malan, David"
+
+matches = re.search(r"^(.+), (.+)$", name)
+if matches:
+    name = matches.group(2) + " " + matches.group(1)
+    print(f"hello, {name}")</textarea>
+  <p>It flipped <code>Malan, David</code> into <code>hello, David Malan</code>. There's a second way to read the captures all at once: <strong><code>matches.groups()</code></strong> hands them back as a <strong>tuple</strong> you can unpack in one line. This box does the identical reformat with <code>last, first = matches.groups()</code>, and loosens the comma to <code>, *</code> (a comma then <strong>zero or more spaces</strong>) so messy spacing still parses. Predict the output.</p>
+  <p class="cell-note">Live — .groups() returns a tuple (last, first) we unpack in one line. ", *" allows any number of spaces after the comma. Try name = "Malan,David". Predict first.</p><textarea class="py">import re
+
+name = "Malan,   David"
+
+matches = re.search(r"^(.+), *(.+)$", name)
+if matches:
+    last, first = matches.groups()
+    print("hello,", first, last)</textarea>
+  <div class="callout note"><span class="tag">Remember tuple unpacking, from Lecture 6</span><p>In Lecture 6 you split a CSV line and dropped the pieces into two variables in one go — <code>name, house = line.rstrip().split(",")</code>. <code>matches.groups()</code> hands back that same kind of tuple, so <code>last, first = matches.groups()</code> unpacks it the identical way — two capture groups, two names. (And the same <code>too many values to unpack</code> error waits if your group count and name count disagree.)</p></div>
+  <h2>Guard the match: None has no .group()</h2>
+  <p>A match object is <strong>not</strong> the matched text — it's an object you <em>ask</em> for the text with <code>.group()</code>. And on <strong>no match</strong>, <code>re.search</code> returns <code>None</code>, which has no <code>.group()</code> at all. Call it blindly and you crash. This box (a these-notes demo, not from the lecture itself) searches for a digit in <code>"abc"</code> (there isn't one), so <code>matches</code> is <code>None</code>, then tries <code>matches.group()</code>. The traceback <strong>is</strong> the expected output here — you can't break anything. Predict the error before you Run.</p>
+  <p class="cell-note">Live — a constructed demo that's SUPPOSED to crash. No digit in "abc", so re.search returns None, and None.group() raises. The traceback is the point. Predict the error name first.</p><textarea class="py">import re
+
+text = "abc"
+
+matches = re.search(r"\d", text)   # no digit -&gt; None
+print("matches is:", matches)
+print(matches.group())             # AttributeError: 'NoneType' has no attribute 'group'</textarea>
+  <p>There it is: <strong><code>AttributeError: 'NoneType' object has no attribute 'group'</code></strong> — you called <code>.group()</code> on <code>None</code>. This is the regex twin of Lecture 3's hazard: there a bad line raised a <code>ValueError</code> and you learned to <em>check before you touch</em>; here a no-match hands back <code>None</code> and you must test it before reading it. The lesson is the same: <strong>always test the result before reading it</strong>. So far we wrote that as two steps — <code>matches = re.search(...)</code> then <code>if matches:</code>. Next we fold those into one line.</p>
+  <h2>The walrus := : assign and test in one line</h2>
+  <p>Notice the two-step shape in the name cells: call <code>re.search</code>, store it in <code>matches</code>, <em>then</em> test <code>if matches</code>. Python's <strong>walrus operator</strong> <code>:=</code> does both at once: <strong><code>if matches := re.search(...):</code></strong> runs the search, <strong>assigns</strong> the result to <code>matches</code>, <strong>and</strong> tests its truthiness — all in the <code>if</code>. It folds the very <em>test-before-you-touch-it</em> guard from the None section just above (the same Lecture 3 lesson — a value you haven't confirmed must be checked before use) into one line, so <code>matches</code> is right there to use in the block. Predict the greeting (same as before).</p>
+  <p class="cell-note">Live — the walrus := assigns AND tests in one line, guarding against the None crash you just saw. Same result as the two-line version, just tidier. Predict first.</p><textarea class="py">import re
+
+name = "Malan, David"
+
+if matches := re.search(r"^(.+), *(.+)$", name):
+    last, first = matches.groups()
+    print("hello,", first, last)</textarea>
+  <div class="callout note"><span class="tag">New here: the walrus :=</span><p>A brand-new operator: <code>:=</code> both <em>assigns</em> and <em>tests</em> in one line, so <code>if matches := re.search(...):</code> stores the match <strong>and</strong> checks it was found — exactly the guard-before-use you just built in the None section. It's pure convenience: the two-line <code>matches = re.search(...)</code> then <code>if matches:</code> does the identical thing. Read <code>:=</code> as 'set, and also ask.' Don't confuse it with <code>==</code> (compare) or plain <code>=</code> (which can't go inside an <code>if</code>).</p></div>
+  <h2>re.sub: replace matches</h2>
+  <p>Matching and extracting aren't the only tricks — you can also <strong>substitute</strong>. Classic use: strip a URL prefix down to a username. With plain string tools you'd start simple — <code>url.replace("https://twitter.com/", "")</code> or the tidier <code>url.removeprefix("https://twitter.com/")</code> both chop a <em>fixed</em> prefix off. Predict what each prints.</p>
+  <p class="cell-note">Live — the string-method lead-in: .replace and .removeprefix both strip a FIXED prefix. The next cell shows why regex wins when the prefix varies. Predict both first.</p><textarea class="py">url = "https://twitter.com/davidjmalan"
+
+print("replace:    ", url.replace("https://twitter.com/", ""))
+print("removeprefix:", url.removeprefix("https://twitter.com/"))</textarea>
+  <div class="callout gotcha"><span class="tag">Argument order: re.sub puts the string THIRD</span><p>You drilled <code>re.search(pattern, string)</code> — pattern first, string second. <strong><code>re.sub</code> is different</strong>: it's <code>re.sub(pattern, repl, string)</code> — pattern first, the <strong>replacement</strong> in the middle, and the target <strong>string moves to third</strong>. So the string you're operating on is in a <em>different slot</em> than in <code>re.search</code>. Mixing these up is a classic trip; when you switch verbs from <em>search</em> to <em>sub</em>, remember the string slid to the end.</p></div>
+  <div class="callout note"><span class="tag">`?` again — same glyph, two roles</span><p>You're about to see <code>?</code> twice in one pattern, doing different jobs. In <code>https?</code> the <code>?</code> is the <strong>'0-or-1' quantifier</strong> applied to the single preceding <code>s</code> — so it matches <code>http</code> <em>or</em> <code>https</code> (just like <code>colou?r</code> matched both spellings). In <code>(www\.)?</code> the <code>?</code> is again the quantifier, making the whole <code>(www\.)</code> group optional. (Later, in <code>(?:...)</code>, the <code>?</code> will be neither — it'll be pure <em>spelling</em> for a non-capturing group.) Read each <code>?</code> by what sits immediately before it.</p></div>
+  <p>Both leave <code>davidjmalan</code> — but only because the prefix is <em>exactly</em> <code>https://twitter.com/</code>. The moment a URL might say <code>http://</code> or include <code>www.</code>, a fixed string can't keep up. That's where <strong><code>re.sub(pattern, repl, string)</code></strong> comes in: it replaces every part of <code>string</code> that matches <code>pattern</code> with <code>repl</code>. The pattern <code>r"^(https?://)?(www\.)?twitter\.com/"</code> matches an optional <code>http://</code> <em>or</em> <code>https://</code> (the <code>s?</code> makes just the single <code>s</code> optional), an optional <code>www.</code>, then <code>twitter.com/</code>; replacing that with <code>""</code> deletes it — whatever the prefix's exact form. Predict what's left of the URL.</p>
+  <p class="cell-note">Live — re.sub(pattern, "", url): the string is the THIRD argument. s? makes just the s optional; (www\.)? makes www. optional. Try url = "http://www.twitter.com/davidjmalan". Predict first.</p><textarea class="py">import re
+
+url = "https://twitter.com/davidjmalan"
+
+username = re.sub(r"^(https?://)?(www\.)?twitter\.com/", "", url)
+print(username)</textarea>
+  <p>The prefix is gone, leaving just <code>davidjmalan</code> — and now it'd survive <code>http://</code>, <code>www.</code>, or both, which <code>.replace</code> could not. <code>re.sub</code> shines whenever you want to <strong>clean</strong> or <strong>rewrite</strong> text rather than just check it. Notice it's the same pattern machinery; only the verb changed from <em>search</em> to <em>substitute</em> (and the string slid to the third slot).</p>
+  <h2>Extracting with groups: from (.+) to non-capturing (?:...)</h2>
+  <p>Often you want the <em>opposite</em> of stripping: keep just the piece you care about. Match the whole URL but wrap <strong>only the username</strong> in a capturing group, then read it with <code>.group(1)</code>. Start with the simplest username capture — <code>(.+)$</code> for 'everything after the slash' — and an optional <code>(www\.)?</code>. Predict what <code>.group(1)</code> holds.</p>
+  <p class="cell-note">Live — (.+)$ captures the whole username. But (www\.)? is ALSO a capturing group, so it took group 1 — watch which group the username lands in. Predict first.</p><textarea class="py">import re
+
+url = "https://twitter.com/davidjmalan"
+
+if matches := re.search(r"^https?://(www\.)?twitter\.com/(.+)$", url):
+    print("group 1:", matches.group(1))
+    print("group 2:", matches.group(2))</textarea>
+  <p>Surprise: the username is in <code>.group(2)</code>, and <code>.group(1)</code> is <code>None</code> — because <code>(www\.)?</code> is <em>itself</em> a capturing group, so it grabbed group number 1 even though we only wanted it for the <code>?</code>. We don't care about the <code>www.</code> text; we only need to <em>group</em> it so <code>?</code> applies. The fix is the <strong>non-capturing group</strong> <code>(?:...)</code>: change <strong>only</strong> <code>(www\.)?</code> to <code>(?:www\.)?</code> and the username slides back to <code>.group(1)</code>, the one and only capture. Nothing else about the pattern changes yet. Predict what prints.</p>
+  <p class="cell-note">Live — the ONLY change from the last cell: (www\.)? became (?:www\.)?. That groups WITHOUT capturing, so the username is back in .group(1). Predict first.</p><textarea class="py">import re
+
+url = "https://twitter.com/davidjmalan"
+
+if matches := re.search(r"^https?://(?:www\.)?twitter\.com/(.+)$", url):
+    print("username:", matches.group(1))
+else:
+    print("no match")</textarea>
+  <p><code>.group(1)</code> is now <code>davidjmalan</code> — the <em>only</em> capture, because <code>(?:www\.)?</code> deliberately didn't take a number. That's the whole reason <code>(?:...)</code> exists: group for the sake of <code>?</code>/<code>|</code>/<code>+</code>, without disturbing how you count your real captures. Now that the <em>one</em> idea has landed, we can also <strong>harden</strong> the pattern — two small, independent tweaks at once: tighten the username from <code>(.+)</code> to <code>[a-z0-9_]+</code> (only the characters a handle allows), and add <code>re.IGNORECASE</code> so an upper-case URL still parses. Predict what prints.</p>
+  <p class="cell-note">Live — now we ALSO harden it: [a-z0-9_]+ tightens the username, and re.IGNORECASE folds case. The (?:...) fix from the last cell stays. Try url = "HTTPS://WWW.Twitter.com/davidjmalan". Predict first.</p><textarea class="py">import re
+
+url = "https://twitter.com/davidjmalan"
+
+if matches := re.search(r"^https?://(?:www\.)?twitter\.com/([a-z0-9_]+)$", url, re.IGNORECASE):
+    print("username:", matches.group(1))
+else:
+    print("no match")</textarea>
+  <div class="callout note"><span class="tag">Pocket cheat-sheet (part 2) — combine and capture</span><p>Now you've met all of these, here's the rest of the card: <strong>Combine:</strong> <code>A|B</code> this-or-that (lowest precedence — wrap it: <code>(A|B)</code>). <strong>Group + capture:</strong> <code>(...)</code> groups <strong>and</strong> remembers the text for <code>.group(n)</code>. <strong>Group only:</strong> <code>(?:...)</code> groups without capturing — the <code>?</code> here is <em>spelling</em>, not '0-or-1'. <strong>Read captures:</strong> <code>.group(0)</code> whole match · <code>.group(1)</code> first capture (1-indexed!) · <code>.groups()</code> tuple. <strong>Flag:</strong> <code>re.IGNORECASE</code> as the 3rd arg = case-blind (classes included). <strong>Verbs:</strong> <code>re.search(pattern, string)</code> · <code>re.sub(pattern, repl, string)</code> — string is 3rd!</p></div>
+  <div class="quiz"><p class="quiz-q">You write <code>re.search(r"(https?)://(?:www\.)?(\w+)", url)</code>. How many <em>capturing</em> groups are there, and what is <code>.group(2)</code>?</p><div class="opts"><button class="opt" type="button" data-correct><strong>Two</strong> capturing groups; <code>.group(2)</code> is the <code>(\w+)</code> site name</button><button class="opt" type="button"><strong>Three</strong> capturing groups; <code>.group(2)</code> is <code>www.</code></button><button class="opt" type="button"><strong>One</strong> capturing group; <code>.group(2)</code> raises an error</button><button class="opt" type="button"><strong>Two</strong> capturing groups; <code>.group(2)</code> is the protocol <code>https</code></button></div><div class="why"><code>(?:...)</code> groups <strong>without</strong> capturing, so it's skipped when numbering. The two <em>capturing</em> groups are <code>(https?)</code> = group 1 and <code>(\w+)</code> = group 2. <code>.group(2)</code> is therefore the site name, not <code>www.</code> (the wrong options assume <code>(?:...)</code> captures, or miscount). <code>.group(1)</code> is the protocol. That's exactly why you reach for <code>(?:...)</code> — to group without shifting your capture numbers, the bug you saw two cells ago.</div></div>
+  <h2>One pattern replaces the whole ladder</h2>
+  <p>Look back at the leaky <code>if</code>-ladder from the start. Everything it tried — something before the <code>@</code>, something after, a real dot, an allowed ending, no junk hiding at the start — is one anchored, character-classed pattern now: <code>r"^\w+@(\w+\.)?\w+\.(com|edu|gov|net|org)$"</code> with <code>re.IGNORECASE</code>. That's exactly the pattern you finished the email evolution with — the alternation/IGNORECASE shape plus the optional <code>(\w+\.)?</code> subdomain piece you added in the last section. This box runs it against a few addresses. Predict which print <code>Valid</code>.</p>
+  <p class="cell-note">Live — the leaky ladder, now one anchored pattern, tested against three strings. Edit the list and Run again. Predict each result first.</p><textarea class="py">import re
+
+pattern = r"^\w+@(\w+\.)?\w+\.(com|edu|gov|net|org)$"
+
+for email in ["malan@harvard.edu", "malan@cs50.harvard.edu", "nonsense hi@there.edu"]:
+    if re.search(pattern, email, re.IGNORECASE):
+        print(email, "-&gt; Valid")
+    else:
+        print(email, "-&gt; Invalid")</textarea>
+  <p>The first two validate; <code>"nonsense hi@there.edu"</code> — the junk the hand-written ladder waved through — is now <code>Invalid</code>, because the anchored <code>^</code> won't allow <code>nonsense </code> hiding at the start. That is the payoff of a pattern language: describe the <em>shape</em> once, precisely, instead of patching checks forever.</p>
+  <div class="callout note"><span class="tag">…and here's why you don't hand-write the REAL thing</span><p>Honesty check, in the lecture's own spirit. Our pattern kills the junk the ladder waved through, but it isn't a real email validator — <code>\w+</code> rejects hyphenated domains (<code>a@my-server.com</code>) and dotted usernames (<code>jane.doe@...</code>), and the single <code>(\w+\.)?</code> caps subdomains at one level. A <em>spec-compliant</em> email regex looks like this (do <strong>not</strong> type this from memory — the point is that you wouldn't):</p><p><code>^<a href="?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9]">a-zA-Z0-9.!#$%&amp;'<em>+/=?^_</code>{|}~-]+@[a-zA-Z0-9</a>?(?:\.<a href="?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9]">a-zA-Z0-9</a>?)</em>$`</p><p>That monster is exactly why, in real code, you reach for a tested library instead of rolling your own. For Problem Set 7, match the spec you're given — not 'every legal email ever.'</p></div>
+  <div class="callout later"><span class="tag">Going further — three names so they aren't a mystery later</span><p>File these away; no need to learn them now. (1) <strong><code>re.fullmatch(pattern, s)</code></strong> does what <code>^...$</code> does — requires the <em>whole</em> string to match — without typing the anchors; this course sticks with <code>^...$</code> because seeing the anchors keeps the 'contains vs is' idea visible. (2) Quantifiers are <strong>greedy</strong> by default: <code>re.search(r"^(.+), (.+)$", "Malan, David, Jr.")</code> puts <code>"Malan, David"</code> in group 1 and just <code>"Jr."</code> in group 2, because <code>.+</code> grabs as much as it can — adding a <code>?</code> for <em>lazy</em> matching (<code>.+?</code>) flips the split to the first comma. (3) A greedy <code>.<em></code> on a tricky pattern over a </em>huge* string can be slow ('catastrophic backtracking'); on the short inputs here it never bites. Three things that 'have a name' — meet them properly later.</p></div>
+  <div class="quiz"><p class="quiz-q">Your pattern <code>r"^\w+@\w+\.edu$"</code> keeps rejecting the real address <code>"malan@harvard.edu"</code> in your program, though it looks right. What's the most likely bug?</p><div class="opts"><button class="opt" type="button" data-correct>You're feeding <code>re.search</code> the raw <code>input()</code> with trailing whitespace (e.g. <code>"malan@harvard.edu "</code> with a stray space); <code>$</code> then fails on the extra char — strip it with <code>.strip()</code> first</button><button class="opt" type="button"><code>\w</code> doesn't match letters, so no email can ever match it</button><button class="opt" type="button"><code>re.search</code> only matches if you remove both <code>^</code> and <code>$</code></button><button class="opt" type="button">Patterns must be plain strings; the <code>r"..."</code> prefix breaks matching</button></div><div class="why">A trailing space left on <code>input()</code> sits <em>after</em> the <code>edu</code>, so the anchored <code>$</code> can't match the very end — the classic 'looks right but fails' bug, which is why CS50's originals call <code>input("...").strip()</code> before matching. (Subtle point: Python's <code>$</code> <em>does</em> tolerate a single trailing <code>\n</code>, but a space or any other trailing char breaks it — so <code>.strip()</code> is the reliable habit.) The wrong options are all false: <code>\w</code> <em>does</em> match letters; dropping the anchors would only make it match <em>more</em>; and <code>r"..."</code> is the recommended way to write patterns.</div></div>
+  <div class="gotcha-list"><h2 id="gotchas">Common mistakes at a glance</h2><ul><li><strong><code>re.search</code> finds the pattern ANYWHERE in the string.</strong> <code>r".+@.+\.edu"</code> matches <code>"my email is malan@harvard.edu."</code> because the shape sits <em>inside</em> the sentence. Anchor with <code>^</code> (start) and <code>$</code> (end) — <code>r"^...$"</code> — to require the <strong>whole</strong> string match. This is the 'contains' vs 'is' distinction, and the single most common fix (it's what kills junk hiding before the <code>@</code>).</li><li><strong><code>.</code> is the any-character wildcard, not a literal dot.</strong> <code>r".+@.+.edu"</code> wrongly matches <code>"...Xedu"</code>. To mean a real dot, escape it: <code>\.</code>. (<code>.</code> does <em>not</em> match a newline by default; and inside a class <code>[a-z.]</code> the dot is already literal.)</li><li><strong>Always write patterns as raw strings <code>r"..."</code>.</strong> A backslash means something to <em>both</em> regex (<code>\.</code>, <code>\w</code>) and Python's own escaping (the Lecture 0 escape character); the <code>r</code> hands backslashes to regex <strong>untouched</strong>, so the two don't fight. Make it a habit even before a pattern has any backslash. (A raw string can't <em>end</em> in a single backslash.)</li><li><strong><code><em></code> is 0-or-more, <code>+</code> is 1-or-more, <code>?</code> is 0-or-1.</strong> <code>.</em>@.<em></code> matches a bare <code>"@"</code> (zero chars on each side); <code>.+@.+</code> does not (it demands at least one). Picking <code></em></code> where you meant <code>+</code> lets empty pieces sneak through. A quantifier applies to the <strong>single token right before it</strong> — one char, one class, or one <code>(...)</code> group.</li><li><strong><code>?</code> wears more than one hat.</strong> Standalone, <code>?</code> is the '0-or-1' quantifier (<code>a?</code>, <code>colou?r</code> = optional <code>u</code>, <code>https?</code> = optional <code>s</code>, <code>(www\.)?</code> = optional group). But in <code>(?:...)</code> that <code>?</code> is <em>spelling</em> — punctuation that marks a non-capturing group, not a quantifier. Read each <code>?</code> by what sits immediately before it.</li><li><strong><code>^</code> has two unrelated jobs.</strong> <em>Outside</em> brackets it anchors the start of the string (<code>r"^cat"</code>); as the <em>first</em> char <em>inside</em> a class it <strong>negates</strong> it (<code>[^@]</code> = 'not an @') — and a pattern like <code>r"^[^@]+...$"</code> uses both at once. Same symbol, read where it sits. <code>$</code> only ever means 'end of string'.</li><li><strong>Argument order differs between the verbs.</strong> <code>re.search(pattern, string)</code> puts the string <strong>second</strong>, but <code>re.sub(pattern, repl, string)</code> slides the string to <strong>third</strong> with the replacement in the middle. Don't carry the search habit over to <code>sub</code>.</li><li><strong>Predefined classes:</strong> <code>\w</code> is <code>[a-zA-Z0-9_]</code> (letters, digits, <strong>and underscore</strong> — that's <em>all</em>, so a <code>.</code> or space breaks a <code>\w+</code> run); <code>\d</code> is a <em>single</em> digit (use <code>\d+</code> for a number); <code>\s</code> is whitespace. Capitalize to negate: <code>\W</code> <code>\D</code> <code>\S</code>.</li><li><strong><code>|</code> has the lowest precedence — confine it with parentheses.</strong> <code>r"\.com|edu$"</code> means '(everything up to com) OR (edu)', so a bare <code>"edu"</code> would pass; group the choices: <code>r"\.(com|edu)$"</code>. Patterns are also <strong>case-sensitive by default</strong> — pass <code>re.IGNORECASE</code> (which folds case on character <em>classes</em> too, not just literals) instead of stuffing <code>[a-zA-Z]</code> everywhere or mangling the input with <code>.lower()</code>.</li><li><strong>A match object isn't the text, and no match returns <code>None</code>.</strong> Call <code>.group()</code>/<code>.groups()</code> to read the text; on no match <code>re.search</code> returns <code>None</code>, so <code>matches.group()</code> raises <code>AttributeError: 'NoneType' object has no attribute 'group'</code>. Always test first — the walrus <code>if matches := re.search(...):</code> assigns <em>and</em> tests in one line (it's assign-and-return, not <code>==</code>).</li><li><strong>Groups are 1-indexed, <code>.group(0)</code> is the whole match (not the whole string), and <code>(...)</code> both groups AND captures.</strong> <code>.group(1)</code> is the first <code>(...)</code>; <code>.groups()</code> returns a tuple to unpack (Lecture 6's <code>name, house = ...</code>). Use <code>(?:...)</code> to group for <code>?</code>/<code>|</code>/<code>+</code> <strong>without</strong> capturing — every extra capturing group renumbers the ones after it (an optional <code>(www\.)?</code> quietly steals group 1).</li><li><strong>Trailing whitespace breaks an anchored <code>$</code>.</strong> A stray space (<code>"malan@harvard.edu "</code>) fails <code>r"...edu$"</code> because of the hidden character at the end — exactly the 'looks right but fails' bug, which is why CS50's originals call <code>input("...").strip()</code> before matching. (Python's <code>$</code> happens to tolerate one trailing <code>\n</code>, but not a space or anything else, so just <code>.strip()</code> and don't rely on it.)</li></ul></div>
+  <h2>Recap &amp; next step</h2><p>The one picture to carry away: <strong>a regex is a SHAPE the string is poured into</strong>, and <code>re.search</code> slides that shape along the text until it fits — so until you pin both ends with <code>^...$</code>, you're only asking 'does this shape appear <em>somewhere</em>?', not 'is the <em>whole</em> string this shape?'. You felt that gap live: <code>.+@.+</code> matched <em>inside</em> <code>"hi malan@x.edu !!"</code>, the same looseness that waved <code>"nonsense hi@there.edu"</code> through the hand-written ladder. <strong>Anchoring with <code>^...$</code> is the fix</strong> — and one anchored pattern replaced the whole leaky ladder.</p><p>The shorthand you built: <code>re.search(pattern, string)</code> returns a match object (truthy) or <code>None</code> (falsy); metacharacters <code>.</code> <code>+</code> <code><em></code> <code>?</code> <code>{m,n}</code> describe shape (always in a raw string <code>r"..."</code>, with <code>\.</code> for a literal dot); <code>^</code> <code>$</code> anchor; <code>[...]</code>, <code>[^@]</code>, <code>[a-z]</code>, and <code>\w</code> <code>\d</code> <code>\s</code> say which characters; <code>|</code> alternates (wrap it in a group); <code>re.IGNORECASE</code> folds case. To </em>extract*, <code>(...)</code> captures — read by <code>.group(1)</code> (1-indexed), <code>.group(0)</code> (whole match), or <code>.groups()</code> (a tuple to unpack); <code>(?:...)</code> groups without renumbering; guard <code>None</code> with the walrus <code>if matches := re.search(...):</code>; and <code>re.sub(pattern, repl, string)</code> rewrites text (mind the string in the third slot). The two cheat-sheet cards above hold the full table — lean on those.</p><p>Next up is <strong>Problem Set 7</strong>: validating and extracting from messy real-world strings (emails, IPs, dates, links). Reach for <code>re.search</code> with an <strong>anchored</strong> <code>^...$</code> pattern, write every pattern as <code>r"..."</code>, use <code>\w</code>/<code>\d</code>/<code>[^...]</code> to say exactly which characters the <em>spec</em> allows, capture with <code>(...)</code> and <code>.group(n)</code>, guard against <code>None</code>, and <code>.strip()</code> your input before matching.</p>
+  <p><a href="index.html">← Back to all lectures</a></p>
+</main>
+</div>
+
+<footer class="site">CS50P interactive notes · Lecture 7 — Regular Expressions · run, edit, and break things freely.</footer>
+<script src="assets/notes.js" defer></script>
+</body>
+</html>
