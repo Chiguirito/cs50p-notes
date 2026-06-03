@@ -31,9 +31,13 @@
   <p class="subtitle lead">The foundation: running code, calling functions, storing values, and writing your own functions that hand results back.</p>
 
   <div class="callout note">
-    <span class="tag">How to use these notes</span>
-    <p>Every code box below is <strong>live</strong> — edit it and press <strong>▶ Run</strong> to execute real Python right here in your browser (the first run downloads Python once, ~10&nbsp;seconds). Break things on purpose. When an example uses <code>input()</code>, a small pop-up appears asking for what to type.</p>
-    <p style="margin-bottom:0">After you understand a piece here, re-type it in your own editor and run it with <code>python file.py</code> — that muscle memory matters.</p>
+    <span class="tag">How these notes work</span>
+    <p>Every code box below is <strong>live</strong> — edit it and press <strong>▶ Run</strong> (or <strong>Cmd/Ctrl&nbsp;+&nbsp;Enter</strong>) to execute real Python right here in your browser. The first run downloads Python once (~10&nbsp;seconds). Break things on purpose; press <kbd>Esc</kbd> to step out of a box back to the buttons.</p>
+    <ul>
+      <li>All cells on a page share <strong>one Python session</strong> (like a single REPL) — a variable you define in one cell stays defined in later cells. A real <code>.py</code> file starts fresh each run, so when you re-type code locally, define everything it needs; reload the page to reset.</li>
+      <li><code>input()</code> shows a pop-up and echoes what you type back into the output; <strong>Cancel</strong> ends input. (Pop-ups can be clunky on phones/tablets.)</li>
+      <li>If a cell ever freezes — usually an endless loop like <code>while True</code> — the page can't stop it; just <strong>reload the tab</strong>.</li>
+    </ul>
   </div>
 
   <div class="objectives">

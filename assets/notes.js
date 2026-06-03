@@ -6,6 +6,8 @@
   var PYODIDE_URL = "https://cdn.jsdelivr.net/pyodide/v0.27.2/full/";
   var pyReadyPromise = null;
   var pyWarm = false;
+  var activeOut = null;    // appends to the running cell's output (and input echo)
+  var activeStatus = null; // sets the running cell's status text
 
   /* ---------- Pyodide loading ---------- */
   function injectScript(src) {
@@ -21,11 +23,30 @@
     pyReadyPromise = (async function () {
       await injectScript(PYODIDE_URL + "pyodide.js");
       var py = await loadPyodide({ indexURL: PYODIDE_URL });
-      // input() -> a browser prompt; return one line (or EOF on cancel)
-      py.setStdin({ stdin: function () {
-        var v = window.prompt("Program input (this is what input() reads):");
-        return v === null ? null : v + "\n";
-      }});
+      // input(): show the REAL prompt, signal we're waiting, and echo the typed
+      // value into the cell output on its own line (terminal-style). Cancelling
+      // the prompt returns null -> the Python shim raises EOFError (like Ctrl-D),
+      // instead of silently feeding "" into the program.
+      globalThis.__cs50pInput = function (promptText) {
+        if (typeof activeStatus === "function") activeStatus("⌨ Waiting for your input — see the pop-up…");
+        var v = window.prompt((promptText && promptText.trim()) ? promptText : "Enter a value:");
+        if (typeof activeStatus === "function") activeStatus("Running…");
+        if (v === null) {
+          if (typeof activeOut === "function") activeOut((promptText || "") + "\n");
+          return null;
+        }
+        if (typeof activeOut === "function") activeOut((promptText || "") + v + "\n");
+        return v;
+      };
+      await py.runPythonAsync(
+        "import builtins, js\n" +
+        "def input(prompt=''):\n" +
+        "    v = js.__cs50pInput(str(prompt))\n" +
+        "    if v is None:\n" +
+        "        raise EOFError('input was cancelled')\n" +
+        "    return v\n" +
+        "builtins.input = input\n"
+      );
       pyWarm = true;
       return py;
     })().catch(function (e) { pyReadyPromise = null; throw e; }); // allow retry on failure
@@ -58,6 +79,7 @@
     ta.style.height = Math.max(ta.scrollHeight, 40) + "px";
   }
   function tabHandler(e) {
+    if (e.key === "Escape") { this.blur(); return; }  // escape hatch (no keyboard trap)
     if (e.key !== "Tab") return;
     e.preventDefault();
     var s = this.selectionStart, en = this.selectionEnd;
@@ -67,11 +89,14 @@
   }
   async function copyText(text, btn) {
     try { await navigator.clipboard.writeText(text); } catch (_) {}
-    var old = btn.textContent; btn.textContent = "✓ Copied";
-    setTimeout(function () { btn.textContent = old; }, 1400);
+    if (!btn.dataset.label) btn.dataset.label = btn.textContent;
+    btn.textContent = "✓ Copied";
+    if (btn._t) clearTimeout(btn._t);
+    btn._t = setTimeout(function () { btn.textContent = btn.dataset.label; }, 1500);
   }
 
   function resetCell(cell) {
+    if (cell.dataset.running === "1") return;   // don't reset mid-run (output would desync)
     var ta = cell.querySelector(".cell-code");
     ta.value = ta.dataset.orig; autoSize(ta);
     var out = cell.querySelector(".cell-out");
@@ -80,12 +105,14 @@
   }
 
   async function runCell(cell) {
+    if (cell.dataset.running === "1") return;   // already running
     var ta = cell.querySelector(".cell-code");
     var out = cell.querySelector(".cell-out");
     var runBtn = cell.querySelector(".run");
     var status = cell.querySelector(".status");
-    out.textContent = ""; out.classList.add("show");
+    out.textContent = ""; out.classList.remove("stale"); out.classList.add("show");
     runBtn.disabled = true;
+    cell.dataset.running = "1";
     status.textContent = pyWarm ? "Running…" : "Loading Python… (one-time, ~10s)";
     var py;
     try {
@@ -93,6 +120,7 @@
     } catch (e) {
       out.innerHTML = '<span class="err">Couldn\'t load Python. Make sure you\'re online — Python downloads once from the web on first run, then works offline afterwards. If it still won\'t load, start the local server instead: in a terminal, run <code>python3 -m http.server</code> inside the <code>lectures/</code> folder.</span>';
       status.textContent = "✗ couldn't load Python";
+      cell.dataset.running = "";
       runBtn.disabled = false;
       return;
     }
@@ -101,9 +129,11 @@
       // batched stdout gives us one line at a time WITHOUT its trailing newline,
       // so we re-add it; trim a single trailing newline when displaying.
       var render = function () { out.textContent = buf.replace(/\n$/, ""); };
-      var write = function (s) { buf += s + "\n"; render(); };
-      py.setStdout({ batched: write });
-      py.setStderr({ batched: write });
+      var append = function (s) { buf += s; render(); };  // raw append (input echo uses this)
+      activeOut = append;
+      activeStatus = function (t) { status.textContent = t; };
+      py.setStdout({ batched: function (s) { append(s + "\n"); } });
+      py.setStderr({ batched: function (s) { append(s + "\n"); } });
       status.textContent = "Running…";
       await py.runPythonAsync(ta.value);
       status.textContent = "✓ done";
@@ -114,6 +144,9 @@
       out.appendChild(span);
       status.textContent = "✗ error";
     } finally {
+      activeOut = null;
+      activeStatus = null;
+      cell.dataset.running = "";
       runBtn.disabled = false;
     }
   }
@@ -125,7 +158,7 @@
     ta.className = "cell-code"; ta.spellcheck = false; ta.wrap = "off";
     ta.setAttribute("autocapitalize", "off");
     ta.setAttribute("autocorrect", "off");
-    ta.setAttribute("aria-label", "Editable Python code, press Run to execute");
+    ta.setAttribute("aria-label", "Editable Python code. Press Cmd or Ctrl + Enter to run, Escape to leave the editor.");
     var bar = document.createElement("div"); bar.className = "cell-bar";
     bar.innerHTML =
       '<button class="run" type="button">▶ Run</button>' +
@@ -140,8 +173,15 @@
 
     ta.dataset.orig = orig;
     autoSize(ta);
-    ta.addEventListener("input", function () { autoSize(ta); });
+    ta.addEventListener("input", function () {
+      autoSize(ta);
+      if (out.textContent) out.classList.add("stale");  // output no longer matches edited code
+    });
     ta.addEventListener("keydown", tabHandler);
+    // Cmd/Ctrl+Enter runs the cell (notebook/REPL gesture)
+    ta.addEventListener("keydown", function (e) {
+      if ((e.metaKey || e.ctrlKey) && e.key === "Enter") { e.preventDefault(); runCell(cell); }
+    });
     // warm Pyodide the first time a learner focuses any cell
     ta.addEventListener("focus", function () { loadPy().catch(function () {}); }, { once: true });
     bar.querySelector(".run").addEventListener("click", function () { runCell(cell); });
@@ -201,6 +241,11 @@
       var a = document.createElement("a");
       a.href = "#" + h.id; a.textContent = h.textContent;
       if (h.tagName === "H3") { a.style.paddingLeft = "1.5rem"; a.style.fontSize = ".85rem"; }
+      // on narrow screens, collapse the TOC <details> after picking a link
+      a.addEventListener("click", function () {
+        var d = a.closest("details");
+        if (d && window.matchMedia("(max-width: 1079px)").matches) d.open = false;
+      });
       li.appendChild(a); nav.appendChild(li); links.push(a);
     });
     if ("IntersectionObserver" in window) {
