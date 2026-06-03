@@ -1,0 +1,231 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Lecture 2 — Loops · CS50P Notes</title>
+<link rel="icon" href="data:,">
+<link rel="stylesheet" href="assets/notes.css">
+<script>try{var t=localStorage.getItem('cs50p-theme');if(t)document.documentElement.setAttribute('data-theme',t);}catch(e){}</script>
+</head>
+<body>
+<div id="progress"></div>
+
+<header class="site">
+  <a class="brand" href="index.html">← CS50P Notes</a>
+  <span class="spacer"></span>
+  <button class="theme-toggle" type="button" aria-pressed="false">🌙 Dark</button>
+</header>
+
+<div class="wrap">
+<nav class="toc" aria-label="On this page">
+  <details open><summary>Contents</summary><p class="toc-title">On this page</p><ol></ol></details>
+</nav>
+
+<main>
+<h1>Lecture 2 — Loops</h1>
+  <p class="subtitle lead">Doing something again and again without repeating yourself: count with while, walk a sequence with for and range, ask until the input is good with while True + break, and loop over lists, dicts, and grids.</p>
+  <div class="objectives"><h2>What you'll be able to do</h2><ul><li>Write a <code>while</code> loop with all three parts — start, condition, and a step toward the fence — and explain why a missing step loops forever</li><li>Use <code>for i in range(n)</code> to repeat <code>n</code> times, knowing <code>range(n)</code> gives <code>0 .. n-1</code> (so <code>n</code> is the count, not the last value)</li><li>Validate input with <code>while True</code> + <code>break</code> (and meet <code>continue</code>), then wrap it in a <code>get_number()</code> where <code>return</code> replaces <code>break</code></li><li>Store values in a <code>list</code> (reached by position) and a <code>dict</code> (reached by key), loop over each, and test for missing values with <code>is None</code></li><li>Nest a loop inside a loop to draw a grid (the inner loop runs fully per outer pass, so size × size), using <code>end=""</code> and a bare <code>print()</code> to control line breaks</li></ul></div>
+  <div class="callout note"><span class="tag">How these notes work</span><p>Every code box below is <strong>live</strong> — edit it and press <strong>Run</strong> (or <strong>Cmd/Ctrl + Enter</strong>) to run real Python right in your browser.</p><ul><li>The <strong>first</strong> run downloads Python once (about 10 seconds); after that it's instant.</li><li>Cells share <strong>one Python session</strong>, so a variable or function from an earlier cell stays defined later. Reload the page to reset.</li></ul><p>(More tips — keyboard, phones, and <code>input()</code> pop-ups — are in a short note at the very bottom; you don't need them yet.)</p></div>
+  <h2>Why loops: the same line, over and over</h2>
+  <p>In Lectures 0 and 1 a program ran each line once, top to bottom. But programs constantly need to do the <em>same</em> thing several times. Say you want a cat to meow three times. With only the tools so far, you'd write the same line three times — it works, and it's already annoying:</p>
+  <p class="cell-note">Three identical lines. It works — but imagine doing this 100 times, or letting the user pick the number.</p><textarea class="py">print("meow")
+print("meow")
+print("meow")</textarea>
+  <p>Copy-pasting is fine for 3 and miserable for 300 — and if you wanted a <em>different</em> number of meows each run, you couldn't write the lines ahead of time at all. A <strong>loop</strong> says "do this block again and again" without repeating yourself. This whole lecture is two loops — <code>while</code> and <code>for</code> — and the containers (<code>list</code>, <code>dict</code>) you'll most often loop over.</p>
+  <h2>The while loop</h2>
+  <p>A <code>while</code> loop repeats its indented block <strong>as long as a condition stays True</strong> — the same colon-and-indent shape you've used since <code>if</code> in Lecture 1, except now the block runs <em>again and again</em>. Run this and watch <code>i</code> count 0, 1, 2:</p>
+  <p class="cell-note">The idiomatic while loop. i starts at 0, the test i &lt; 3 is checked before each pass, and i += 1 steps it forward. Three meows, then it stops.</p><textarea class="py">i = 0
+while i &lt; 3:
+    print("meow")
+    i += 1</textarea>
+  <p>Now the shape. Three pieces make a <code>while</code> loop work, and you need all three: a <strong>start</strong> value (<code>i = 0</code>), a <strong>test</strong> checked before every pass (<code>i &lt; 3</code>), and a <strong>step</strong> in the body that moves <code>i</code> toward making the test False (<code>i += 1</code>). Each full pass is one <strong>iteration</strong>. With <code>i</code> going 0, 1, 2, the body runs exactly three times; then <code>i</code> is 3, <code>3 &lt; 3</code> is False, and the loop ends. The catch: making the test eventually False is <em>your</em> job.</p>
+  <div class="callout note"><span class="tag">What is i += 1?</span><p><code>i += 1</code> is shorthand for <code>i = i + 1</code>: take <code>i</code>, add 1, store it back. That one line is the <strong>step</strong> — without it, nothing would move <code>i</code> toward the fence. (<code>+=</code> has matching friends <code>-=</code>, <code>*=</code>, and so on.)</p></div>
+  <p>Leave the step out, and here's what happens — <code>i</code> never changes, the test never goes False, and <code>meow</code> prints with no end. CS50's classic version of this counts <em>down</em> instead: it starts <code>i</code> at 3 and loops <code>while i != 0</code>, but forgets the line that lowers <code>i</code>. So <code>i</code> stays 3 forever. This box has <strong>no Run button on purpose</strong>:</p>
+  <p class="cell-note">Never run this — it loops forever. There is no line that changes i, so i stays 3 and i != 0 stays true with no end. (At a real terminal you'd stop a runaway loop with Ctrl-C; a browser cell can't be interrupted, which is why this one box is locked.)</p><div class="codeblock"><pre><code># Never run this — it loops forever (nothing changes i, so i stays 3)
+i = 3
+while i != 0:
+    print("meow")</code></pre></div>
+  <div class="mental-model"><span class="tag">Mental model — the idea to hold onto</span><p>Almost every while-loop bug comes from ONE idea: a loop is repetition steered by a value that changes each pass, and it ends only when that value crosses a line. The two cells you just saw are the same picture — once working, once broken.</p><div class="mm-diagram"><div class="mm-card"><b>A counter walking to a fence</b><pre style="margin:.4rem 0;font-family:var(--mono);font-size:.84rem;white-space:pre-wrap;overflow-x:auto">i = 0
+while i &lt; 3:
+    print('meow')
+    i += 1      # &lt;- steps toward the fence</pre><span>The condition <code>i &lt; 3</code> is a FENCE. <code>i</code> starts at 0 and steps toward 3 each pass; the walker keeps going until it reaches the fence, then stops. The step <code>i += 1</code> is what moves it.</span></div><div class="mm-card"><b>Forget to step = walk forever</b><pre style="margin:.4rem 0;font-family:var(--mono);font-size:.84rem;white-space:pre-wrap;overflow-x:auto">i = 3
+while i != 0:
+    print('meow')
+    # &lt;- nothing lowers i!</pre><span>Same picture, broken: no step toward the fence. <code>i</code> stays 3, so <code>i != 0</code> is true forever. This is THE infinite loop — and the one box on this page locked from running.</span></div></div></div>
+  <details class="predict"><summary>Predict: after the working <code>i = 0</code> / <code>while i &lt; 3</code> loop above finishes, what is the value of <code>i</code>?</summary><div style="margin:.2rem 0 .6rem"><p><code>3</code>. The body ran with <code>i</code> equal to 0, 1, and 2 (three meows), then stepped <code>i</code> to 3 — and at that point <code>3 &lt; 3</code> is False, so the loop stopped <em>without</em> running the body again. So <code>i</code> lands exactly <em>on</em> the fence, 3.</p></div></details>
+  <div class="quiz"><p class="quiz-q">You write <code>i = 0</code> then <code>while i &lt; 3: print("meow")</code> but leave OUT the <code>i += 1</code> line. What happens?</p><div class="opts"><button class="opt" type="button" data-correct>It prints <code>meow</code> forever — <code>i</code> never reaches 3, so the condition stays True</button><button class="opt" type="button">It prints <code>meow</code> exactly three times</button><button class="opt" type="button">Python raises an error because the loop body is incomplete</button><button class="opt" type="button">It prints <code>meow</code> once and stops</button></div><div class="why">Without <code>i += 1</code>, <code>i</code> is stuck at 0 forever, so <code>i &lt; 3</code> is always True and the loop never ends — the counter has no step toward the fence. This is the same trap as the locked box above (which counts down and forgets to lower <code>i</code>). Every <code>while</code> loop needs a line that moves its condition toward False.</div></div>
+  <div class="callout later"><span class="tag">How CS50 builds up to this (optional)</span><p>The zero-based form (<code>i = 0</code> / <code>while i &lt; 3:</code> / <code>i += 1</code>) is the one to reach for, and it's where CS50 <em>lands</em> — but the lecture gets there by refining naive versions first: a broken countdown (<code>i = 3</code> / <code>while i != 0:</code> with no step), then fixing it with <code>i = i - 1</code>, then counting <em>up</em> (<code>i = 1</code> / <code>while i &lt;= 3:</code> / <code>i += 1</code>). All give three meows; the only rule is that a step must move the counter toward the fence.</p></div>
+  <h2>The for loop and range</h2>
+  <p>A <code>while</code> loop is right when you <em>don't know in advance</em> how many passes you'll need. But "do this exactly 3 times" is so common that Python has a cleaner tool: the <code>for</code> loop. A <code>for</code> loop walks through a sequence of values, one per iteration — no counter to start and no step to remember, so the infinite-loop trap simply can't happen. Here it walks a list of three numbers:</p>
+  <p class="cell-note">for binds i to each item in the list, one per pass. The numbers themselves don't matter here — just that there are three.</p><textarea class="py">for i in [0, 1, 2]:
+    print("meow")</textarea>
+  <p>When the list runs out, the loop ends on its own. But typing <code>[0, 1, 2]</code> by hand gets old fast (picture <code>[0, 1, 2, …, 99]</code>). <code>range(n)</code> <em>generates</em> that run of numbers for you, starting at 0. So <code>range(3)</code> gives 0, 1, 2 — and the <code>for</code> loop runs once per value:</p>
+  <p class="cell-note">range(3) gives 0, 1, 2. Same three meows, far less typing.</p><textarea class="py">for i in range(3):
+    print("meow")</textarea>
+  <div class="callout gotcha"><span class="tag">range(n) gives 0 .. n-1 — it never includes n</span><p><code>range(3)</code> produces <strong>0, 1, 2</strong> — three values, stopping <em>before</em> 3. The number <code>n</code> is how <em>many</em> values you get, not the last one. This is the same fence logic as <code>while i &lt; 3</code>: both give exactly 3 iterations and both stop <em>before</em> using 3. The off-by-one trap is expecting <code>range(3)</code> to include 3.</p></div>
+  <p>Don't take that on faith — print the values <code>range(3)</code> actually hands out and count them. (This little cell isn't part of CS50's cat.py; it's just a quick check.)</p>
+  <p class="cell-note">Quick check: range(3) yields 0, 1, 2 — and stops before 3.</p><textarea class="py">for i in range(3):
+    print(i)</textarea>
+  <div class="callout note"><span class="tag">Where each loop leaves its counter</span><p>You just watched <code>range(3)</code> stop at 2 — so after this <code>for</code> loop, <code>i</code> holds <strong>2</strong>, the <em>last value actually used</em>. Compare the working <code>while i &lt; 3</code> loop from earlier, which left <code>i</code> sitting on <strong>3</strong>: it took one extra step before the test caught it. The <code>for</code> loop never takes that extra step — it stops the instant the values run out.</p></div>
+  <details class="predict"><summary>Predict: how many times does <code>for _ in range(0): print("hi")</code> run, and what does it print?</summary><div style="margin:.2rem 0 .6rem"><p>Zero times — it prints nothing at all. <code>range(0)</code> is an empty run of numbers (it would be "0, 1, … up to but not including 0," which is no numbers), so there's nothing for the loop to walk and the body never runs. A <code>for</code> loop over an empty sequence is perfectly legal; it just does nothing. (And <code>range(5)</code> would print 0, 1, 2, 3, 4 — five values, stopping before 5.)</p></div></details>
+  <p>In the meow loops we never actually <em>use</em> the loop value — we just want the block to run three times. When a value exists but you won't use it, the convention is to name it <code>_</code> (a single underscore), an ordinary variable name that quietly signals "I'm ignoring this":</p>
+  <p class="cell-note">_ is a normal variable name, used by convention for a value you won't use. Python doesn't treat it specially.</p><textarea class="py">for _ in range(3):
+    print("meow")</textarea>
+  <h2>while True with break</h2>
+  <p>Now the case <code>for</code> <em>can't</em> handle: repeating until the user gives good input, where you have no idea how many tries that takes. The pattern is <code>while True</code> — a loop whose condition is <em>always</em> True — escaped by a keyword called <strong><code>break</code></strong>, which <strong>leaves the loop entirely</strong>. Here we read a number with <code>int(input(...))</code> (the same read-a-number move you used in Lecture 1's compare.py and grade.py): if it's positive we <code>break</code> out; otherwise the loop just goes round and asks again.</p>
+  <p class="cell-note">Enter 0 or a negative number first (the loop goes round and re-asks), then a positive one (break leaves the loop). print(n) confirms we captured a good value.</p><textarea class="py">while True:
+    n = int(input("What's n? "))
+    if n &gt; 0:
+        break
+
+print(n)</textarea>
+  <p>Notice this loop <em>does</em> end — even though <code>while True</code> has no condition that turns False, the <code>break</code> is reachable the moment you type a positive number. There's a second escape keyword, <strong><code>continue</code></strong>, and it's the surprising one: <code>continue</code> does <em>not</em> leave the loop — it <strong>skips the rest of this pass and jumps back to the top</strong> to go round again. In this exact validator <code>continue</code> isn't needed (just looping round already re-asks), but it's worth meeting, so here's the same loop written the long way to show both keywords side by side:</p>
+  <p class="cell-note">Same result, written to show both keywords: if n is not positive, continue jumps back to the top; otherwise break leaves. This is more verbose than the version above — continue is doing what "just loop round" did for free.</p><textarea class="py">while True:
+    n = int(input("What's n? "))
+    if n &lt;= 0:
+        continue
+    else:
+        break
+
+print(n)</textarea>
+  <p>Once a <code>break</code> hands us a good <code>n</code>, a separate <code>for</code> loop does the meowing:</p>
+  <p class="cell-note">Reusing n from a loop above: meow that many times. (Run one of the input loops above first so n is defined.)</p><textarea class="py">for _ in range(n):
+    print("meow")</textarea>
+  <div class="callout gotcha"><span class="tag">while True ends only if a break is reachable</span><p><code>while True</code> has no condition that turns False, so the <strong>only</strong> way out is a <code>break</code> (or a <code>return</code>) your code can actually reach. The loops above are safe because a positive number reaches the <code>break</code>. <code>continue</code> does the opposite — it loops again, so on its own it never leaves. Always ask: "what input gets me to the break?"</p><p>These input cells are intentionally <strong>live</strong> (not locked like the stepless cell earlier): each pass pauses on an input pop-up rather than spinning, so it can never freeze the tab — press <strong>Cancel</strong> to stop. And if you type <em>letters</em> instead of a number, <code>int()</code> raises a <strong>ValueError</strong> and the cell stops with an error — just re-run and enter a number. (Handling bad text gracefully comes later.)</p></div>
+  <div class="quiz"><p class="quiz-q">In the <code>while True</code> loops above, which input ever reaches the <code>break</code> and ends the loop?</p><div class="opts"><button class="opt" type="button" data-correct>A positive number (1 or more) — 0 and negatives loop round and ask again</button><button class="opt" type="button">Any number at all — every input leaves the loop</button><button class="opt" type="button">A negative number — that's what <code>continue</code> is for</button><button class="opt" type="button">Nothing reaches it; <code>while True</code> always loops forever</button></div><div class="why">The test is <code>if n &gt; 0</code>, so only a positive number reaches the <code>break</code> and leaves. Zero and negatives fail the test, so the loop simply goes round (in the long version, <code>continue</code> makes that explicit). <code>while True</code> ends precisely when a reachable <code>break</code> fires.</div></div>
+  <p>Right now the asking and the meowing live in two loose cells — there's no clean name for either job, and nothing to reuse. Let's package them into functions. Recall the habit from before: in Lecture 0 <code>square()</code> did its work and <code>return</code>ed a number; in Lecture 1 <code>is_even()</code> <code>return</code>ed a <code>True</code>/<code>False</code>. So <code>get_number()</code> can loop until the input is good and <strong>return</strong> it. And inside a loop, <code>return</code> does double duty: returning from a function hands back a value <em>and</em> exits the function — which leaves the loop too. So in <code>get_number()</code>, <code>return n</code> replaces the <code>break</code> outright. <code>main()</code> then composes them in one line, defined first and called last (the tidy habit from Lectures 0 and 1):</p>
+  <p class="cell-note">cat.py, packaged into functions (CS50's exact shape). Inside get_number(), return n leaves the loop AND hands the value back in one move — no break needed. Enter 0 or a negative first, then a positive number.</p><textarea class="py">def main():
+    meow(get_number())
+
+
+def get_number():
+    while True:
+        n = int(input("What's n? "))
+        if n &gt; 0:
+            return n
+
+
+def meow(n):
+    for _ in range(n):
+        print("meow")
+
+
+main()</textarea>
+  <details class="predict"><summary>Predict: suppose you replaced <code>return n</code> with a plain <code>break</code> inside <code>get_number()</code>. What would <code>main()</code> receive, and why does that break the program?</summary><div style="margin:.2rem 0 .6rem"><p><code>break</code> only <em>exits the loop</em> — it doesn't hand any value back. After the loop ends, <code>get_number()</code> reaches the end of its body and returns <code>None</code> (Python's no-value, coming up next), so <code>meow(get_number())</code> calls <code>meow(None)</code>. Then <code>range(None)</code> raises a TypeError because you can't count to <code>None</code>. That's exactly why <code>return n</code> is the right tool here: it both ends the loop <em>and</em> gives <code>main()</code> the number it asked for, in one move.</p></div></details>
+  <h2>Lists: many values under one name</h2>
+  <p>Looping is most useful over a collection of things. A <strong>list</strong> holds several values in order, under one name, written in square brackets. Remember Hermione, Harry, Ron, and Draco from Lecture 1's house-sorting <code>match</code>? Same cast — this time they live in a list. Each item has a <strong>position number</strong> (an <em>index</em>) starting at <strong>0</strong>, and you reach an item with <code>name[index]</code>:</p>
+  <p class="cell-note">A list keeps values in order. Indexing starts at 0, so students[0] is the first item.</p><textarea class="py">students = ["Hermione", "Harry", "Ron"]
+
+print(students[0])
+print(students[1])
+print(students[2])</textarea>
+  <p>Indexing one at a time defeats the point — looping is what lists are for. A <code>for</code> loop over a list hands you each item directly, no index needed. Read <code>for student in students:</code> as "for each student in the students list":</p>
+  <p class="cell-note">for-over-a-list gives you each item directly — the cleanest way to visit every value.</p><textarea class="py">students = ["Hermione", "Harry", "Ron"]
+
+for student in students:
+    print(student)</textarea>
+  <p>Sometimes you also want the position — say, to number them 1, 2, 3 for a human. <code>len(students)</code> gives the count of items (here, 3), and <code>range(len(students))</code> gives the valid indices <code>0, 1, 2</code> — the same fence as <code>range(3)</code>, lined up exactly with the list. Loop over those indices, and add 1 when printing so it reads 1-based for people:</p>
+  <p class="cell-note">len() gives the count; range(len(...)) gives the indices. The + 1 makes the numbering start at 1.</p><textarea class="py">students = ["Hermione", "Harry", "Ron"]
+
+for i in range(len(students)):
+    print(i + 1, students[i])</textarea>
+  <details class="predict"><summary>Predict: what does the very first line of that last cell's output look like?</summary><div style="margin:.2rem 0 .6rem"><p><code>1 Hermione</code>. On the first pass <code>i</code> is <code>0</code>, so <code>i + 1</code> is <code>1</code> (the human, 1-based number) and <code>students[0]</code> is <code>"Hermione"</code>; <code>print</code> puts a single space between them by default. Valid indices run <code>0 … len(students)-1</code> (here 0, 1, 2), which is exactly what <code>range(len(students))</code> gives you — so it never runs off the end of the list.</p></div></details>
+  <h2>Dictionaries: looking things up by key</h2>
+  <p>A list answers "what's at position 2?" But often you want to look something up by a <em>name</em>, not a number — like a real dictionary, where you find a word and get its definition. A <strong>dict</strong> stores <code>key: value</code> pairs in curly braces. Here each name (the <strong>key</strong>) maps to a house (the <strong>value</strong>). You look up by key with <code>students["Hermione"]</code> — a key, not a number:</p>
+  <p class="cell-note">A dict maps keys to values. Look up by KEY in brackets: students["Hermione"], not a number.</p><textarea class="py">students = {
+    "Hermione": "Gryffindor",
+    "Harry": "Gryffindor",
+    "Ron": "Gryffindor",
+    "Draco": "Slytherin",
+}
+
+print(students["Hermione"])
+print(students["Harry"])
+print(students["Ron"])
+print(students["Draco"])</textarea>
+  <div class="callout gotcha"><span class="tag">Lists use a position; dicts use a key</span><p>With a list, <code>students[0]</code> means "the item at position 0." With this dict, <code>students[0]</code> is an error — there is no key <code>0</code>, so Python raises a <strong>KeyError</strong>. A dict is reached by its keys: <code>students["Hermione"]</code>, not <code>students[0]</code>. Asking for a key that doesn't exist is also a <code>KeyError</code>. Different container, different access: lists by numeric position, dicts by key.</p></div>
+  <p>Now the part to slow down for. A few blocks ago, <code>for</code> over a <em>list</em> handed you each <strong>value</strong> directly. Looping a <em>dict</em> does <strong>not</strong> do the same thing: <code>for student in students:</code> hands you the <strong>keys</strong>, not the values. (Same container word, opposite behavior — this is the classic dict surprise.) So to print both, use the key you're handed <em>and</em> look up its value with <code>students[student]</code>:</p>
+  <p class="cell-note">Iterating a dict gives KEYS. Use students[student] to get each value.</p><textarea class="py">students = {
+    "Hermione": "Gryffindor",
+    "Harry": "Gryffindor",
+    "Ron": "Gryffindor",
+    "Draco": "Slytherin",
+}
+
+for student in students:
+    print(student, students[student])</textarea>
+  <div class="quiz"><p class="quiz-q">Looping <code>for student in students:</code> over a <strong>dict</strong> like <code>{"Harry": "Gryffindor"}</code>, what does <code>student</code> hold each pass?</p><div class="opts"><button class="opt" type="button" data-correct>The key, e.g. <code>"Harry"</code> — then <code>students[student]</code> looks up the value</button><button class="opt" type="button">The value, e.g. <code>"Gryffindor"</code></button><button class="opt" type="button">A <code>(key, value)</code> pair like <code>("Harry", "Gryffindor")</code></button><button class="opt" type="button">The index <code>0</code>, then <code>1</code>, …</button></div><div class="why">Iterating a dict gives its <strong>keys</strong>. To get the matching value you look it up with <code>students[student]</code>. (A list, by contrast, gives you each value directly — and there are no integer positions to loop over in a dict.)</div></div>
+  <h2>None: the no-value object</h2>
+  <p>Sometimes a value is simply missing — a student who hasn't got a patronus yet, say. Python has a built-in object for exactly that: <code>None</code>. It's its own thing, the deliberate absence of a value. You can print it (it shows as the bare word <code>None</code>, no quotes — not an error), and you test for it with <code>is None</code>:</p>
+  <p class="cell-note">None is the no-value object. It prints as the bare word None, with no quotes — and no error.</p><textarea class="py">patronus = None
+
+print(patronus)
+print(patronus is None)</textarea>
+  <div class="callout gotcha"><span class="tag">is None, not == "None"</span><p><code>None</code> (no quotes) is <em>not</em> the five-letter string <code>"None"</code> — that's a different value. To check for it, write <code>value is None</code>, not <code>value == "None"</code>. (A couple more <code>None</code> traps live in the Common mistakes list at the end; this is the one to remember now.)</p></div>
+  <h2>A list of dicts</h2>
+  <p>One key per student only holds one fact. To store <em>more</em> about each student — a house <em>and</em> a patronus — make each entry its own little dict, and collect those dicts in a list. This <strong>list of dicts</strong> is one of Python's most common data shapes. Draco hasn't got a patronus, so his is <code>None</code>. We loop the list (each item is a dict) and pull three values out of each by key. The <code>sep=", "</code> tells <code>print</code> to put a comma and space <em>between</em> the things we print, instead of its default single space — so each line reads cleanly:</p>
+  <p class="cell-note">hogwarts.py final: a list of dicts. Loop the list, index each dict by key. sep=", " separates the three values with a comma. Draco's patronus is None and prints as None.</p><textarea class="py">students = [
+    {"name": "Hermione", "house": "Gryffindor", "patronus": "Otter"},
+    {"name": "Harry", "house": "Gryffindor", "patronus": "Stag"},
+    {"name": "Ron", "house": "Gryffindor", "patronus": "Jack Russell terrier"},
+    {"name": "Draco", "house": "Slytherin", "patronus": None},
+]
+
+for student in students:
+    print(student["name"], student["house"], student["patronus"], sep=", ")</textarea>
+  <details class="predict"><summary>Predict: what does the LAST line show for Draco's patronus — quotes, an error, or something else?</summary><div style="margin:.2rem 0 .6rem"><p>It prints <code>Draco, Slytherin, None</code> — no quotes, no error. <code>None</code> is a real value, so <code>print</code> displays it just fine, as the four letters <code>None</code> (not the string <code>"None"</code>, and not a blank). Printing or passing <code>None</code> around never errors — what <em>would</em> error is trying to index or loop over it (e.g. <code>None[0]</code>), because there's nothing inside it.</p></div></details>
+  <h2>Nested loops: a loop inside a loop (Mario)</h2>
+  <p>A loop body can contain <em>another</em> loop. To draw a <em>grid</em> of bricks (like a wall in Mario) you need rows <em>and</em> columns. Build up to it the same way we built the meows — start with the plain repetition. A column of bricks is just <code>#</code> printed on its own line, three times. Written out by hand, it's the cat's three meows all over again:</p>
+  <p class="cell-note">A column, written by hand — three # on three lines. Same starting point as the three-line meow program.</p><textarea class="py">print("#")
+print("#")
+print("#")</textarea>
+  <p>That's the repetition; now make it a loop, then wrap it in a function so you can ask for any height. <code>print_column(height)</code> is just the loop with <code>3</code> swapped for a parameter:</p>
+  <p class="cell-note">print_column: one # per line, height times.</p><textarea class="py">def print_column(height):
+    for _ in range(height):
+        print("#")
+
+
+print_column(3)</textarea>
+  <p>A <em>row</em> is the other direction — bricks across, on one line. No loop needed: <strong>multiplying a string repeats it.</strong> <code>"#" * 4</code> builds <code>"####"</code>, four copies glued together on one line. (This is a handy shortcut for the special case of repeating one fixed thing — a <code>for</code> loop is still your general tool whenever the body does anything that varies per pass.)</p>
+  <p class="cell-note">print_row: width copies on a single line, using string repetition. "?" is a placeholder brick for now — we switch to # shortly.</p><textarea class="py">def print_row(width):
+    print("?" * width)
+
+
+print_row(4)</textarea>
+  <div class="callout note"><span class="tag">print adds a newline by default</span><p>By default, <code>print</code> adds a <strong>newline</strong> (a line break) at the end of whatever it prints — that's <em>why</em> each <code>print</code> call lands on its own line. You can change that with the <code>end=</code> parameter: <code>print("#", end="")</code> says "add nothing at the end," so the next <code>print</code> continues on the <em>same</em> line. We'll lean on that to build a row of bricks in the square below.</p></div>
+  <p>A <strong>square</strong> is rows <em>and</em> columns at once: an outer loop for each row, and an inner loop that prints the bricks across that row. The inner <code>print("#", end="")</code> keeps the bricks on <strong>one line</strong>; then a bare <code>print()</code> <em>after</em> the inner loop adds the newline that ends the row. The comments name each part the way CS50 does:</p>
+  <p class="cell-note">Nested loops: outer i = each row, inner j = each brick. end="" keeps a row on one line; the bare print() ends it. print_square(3) draws a 3x3 grid.</p><textarea class="py">def print_square(size):
+    for i in range(size):          # For each row in square
+        for j in range(size):      # For each brick in row
+            print("#", end="")     # Print brick
+        print()                    # Print blank line
+
+
+print_square(3)</textarea>
+  <div class="callout gotcha"><span class="tag">The inner loop runs fully on EVERY outer pass</span><p>For each row the outer loop reaches, the inner loop runs start-to-finish — a <em>whole row</em> of bricks — before the outer loop moves on. The loops do <strong>not</strong> advance in lockstep (one inner per outer). So the total work is <code>size × size</code>: <code>print_square(3)</code> draws 9 bricks, not 3. Watch the indentation too — the bare <code>print()</code> sits in the <em>outer</em> body (it ends each row), not inside the inner loop. (Curious how a non-square behaves? Change the two <code>range(size)</code> to <code>range(4)</code> and <code>range(2)</code> and predict before you run.)</p></div>
+  <details class="predict"><summary>Predict: what if you indent the bare <code>print()</code> one more level, putting it <em>inside</em> the inner loop?</summary><div style="margin:.2rem 0 .6rem"><p>You'd get a newline after <em>every single</em> <code>#</code>, so instead of a 3×3 square you'd print 9 <code>#</code> straight down one column. The bare <code>print()</code> belongs in the <em>outer</em> loop's body — it must run once per row, after the inner loop finishes a full row. Indentation is what decides "end the row" vs. "end every brick": it says which loop a line belongs to.</p></div></details>
+  <p>Finally, the payoff of writing <code>print_row</code> earlier: a square is just <code>size</code> rows. So <code>print_square</code> can <em>call</em> <code>print_row</code> instead of carrying its own inner loop — the inner <code>end=""</code> loop disappears, replaced by one tidy call. That's the same compose-from-smaller-functions habit behind <code>get_number()</code>/<code>meow()</code>/<code>main()</code> earlier this lecture (here <code>print_row</code> does its work by <em>printing</em> rather than returning). Same 3×3 output, less code, and the outer loop reads like plain English. Now we use <code>#</code> for real:</p>
+  <p class="cell-note">Abstraction: print_square reuses print_row, so the row-drawing lives in one place only — no more end="" inner loop to track.</p><textarea class="py">def print_square(size):
+    for _ in range(size):
+        print_row(size)
+
+
+def print_row(width):
+    print("#" * width)
+
+
+print_square(3)</textarea>
+  <div class="quiz"><p class="quiz-q">In the nested-loops <code>print_square(3)</code>, how many <code>#</code> characters are printed in total?</p><div class="opts"><button class="opt" type="button" data-correct>9 — the inner loop runs all 3 times for each of the 3 outer passes</button><button class="opt" type="button">3 — the loops advance together, one inner pass per outer pass</button><button class="opt" type="button">6 — 3 outer plus 3 inner</button><button class="opt" type="button">It loops forever</button></div><div class="why">The inner loop runs <em>fully</em> (3 bricks) on <em>every</em> outer pass, and there are 3 outer passes: 3 × 3 = 9. Nested loops multiply, they don't add and don't run in lockstep. Both versions terminate cleanly — neither is an infinite loop.</div></div>
+  <div class="callout later"><span class="tag">Coming from C or Java? (skip unless you know one)</span><p><code>for i in range(n)</code> replaces the C-style <code>for (int i = 0; i &lt; n; i++)</code> — same 0-to-n-1 sweep, far less punctuation, and Python has no three-part <code>for</code> header. There's also <strong>no <code>do</code>/<code>while</code></strong> (a loop that always runs once); for "run the body at least once," use <code>while True</code> with a <code>break</code> as we did above. And Python's <code>list</code> and <code>dict</code> are flexible, growable containers — <em>not</em> fixed-size typed arrays.</p></div>
+  <div class="callout note"><span class="tag">A few more page tips</span><ul><li>Press <strong>Esc</strong> to step out of a code box back to the buttons.</li><li><code>input()</code> shows a pop-up and echoes what you type into the output; <strong>Cancel</strong> ends input. (Pop-ups can be clunky on phones and tablets.)</li><li>If any <em>live</em> cell ever seems stuck, just <strong>reload the tab</strong> — that resets the shared Python session too.</li></ul></div>
+  <div class="gotcha-list"><h2 id="gotchas">Common mistakes at a glance</h2><ul><li>A <code>while</code> loop needs a line that moves its condition toward False (like <code>i += 1</code>, or <code>i = i - 1</code> when counting down). Leave it out and it loops forever — the browser cell that shows this is locked from running. Before running any while loop, point to the step.</li><li><code>range(n)</code> gives <code>0, 1, … n-1</code> — it <strong>never includes n</strong>. <code>range(3)</code> is 0, 1, 2 (three values); <code>n</code> is the count, not the last value. After a <code>for</code> loop the variable holds the <em>last value used</em> (<code>range(3)</code> leaves it at 2).</li><li><code>while True</code> ends <em>only</em> if a <code>break</code> (or <code>return</code>) is reachable. <code>continue</code> does the opposite — it skips the rest of this pass and loops again, so on its own it never leaves. Always ask which input reaches the break.</li><li>Typing letters into <code>int(input())</code> raises a <strong>ValueError</strong> that stops the cell (re-run and enter a number). Each input pop-up pauses the loop, so an input-gated <code>while True</code> can't freeze the tab — press Cancel to stop.</li><li>A list is reached by <strong>position</strong> (<code>students[0]</code>); a dict is reached by <strong>key</strong> (<code>students["Hermione"]</code>). Using a number on a dict — <code>students[0]</code> — raises a <code>KeyError</code>, as does any key that doesn't exist.</li><li>Looping a dict — <code>for student in students:</code> — hands you the <strong>keys</strong>, not the values (the opposite of a list, which hands you each value directly). Get the value with <code>students[student]</code>.</li><li><code>None</code> is the no-value object — <em>not</em> the string <code>"None"</code>, and <em>not</em> <code>0</code>, <code>""</code>, or <code>False</code>. Printing it shows the bare word <code>None</code> (no error); test for it with <code>is None</code>, never <code>== "None"</code>. You can't loop over or index <code>None</code> (<code>None[0]</code> raises a <code>TypeError</code>).</li><li>In nested loops the <strong>inner loop runs fully on every outer pass</strong>, so the work is size × size, not size. Watch indentation: a <code>print()</code> inside the inner loop ends every brick; one in the outer body ends each row.</li><li><code>print()</code> adds a newline by default (which is why each <code>print</code> lands on its own line). <code>print()</code> with no arguments prints a single blank line (used to end a Mario row); <code>end=""</code> turns the trailing newline off so output stays on one line; <code>sep=", "</code> sets what goes <em>between</em> multiple arguments (default is a single space).</li></ul></div>
+  <h2>Recap &amp; next step</h2><p>You can now make programs <em>repeat</em>. A <code>while</code> loop runs as long as its condition holds, and every while loop needs a step toward the fence or it loops forever — the classic example starts <code>i = 3</code> / <code>while i != 0:</code> and forgets to lower <code>i</code> (the one box on this page locked from running). The form to reach for is the zero-based one — <code>i = 0</code> / <code>while i &lt; 3:</code> / <code>i += 1</code> (<code>+=</code> is shorthand for <code>i = i + 1</code>) — which ends with <code>i</code> sitting exactly on the fence, 3; CS50 arrives at it by refining a broken countdown and a count-up first. A <code>for i in range(n)</code> loop repeats a known number of times, where <code>range(n)</code> is the 0 .. n-1 fence that explains both the off-by-one and why <code>range(len(...))</code> lines up with a list's indices (use <code>_</code> when the value is unused); <code>for</code> leaves the variable at the last value used (2 for <code>range(3)</code>). <code>while True</code> plus a reachable <code>break</code> handles \"ask until valid\" — <code>continue</code> loops again, <code>break</code> (or <code>return</code>) leaves on good input (here CS50 keeps positive numbers with <code>if n &gt; 0</code>) — and folding it into a <code>get_number()</code> that <em>returns</em> its value reuses Lecture 0's <code>square</code> and Lecture 1's <code>is_even</code>, with <code>return</code> doing the job of <code>break</code> from inside the loop; <code>int(input(...))</code> is the read-a-number move from Lecture 1's compare.py and grade.py (bare <code>input()</code> itself goes back to Lecture 0). You met two containers — a <code>list</code> reached by position and a <code>dict</code> reached by key (the same Hermione/Harry/Ron/Draco cast from Lecture 1's <code>match</code>), where looping a list gives values directly but looping a dict gives <em>keys</em> — plus <code>None</code> for a missing value (test with <code>is None</code>), the list-of-dicts shape for richer records (printed with <code>sep=\", \"</code>), and nested loops for a grid (the inner loop runs fully per outer pass, so it's size × size; <code>print(\"#\", end=\"\")</code> then a bare <code>print()</code> builds a row, and <code>print_square</code> later reuses <code>print_row</code> to drop the inner loop). CS50's Lecture 2 programs are <code>cat.py</code> (the meow series), <code>hogwarts.py</code> (the <code>students</code> list → dict → list of dicts), and the Mario <code>print_column</code>/<code>print_row</code>/<code>print_square</code>; the counter-walking-to-a-fence mental model and the <code>range(3)</code> proof cell are robustness asides these notes add. Next up is the problem set: when you need a known count reach for <code>for</code>/<code>range</code>, when you're driven by a condition reach for <code>while</code> (and point to the step), convert input with <code>int()</code> before you loop on it, and skim the Common mistakes above — most loop bugs are right there.</p>
+  <p><a href="index.html">← Back to all lectures</a></p>
+</main>
+</div>
+
+<footer class="site">CS50P interactive notes · Lecture 2 — Loops · run, edit, and break things freely.</footer>
+<script src="assets/notes.js" defer></script>
+</body>
+</html>
