@@ -135,7 +135,15 @@
       py.setStdout({ batched: function (s) { append(s + "\n"); } });
       py.setStderr({ batched: function (s) { append(s + "\n"); } });
       status.textContent = "Running…";
-      await py.runPythonAsync(ta.value);
+      // Run each cell in a FRESH namespace so cells don't leak names into one
+      // another — every cell behaves like its own little program (and like
+      // re-typing it into a real .py file). builtins (print/input/…) are shared.
+      var ns = py.toPy({});
+      try {
+        await py.runPythonAsync(ta.value, { globals: ns });
+      } finally {
+        ns.destroy();
+      }
       status.textContent = "✓ done";
     } catch (e) {
       var span = document.createElement("span");

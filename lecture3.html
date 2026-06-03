@@ -1,0 +1,193 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Lecture 3 — Exceptions · CS50P Notes</title>
+<link rel="icon" href="data:,">
+<link rel="stylesheet" href="assets/notes.css">
+<script>try{var t=localStorage.getItem('cs50p-theme');if(t)document.documentElement.setAttribute('data-theme',t);}catch(e){}</script>
+</head>
+<body>
+<div id="progress"></div>
+
+<header class="site">
+  <a class="brand" href="index.html">← CS50P Notes</a>
+  <span class="spacer"></span>
+  <button class="theme-toggle" type="button" aria-pressed="false">🌙 Dark</button>
+</header>
+
+<div class="wrap">
+<nav class="toc" aria-label="On this page">
+  <details open><summary>Contents</summary><p class="toc-title">On this page</p><ol></ol></details>
+</nav>
+
+<main>
+<h1>Lecture 3 — Exceptions</h1>
+  <p class="subtitle lead">Programs shouldn't crash just because someone types the wrong thing. You'll see how Python signals a bad value, how to catch it instead of crashing, and how to keep asking until the input is good. By the end you'll have a small reusable helper you can drop into any program.</p>
+  <div class="objectives"><h2>What you'll be able to do</h2><ul><li>Tell a runtime <code>ValueError</code> apart from a <code>SyntaxError</code> caught before any line runs</li><li>Catch a <code>ValueError</code> with <code>try</code>/<code>except</code> instead of letting the program crash</li><li>Use <code>else</code> to run a line only when the <code>try</code> succeeded — and dodge the <code>NameError</code> trap</li><li>Loop with <code>while True</code> until a valid integer arrives, then leave via a reachable exit</li><li>Refactor into a reusable <code>get_int(prompt)</code> that returns the good value to its caller</li></ul></div>
+  <div class="callout note"><span class="tag">How these notes work</span><p>Every code box below is <strong>live</strong> — edit it and press <strong>Run</strong> (or <strong>Cmd/Ctrl + Enter</strong>) to run real Python in your browser; press Esc to step out of a box. The first run downloads Python once (about 10 seconds), then it's instant.</p><ul><li>Each box runs <strong>on its own</strong>, like its own small program (just like a real <code>.py</code> file) — define everything a cell needs inside it; names don't carry over between boxes.</li><li>When a cell uses <code>input()</code>, a pop-up asks for the value and echoes it back; <strong>Cancel</strong> ends input.</li><li>If a box ever freezes (usually an endless loop), the page can't stop it — just reload the tab.</li></ul></div>
+  <div class="callout note"><span class="tag">Remember: the L2 cliffhanger</span><p>In Lecture 2, when we first read numbers in a <code>while True</code> loop, we warned that typing letters into <code>int(input(...))</code> raises a <strong>ValueError</strong> that stops the program cold — and promised that handling bad text <em>gracefully</em> comes later. <strong>Later is now.</strong> This whole lecture is that one fix, built up step by step.</p></div>
+  <h2>Errors that happen while the program runs</h2>
+  <p>An <strong>exception</strong> is an error that happens <em>while your program is running</em> — a <strong>runtime error</strong>. The code is perfectly valid; it just hit something it couldn't handle on this particular run. Here's the <code>int(input(...))</code> read-a-number move from Lecture 1's compare.py (<code>input()</code> itself goes back to Lecture 0): it reads text and turns it into a whole number, then an f-string prints it. Run it and type a real number like <code>7</code> — all good:</p>
+  <p class="cell-note">Type a number like 7 — it prints fine.</p><textarea class="py">x = int(input("What's x? "))
+print(f"x is {x}")</textarea>
+  <details class="predict"><summary>Before you run it: commit to an answer. If you run that same cell again but type the word <code>cat</code> instead of a number, does <code>print</code> still run, or not?</summary><div style="margin:.2rem 0 .6rem"><p>It does <strong>not</strong> — the program <strong>crashes</strong> with a <code>ValueError</code>. Python can read the text <code>cat</code> fine, but <code>int("cat")</code> can't turn it into a whole number, so the program stops right there and <code>print</code> never runs. The exact message is <code>ValueError: invalid literal for int() with base 10: 'cat'</code> ("this string isn't a valid base-10 integer"). Now run it above and type <code>cat</code> to check.</p></div></details>
+  <p>When <code>int("cat")</code> fails, we say Python <strong>raises</strong> a <code>ValueError</code>. "Raises" is the key verb: the failing line throws up its hands and stops the program mid-run. That's a <em>runtime</em> error — it only shows up when that line actually runs with bad input. Hold onto this verb; it's the one idea the rest of the lecture is built on.</p>
+  <h2>try and except: catch it instead of crashing</h2>
+  <p>We can't stop users from typing <code>cat</code>, but we can <strong>handle</strong> it instead of crashing. Wrap the risky line in a <strong><code>try</code></strong> block, and tell Python what to do if it goes wrong in an <strong><code>except</code></strong> block — naming the specific error you expect, <code>ValueError</code>. Now bad input prints a friendly message instead of a red traceback. Run it and type <code>cat</code>:</p>
+  <p class="cell-note">Type cat — no crash, just "x is not an integer". Then re-run and type a number to see the normal path. (The print sits inside try for now; we fix that next.)</p><textarea class="py">try:
+    x = int(input("What's x? "))
+    print(f"x is {x}")
+except ValueError:
+    print("x is not an integer")</textarea>
+  <div class="callout note"><span class="tag">Recall: SyntaxError, from Lecture 1</span><p>You already met a <strong><code>SyntaxError</code></strong> in Lecture 1 — <code>if x = 5:</code> (one equals sign) wouldn't even run. That's the <em>before-it-runs</em> kind: Python can't even <strong>read</strong> the program, so it refuses to start and <strong>nothing runs at all</strong>. That's exactly why <code>try</code>/<code>except</code> can't catch it — there's no <em>running</em> program to catch the error mid-flight. A <code>ValueError</code> is the opposite: a valid line that <strong>raises</strong> mid-run, which is the kind you <em>can</em> catch.</p></div>
+  <div class="quiz"><p class="quiz-q">You type <code>cat</code> into <code>int(input(...))</code> and the program stops with <code>ValueError</code>. How does this differ from a <code>SyntaxError</code>?</p><div class="opts"><button class="opt" type="button" data-correct>The <code>ValueError</code> is <strong>raised while the program runs</strong> (the line was valid until it met bad input); a <code>SyntaxError</code> is caught <strong>before</strong> any line runs at all</button><button class="opt" type="button">They're the same thing — both stop the program, so the name doesn't matter</button><button class="opt" type="button">A <code>ValueError</code> is caught before running; a <code>SyntaxError</code> happens while running</button><button class="opt" type="button">A <code>ValueError</code> only happens inside functions, never at the top level</button></div><div class="why">A <code>SyntaxError</code> means Python can't even read your program, so it never starts — not one line runs. A <code>ValueError</code> is a <strong>runtime</strong> error: the program ran fine until a valid line (<code>int("cat")</code>) hit input it couldn't handle and <strong>raised</strong>. You can't catch a SyntaxError at runtime because the program never got to run; you <em>can</em> catch a ValueError, which is the rest of this lecture.</div></div>
+  <div class="callout gotcha"><span class="tag">Catch a SPECIFIC type — never a bare except</span><p>Write <code>except ValueError</code>, naming the one error you actually expect. A <strong>bare <code>except:</code></strong> (with no type) catches <em>everything</em> — including bugs you didn't mean to hide, like a typo'd variable name or a logic mistake, and even the Ctrl-C you'd press to quit. That turns a loud, fixable crash into a silent wrong answer. Catch the specific exception you're prepared to handle, and let real bugs surface.</p></div>
+  <div class="mental-model"><span class="tag">Mental model — the picture behind what just happened</span><p>Now that you've seen the crash and the catch, here's the single picture that explains the rest of the lecture. When a line goes wrong, Python <strong>raises</strong> — like falling through a trapdoor in the middle of the <code>try</code> block. The instant a line raises, Python abandons the rest of the <code>try</code> <em>right there</em> and drops into <code>except</code>.</p><div class="mm-diagram"><div class="mm-card"><b>The trapdoor in try</b><pre style="margin:.4rem 0;font-family:var(--mono);font-size:.84rem;white-space:pre-wrap;overflow-x:auto">try:
+    x = int(input())   # if this RAISES...
+    print(x)           # ...this line is SKIPPED
+except ValueError:
+    print('not an integer')</pre><span>A raise drops you out of <code>try</code> at that <strong>exact spot</strong> and into <code>except</code>. Everything <em>after</em> the failing line inside <code>try</code> is skipped. Hold this picture — the next section turns it into a surprise.</span></div></div></div>
+  <h2>The scope trap: a failed try leaves the name unassigned</h2>
+  <p>The <code>print</code> can't fail, so the tidy instinct is to pull it out of <code>try</code> — put it <em>after</em> the handler, where it looks cleaner. Try that. Type a <strong>number</strong> and it works. Now, before you re-run with <code>cat</code>, commit to an answer in the predict below.</p>
+  <p class="cell-note">Move print out of try. Type a number first (works), then re-run with cat.</p><textarea class="py">try:
+    x = int(input("What's x? "))
+except ValueError:
+    print("x is not an integer")
+
+print(f"x is {x}")</textarea>
+  <details class="predict"><summary>Predict before running with <code>cat</code>: the <code>except</code> already printed "x is not an integer". So what does the final <code>print(f"x is {x}")</code> show?</summary><div style="margin:.2rem 0 .6rem"><p>It <strong>crashes</strong> with <code>NameError: name 'x' is not defined</code>. The trapdoor: when <code>int("cat")</code> raised, Python jumped out of <code>try</code> <em>before</em> the assignment to <code>x</code> finished — so <code>x</code> was <strong>never created</strong>. The program then falls through to <code>print(f"x is {x}")</code> and tries to read an <code>x</code> that doesn't exist. That's a <code>NameError</code>: not a wrong value, but <em>no name at all</em>.</p></div></details>
+  <div class="callout note"><span class="tag">Remember: None vs. a missing name (L2)</span><p>In Lecture 2 you met <code>None</code> — a name that <em>has</em> a value, just the <em>no-value</em> one (it prints as <code>None</code>, no error). A failed <code>try</code> is different and <strong>worse</strong>: <code>x</code> was never assigned at all, so it doesn't exist. Touching a name that doesn't exist isn't <code>None</code>; it's a <strong><code>NameError</code></strong>.</p></div>
+  <div class="quiz"><p class="quiz-q">You typed <code>cat</code>, so <code>x</code> was never created. Where could you safely move <code>print(f"x is {x}")</code> so it never raises a <code>NameError</code>?</p><div class="opts"><button class="opt" type="button" data-correct>Onto a path that runs <strong>only when the conversion succeeded</strong> — so the assignment to <code>x</code> definitely completed first</button><button class="opt" type="button">Right after the <code>except</code> block, where it will always run no matter what happened</button><button class="opt" type="button">Inside the <code>except</code> block, so it runs when conversion fails</button><button class="opt" type="button">Nowhere — once a <code>NameError</code> is possible, you can't print <code>x</code> at all</button></div><div class="why">The fix is to use <code>x</code> only on the path where the assignment definitely succeeded. Putting <code>print</code> <em>after</em> the handler runs it on <strong>both</strong> paths, including the failed one where <code>x</code> doesn't exist. Putting it in <code>except</code> runs it exactly when <code>x</code> is missing. What you want is a success-only path — and <code>try</code> has a block for exactly that, which is the next section.</div></div>
+  <h2>else: the success-only path</h2>
+  <p>You need <code>x</code> only on the path where it actually got created. <code>try</code> has a third, optional block for exactly that: <strong><code>else</code></strong>, which runs <strong>only when the <code>try</code> finished without raising</strong> — so <code>x</code> is guaranteed to exist there. (As a bonus, this keeps <strong>only the risky line</strong> in <code>try</code>, which is the tidy habit anyway.) Put the <code>print</code> in <code>else</code>: type <code>cat</code> and only the error message shows (no NameError); type a number and only the <code>x is ...</code> line shows.</p>
+  <p class="cell-note">else runs ONLY on success. Type cat, then re-run and type 5. Watch which line appears each time.</p><textarea class="py">try:
+    x = int(input("What's x? "))
+except ValueError:
+    print("x is not an integer")
+else:
+    print(f"x is {x}")</textarea>
+  <div class="callout gotcha"><span class="tag">This else is NOT the if/else from Lecture 1</span><p>You met <code>else</code> in Lecture 1 paired with <code>if</code> — "otherwise." On a <code>try</code>, <code>else</code> is the <em>opposite</em> trigger: it means <strong>"run this only if the <code>try</code> raised no exception."</strong> It runs on the <em>success</em> path and is skipped entirely when <code>except</code> fires — so exactly one of <code>except</code> (failure) / <code>else</code> (success) runs each time. Don't read it as "otherwise." (It's a genuinely uncommon clause — we use it here to make the success path obvious, and later we'll simplify it away once you trust it.)</p></div>
+  <div class="quiz"><p class="quiz-q">You have <code>try</code> (int) / <code>except ValueError</code> (message) / <code>else</code>. You add a SECOND <code>print</code> that also uses <code>x</code>. Which block must it go in to never raise <code>NameError</code>, and why?</p><div class="opts"><button class="opt" type="button" data-correct><code>else</code> — it's the only block guaranteed to run <em>after</em> the assignment to <code>x</code> succeeded</button><button class="opt" type="button"><code>try</code>, right under the <code>int(...)</code> line — <code>try</code> always finishes before <code>else</code></button><button class="opt" type="button"><code>except</code> — that's where Python recovers, so <code>x</code> is safe there</button><button class="opt" type="button">It doesn't matter; all three blocks can see <code>x</code> once the cell has run</button></div><div class="why"><code>else</code> runs <em>only</em> when the <code>try</code> raised nothing, so the assignment to <code>x</code> definitely completed — that's the one place <code>x</code> is guaranteed to exist. Putting it in <code>try</code> after <code>int(...)</code> works only if <code>int</code> didn't raise; putting it in <code>except</code> runs exactly when <code>x</code> is <em>missing</em>. Exactly one of <code>except</code>/<code>else</code> runs per attempt, and <code>else</code> is the safe home for the value.</div></div>
+  <h2>Loop until the input is good</h2>
+  <p>Catching the error is nice, but right now a bad answer prints a message and the program just <em>ends</em>. Better: keep <strong>asking until</strong> the user gives a real number. That's the same shape from Lecture 2 — a <code>while True</code> loop whose only way out is a reachable <code>break</code> (or, once we're inside a function, a <code>return</code>). Drop the whole <code>try</code>/<code>except</code>/<code>else</code> inside the loop, and put the <code>break</code> in the <code>else</code> (success) block: on a good number we leave the loop; on <code>cat</code> we print the message and loop round to ask again.</p>
+  <p class="cell-note">Type cat a couple of times, then a number — watch the output and count the messages.</p><textarea class="py">while True:
+    try:
+        x = int(input("What's x? "))
+    except ValueError:
+        print("x is not an integer")
+    else:
+        break
+
+print(f"x is {x}")</textarea>
+  <details class="predict"><summary>Predict: if you type <code>cat</code>, then <code>dog</code>, then <code>8</code>, how many times does "x is not an integer" print, and what's the final line?</summary><div style="margin:.2rem 0 .6rem"><p>"x is not an integer" prints <strong>twice</strong> (once for <code>cat</code>, once for <code>dog</code>), then <code>8</code> succeeds: the <code>else</code> runs <code>break</code>, the loop ends, and the final line is <code>x is 8</code>. Each bad answer triggers <code>except</code> and loops round; the first good answer reaches <code>break</code> in <code>else</code> and leaves. The loop <em>only</em> ends on a valid integer. (Note: <code>x</code> is still readable after the loop — Python loops don't create their own scope.)</p></div></details>
+  <div class="callout gotcha"><span class="tag">while True needs a reachable exit</span><p>Lecture 2's rule: <code>while True</code> has no condition that turns False, so the <strong>only</strong> way out is a <code>break</code> (or <code>return</code>) your code can actually reach — here, the instant you type a valid integer. That reachable escape is what guarantees the loop ends. (And on this page a live <code>while True</code> cell can't freeze, because each pass <strong>blocks on the <code>input()</code> pop-up</strong> while it waits for you — more on that in the page tips at the bottom.)</p></div>
+  <h2>Refactor into a function that returns a value</h2>
+  <div class="callout note"><span class="tag">Where we are</span><p>You now have a working loop. From here we'll change <strong>one thing per step</strong> until <code>get_int</code> is a small, reusable helper — you only need to track a single delta from one cell to the next.</p></div>
+  <p>"Ask until you get a valid integer" is a self-contained job you'll want again and again — so give it a name and make it a function. <code>get_int()</code> holds the loop and <strong>returns</strong> the good value; <code>main()</code> calls it and prints the result. Defined first, called last — the define-<code>main</code>-first habit from Lecture 1.</p>
+  <p class="cell-note">get_int() loops, then returns x after the break. main() uses it. Type cat then a number.</p><textarea class="py">def main():
+    x = get_int()
+    print(f"x is {x}")
+
+
+def get_int():
+    while True:
+        try:
+            x = int(input("What's x? "))
+        except ValueError:
+            print("x is not an integer")
+        else:
+            break
+    return x
+
+
+main()</textarea>
+  <div class="mental-model"><span class="tag">Mental model — return does double duty</span><p>Look at the flow inside <code>get_int()</code>: loop until <code>else</code> runs <code>break</code>, fall out of the loop, then <code>return x</code>. The <code>break</code> and the <code>return x</code> are two steps doing one job — and now that we're inside a function, one keyword can do both.</p><div class="mm-diagram"><div class="mm-card"><b>return ends the loop AND the function</b><pre style="margin:.4rem 0;font-family:var(--mono);font-size:.84rem;white-space:pre-wrap;overflow-x:auto">def get_int():
+    while True:
+        try:
+            x = int(input())
+        except ValueError:
+            ...
+        else:
+            return x   # leaves the loop AND the function — and hands x back</pre><span>A <code>return</code> inside the loop ends the function — which also leaves the loop — <em>and</em> hands the value back, all at once. That one move replaces a <code>break</code> plus a separate trailing <code>return</code>. So we can <code>return x</code> straight from the <code>else</code>:</span></div></div></div>
+  <p class="cell-note">else now returns x directly — no break, no trailing return. Type cat then a number.</p><textarea class="py">def main():
+    x = get_int()
+    print(f"x is {x}")
+
+
+def get_int():
+    while True:
+        try:
+            x = int(input("What's x? "))
+        except ValueError:
+            print("x is not an integer")
+        else:
+            return x
+
+
+main()</textarea>
+  <h2>Streamline: return straight from inside try</h2>
+  <p>Now that the success path is just <code>return x</code> in <code>else</code>, look at what the <code>try</code> can do: it either converts and returns, or it raises — there's no third outcome. So we don't need the <code>else</code> at all. Move the <code>return</code> up into the <code>try</code>: convert the input and return it in one line. If conversion fails, control jumps to <code>except</code> and the <code>while True</code> simply loops round again. No <code>else</code>, no <code>break</code>, no temporary variable:</p>
+  <p class="cell-note">return int(input(...)) does it all: convert, and if it works, leave the loop AND the function together. A ValueError is caught and the loop re-asks. Type cat then a number.</p><textarea class="py">def main():
+    x = get_int()
+    print(f"x is {x}")
+
+
+def get_int():
+    while True:
+        try:
+            return int(input("What's x? "))
+        except ValueError:
+            print("x is not an integer")
+
+
+main()</textarea>
+  <div class="quiz"><p class="quiz-q">In <code>get_int()</code>, why can <code>return int(input(...))</code> replace the whole <code>else: return x</code> step?</p><div class="opts"><button class="opt" type="button" data-correct>A <code>return</code> inside the loop exits <strong>both</strong> the loop and the function at once — and inside <code>try</code>, the line either returns or raises, so no <code>else</code> is needed</button><button class="opt" type="button"><code>return</code> only exits the function, so the loop keeps running in the background</button><button class="opt" type="button"><code>return</code> is just a fancier <code>break</code> and never sends a value back</button><button class="opt" type="button">It works only because <code>try</code> automatically breaks out of loops</button></div><div class="why">Inside the <code>try</code>, the line has exactly two outcomes: a successful <code>int(...)</code> returns immediately (leaving loop and function together), or a failed one raises and <code>except</code> handles it, looping round. There's no success-but-don't-return case, so the <code>else</code> is redundant. The loop still always terminates — but only the moment a valid integer reaches the <code>return</code>.</div></div>
+  <h2>pass: a silent re-prompt</h2>
+  <p>That last version <em>prints</em> a message on every fumble — which is friendly for a confused first-timer. But in a tight retry loop, a quick double-typo can scroll noise. Neither is always right: a message helps, silent re-prompting feels calmer — it's the caller's call. To show the silent option, we need Python's keyword for <strong>"do nothing"</strong>, because <code>except</code> needs <em>something</em> in its body and can't be left empty. That keyword is <strong><code>pass</code></strong>: a valid, empty placeholder. Put it in the <code>except</code> and a bad answer is swallowed silently; the loop just re-asks with no message.</p>
+  <p class="cell-note">pass = do nothing. Type cat, then a number to finish. Watch the output between tries.</p><textarea class="py">def main():
+    x = get_int()
+    print(f"x is {x}")
+
+
+def get_int():
+    while True:
+        try:
+            return int(input("What's x? "))
+        except ValueError:
+            pass
+
+
+main()</textarea>
+  <details class="predict"><summary>Predict: with <code>except ValueError: pass</code>, you type <code>cat</code>. What gets printed before the prompt comes back?</summary><div style="margin:.2rem 0 .6rem"><p><strong>Nothing.</strong> <code>pass</code> means "do nothing," so the <code>except</code> block runs but prints no message and forwards nothing — it just lets the loop go round and show the input prompt again. (Don't confuse <code>pass</code> with Lecture 2's <code>continue</code>: <code>continue</code> jumps back to the top of the loop, while <code>pass</code> does nothing and simply falls through.) The only visible thing is the prompt reappearing. Note we still catch the <em>specific</em> <code>ValueError</code> — a bare <code>except: pass</code> would silently swallow real bugs too, which is a genuine anti-pattern.</p></div></details>
+  <h2>Parameterize the prompt: a truly reusable get_int</h2>
+  <p>One last touch. Right now <code>get_int()</code> always asks "What's x?" — useless if you want a different question. Give it a <strong>parameter</strong>, <code>prompt</code> — just as <code>square(n)</code> in Lecture 0 took its number as a parameter (called as <code>square(x)</code>) — and pass it straight to <code>input(prompt)</code>. Now the <em>caller</em> decides the wording, so the same function works anywhere: <code>get_int("What's x? ")</code>, <code>get_int("How old are you? ")</code>, anything.</p>
+  <p class="cell-note">Final form: get_int(prompt) is reusable — the caller supplies the question. Type cat then a number.</p><textarea class="py">def main():
+    x = get_int("What's x? ")
+    print(f"x is {x}")
+
+
+def get_int(prompt):
+    while True:
+        try:
+            return int(input(prompt))
+        except ValueError:
+            pass
+
+
+main()</textarea>
+  <details class="predict"><summary>Predict: call BOTH <code>get_int("What's x? ")</code> and <code>get_int("How old are you? ")</code> from the same <code>main</code>. How many times is the function <em>defined</em>, and what makes the two calls behave differently?</summary><div style="margin:.2rem 0 .6rem"><p>The function is defined <strong>once</strong>. The two calls differ only because each passes a different <code>prompt</code> string, which <code>get_int</code> hands straight to <code>input(prompt)</code> — nothing inside the function changes. That's the whole point of a parameter: one definition, behavior the <em>caller</em> controls. From a one-line <code>int(input(...))</code> that crashed on <code>cat</code>, you've built a robust, reusable "get me a valid integer with <em>this</em> prompt" you could drop into any program — picking up <code>try</code>, <code>except</code>, <code>else</code>, <code>pass</code>, and a sharper sense of <code>return</code> along the way. (Want active recall? Write <code>get_positive_int(prompt)</code> that loops until the answer is a non-negative integer.)</p></div></details>
+  <div class="callout later"><span class="tag">Beyond this lecture — coming from C, Java, or JavaScript? (skip unless you know one)</span><p>It's <code>try</code>/<strong><code>except</code></strong>, not <code>try</code>/<code>catch</code> — and Python says a line <strong>raises</strong> a <code>ValueError</code>, not "throws" an exception object. More surprising: in Python, using exceptions for ordinary <strong>input validation</strong> (try to convert, handle the failure) is <strong>normal, idiomatic control flow</strong>, not a last resort — the opposite of the advice you may have heard in other languages.</p></div>
+  <div class="callout note"><span class="tag">Page tip — the input() pop-up and Cancel</span><p><code>input()</code> shows a pop-up and echoes what you type into the output. A live <code>while True</code> cell on this page never freezes because each pass <strong>blocks on that pop-up</strong>, waiting for you — so it can't spin even though the condition is always <code>True</code>. The reachable <code>break</code>/<code>return</code> is still what <em>ends</em> the loop once you enter a number.</p><p>Pressing <strong>Cancel</strong> stops the cell — but note: in <em>standard</em> Python a cancelled <code>input()</code> raises an <strong><code>EOFError</code></strong>, a different error from the <code>ValueError</code> we catch, so these <code>except ValueError</code> loops would not handle it; Cancel works here only because the runtime ends the run for you. If anything ever seems stuck, <strong>reload the tab</strong> (that also resets the shared Python session).</p></div>
+  <div class="callout note"><span class="tag">A couple more page tips</span><ul><li>Press <strong>Esc</strong> to step out of a code box back to the buttons. (Pop-ups can be clunky on phones and tablets.)</li><li>Sharp-eyed testers: <code>int()</code> tolerates surrounding spaces and a leading sign, so <code>int(" -7 ")</code> is <code>-7</code> — those still count as valid integers.</li><li>Source: the starting <code>int(input(...))</code> program and the final <code>get_int(prompt)</code> follow CS50's Lecture 3 walkthrough; the in-browser cells, pop-ups, and <code>EOFError</code>/Cancel notes are specific to this page, not part of the lecture.</li></ul></div>
+  <div class="gotcha-list"><h2 id="gotchas">Common mistakes at a glance</h2><ul><li>A <strong><code>ValueError</code></strong> is <strong>raised at runtime</strong> — the line was valid until it met bad input (<code>int("cat")</code>). A <strong><code>SyntaxError</code></strong> (Lecture 1's <code>if x = 5:</code>) is different: Python can't even read the program, so it's caught <strong>before any line runs</strong>. You can <code>try</code>/<code>except</code> the runtime kind, never the syntax kind.</li><li>Catch a <strong>specific</strong> type: <code>except ValueError</code>, never a bare <code>except:</code>. A bare <code>except</code> swallows <em>everything</em> — real bugs (a typo'd name, a logic error) and even Ctrl-C — turning a loud crash into a silent wrong answer.</li><li>Put <strong>only the risky line</strong> inside <code>try</code> (the <code>int(input(...))</code>). Wrapping extra lines lets <code>try</code> quietly hide problems that have nothing to do with the error you meant to handle.</li><li>A failed <code>try</code> leaves the name <strong>unassigned</strong>: the raise jumps out <em>before</em> <code>x = ...</code> finishes, so <code>x</code> was never created, and using it later is a <strong><code>NameError</code></strong>. Unlike Lecture 2's <code>None</code> (a name holding the no-value object), here <code>x</code> doesn't exist at all.</li><li><code>else</code> on a <code>try</code> runs <strong>only on success</strong> (no exception raised) — the opposite trigger from the <code>if</code>/<code>else</code> of Lecture 1. Exactly one of <code>except</code> (failure) or <code>else</code> (success) runs per attempt; <code>else</code> is the safe place to <em>use</em> the value.</li><li><code>while True</code> has no condition that turns False, so it needs a <strong>reachable</strong> <code>break</code> (or <code>return</code>) — here, the moment you type a valid integer. That reachable escape, not the runtime, is what makes the loop end.</li><li>A <strong><code>return</code> inside the loop exits both the loop and the function</strong> at once — which is why it replaces both <code>break</code> and the trailing <code>return x</code>. And since the <code>try</code> line either returns or raises, no <code>else</code> is needed at all.</li><li><code>pass</code> means <strong>do nothing</strong> — a valid empty placeholder so a block that needs a body (like <code>except</code>) can have one. Unlike Lecture 2's <code>continue</code> (which jumps to the top of the loop), <code>pass</code> doesn't print, skip, or forward the error; it just lets control fall through. Pairing <code>pass</code> with a <em>bare</em> <code>except</code> is the anti-pattern.</li><li>Give <code>get_int(prompt)</code> a <strong>parameter</strong> so the caller picks the question. A hard-coded prompt makes the function un-reusable; <code>input(prompt)</code> makes the same validator work for any "ask for a number" need.</li><li>Page-specific: Cancel on a pop-up only stops the cell because the runtime ends the run — in standard Python a cancelled <code>input()</code> raises <strong><code>EOFError</code></strong>, which <code>except ValueError</code> would <em>not</em> catch.</li></ul></div>
+  <h2>Recap &amp; next step</h2><p>You can now keep a program alive when a line blows up at runtime. The trigger is <code>int(input(...))</code>, which <strong>raises</strong> a <code>ValueError</code> on text like <code>cat</code> — a <em>runtime</em> error, unlike the <code>SyntaxError</code> you met in Lecture 1, which Python catches <strong>before</strong> a single line runs. This pays off the promise from Lecture 2. The fix is <code>try</code> (wrap <strong>only</strong> the risky line) plus <code>except ValueError</code> (catch the <strong>specific</strong> type, never a bare <code>except</code>). The hardest idea is the trapdoor: a raise abandons the <code>try</code> mid-statement, so a name the failing line was about to assign is <strong>never created</strong> — which is why pulling <code>print</code> outside <code>try</code> gives a <code>NameError</code>. Here <code>x</code> doesn't exist at all, unlike Lecture 2's <code>None</code>, which <em>is</em> a value. <code>else</code> fixes it by running <strong>only on success</strong>, where the value is guaranteed to exist. From there it's a <code>while True</code> helper retold: a loop with a reachable escape keeps asking until the input is good, and folding it into a value-returning <code>get_int()</code> lets <code>return</code> do double duty — leaving the loop <em>and</em> the function — so first <code>else: return x</code> drops the <code>break</code>, then <code>return int(input(...))</code> drops the <code>else</code> too. <code>pass</code> makes the handler silent (a do-nothing choice, not always the right one), and a <code>prompt</code> parameter makes <code>get_int(\"What's x? \")</code> reusable anywhere. Next up is the problem set: reach for <code>try</code>/<code>except ValueError</code> whenever you convert user input, keep only the risky line in <code>try</code>, remember <code>else</code> is the success path, lean on <code>return</code> to leave a loop, and skim the Common mistakes above — most exception bugs are right there.</p>
+  <p><a href="index.html">← Back to all lectures</a></p>
+</main>
+</div>
+
+<footer class="site">CS50P interactive notes · Lecture 3 — Exceptions · run, edit, and break things freely.</footer>
+<script src="assets/notes.js" defer></script>
+</body>
+</html>
