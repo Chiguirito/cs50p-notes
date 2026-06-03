@@ -1,0 +1,252 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Lecture 4 — Libraries · CS50P Notes</title>
+<link rel="icon" href="data:,">
+<link rel="stylesheet" href="assets/notes.css">
+<script>try{var t=localStorage.getItem('cs50p-theme');if(t)document.documentElement.setAttribute('data-theme',t);}catch(e){}</script>
+</head>
+<body>
+<div id="progress"></div>
+
+<header class="site">
+  <a class="brand" href="index.html">← CS50P Notes</a>
+  <span class="spacer"></span>
+  <button class="theme-toggle" type="button" aria-pressed="false">🌙 Dark</button>
+</header>
+
+<div class="wrap">
+<nav class="toc" aria-label="On this page">
+  <details open><summary>Contents</summary><p class="toc-title">On this page</p><ol></ol></details>
+</nav>
+
+<main>
+<h1>Lecture 4 — Libraries</h1>
+  <p class="subtitle lead">You don't have to write everything yourself. You'll learn to import ready-made tools two ways, use random and statistics, read what a user typed on the command line, install other people's packages, fetch live data from an API, and write your own module.</p>
+  <div class="objectives"><h2>What you'll be able to do</h2><ul><li>Import a library two ways — <code>import random</code> (then <code>random.choice</code>) and <code>from random import choice</code> (then bare <code>choice</code>) — and know which call goes with which</li><li>Use <code>random</code> (choice, randint, shuffle) and <code>statistics.mean</code>, remembering <code>shuffle</code> mutates in place and returns <code>None</code></li><li>Read command-line arguments via <code>sys.argv[1:]</code>, guard them with <code>len(sys.argv)</code> and <code>if</code>/<code>elif</code>/<code>else</code> (or <code>try</code>/<code>except IndexError</code>), and bail cleanly with <code>sys.exit(message)</code></li><li>Install packages with <code>pip</code> from PyPI, call an API with <code>requests</code>, and parse or pretty-print JSON with <code>.json()</code> (the IN door) and <code>json.dumps(obj, indent=2)</code> (the OUT door)</li><li>Tell what runs in your browser (the standard library) from what needs your terminal (pip, the network), and write a two-file module with <code>from sayings import goodbye</code></li></ul></div>
+  <div class="callout note"><span class="tag">How these notes work (2 box types)</span><p><strong>White box, Run button</strong> = real Python, runs right here in your browser. Edit it, press <strong>Run</strong>. The first run downloads Python once (about 10 seconds), then it's instant.</p><p><strong>Greyed box, Copy only</strong> = no Run button, because it needs something a browser tab doesn't have (a terminal, installed software, or the internet). Copy it into a <code>.py</code> file and run it on your own machine; each greyed box shows the exact command.</p></div>
+  <div class="callout note"><span class="tag">The one rule that explains everything below</span><p><strong>Each white box runs on its own, like its own tiny <code>.py</code> file. Names don't carry from one box to the next.</strong> That's why every box below re-types its own <code>import random</code> — it isn't redundant, it's required. If a box uses a tool, it must import that tool itself.</p><p><em>(Keyboard, if you like it: <strong>Cmd/Ctrl + Enter</strong> runs a box; <strong>Esc</strong> steps back out of it. The mouse works fine too.)</em></p></div>
+  <h2>A problem you can't solve yet</h2>
+  <p>Say you want your program to flip a coin — pick <code>"heads"</code> or <code>"tails"</code> fairly, differently each time you run it. With only the tools from Lecture 0, you can't: nothing you've written makes a <em>random</em> choice. You'd have to invent randomness from scratch, which is genuinely hard to do well. This is the moment a <strong>library</strong> earns its keep.</p>
+  <h2>What a library is</h2>
+  <p>In Lecture 0 you wrote your own functions — <code>square(n)</code> took a number and handed one back. A <strong>library</strong> (also called a <strong>module</strong>) is just a <em>file full of ready-made functions</em> someone already wrote and tested. <code>random</code> knows how to pick things at random; <code>statistics</code> knows how to average numbers; <code>json</code> knows how to format data. You don't get them for free, though: you first <strong><code>import</code></strong> the file, which loads it and gives you a name to reach it by. We'll start with <code>random</code>.</p>
+  <h2>import: load the whole library</h2>
+  <p><code>import random</code> loads the <code>random</code> library. Then <code>random.choice([...])</code> reaches in and picks one item from a list at random — that's our fair coin flip, solved in two lines. (<code>random.choice(...)</code> is the same 'call a function' move as <code>square(n)</code>; the name just lives inside a module now.) <strong>Re-run it</strong> and watch the result change:</p>
+  <p class="cell-note">Live — press Run several times; random.choice picks heads or tails fresh each run.</p><textarea class="py">import random
+
+coin = random.choice(["heads", "tails"])
+print(coin)</textarea>
+  <div class="callout gotcha"><span class="tag">Never name your own file random.py</span><p>A natural first instinct is to save your coin-flip program as <code>random.py</code>. Don't: if you then run <code>python random.py</code> with <code>import random</code> inside, Python tries to import <strong>your own file as the library</strong> and trips over itself — <code>random.choice(...)</code> crashes with <code>AttributeError: partially initialized module 'random' has no attribute 'choice' (most likely due to a circular import)</code>. The 'circular import' hint means your file collided with the real one. Same trap for <code>statistics.py</code>, <code>requests.py</code>, and so on. Rule: never name your script the same as a library you import.</p></div>
+  <h2>from ... import: take just one tool</h2>
+  <p>If you only ever use <code>choice</code>, you can pull just that one function out with <code>from random import choice</code> and then call it <strong>bare</strong> — no <code>random.</code> in front. Same behavior, shorter call. Run it a few times:</p>
+  <p class="cell-note">Live — same coin flip, called bare as choice(...) because we imported just that one name.</p><textarea class="py">from random import choice
+
+coin = choice(["heads", "tails"])
+print(coin)</textarea>
+  <div class="mental-model"><span class="tag">Mental model — a library is a labeled toolbox</span><p>You've now run both import styles. Here's the picture that ties them together: a library is a <strong>labeled toolbox</strong>, and there are two ways to get a tool out. The dot tells you which.</p><div class="mm-diagram"><div class="mm-card"><b>import random — the whole box is in your room</b><pre style="margin:.4rem 0;font-family:var(--mono);font-size:.84rem;white-space:pre-wrap;overflow-x:auto">import random
+coin = random.choice(['heads', 'tails'])
+num  = random.randint(1, 10)</pre><span><code>import random</code> puts the <strong>whole box</strong> in your room. Each time you want a tool, you open the box by name with a dot: <code>random.choice(...)</code>, <code>random.randint(...)</code>. The dot is you reaching in — and since the whole box is here, every tool is one dot away.
+
+(The toolbox picture is our own framing to make the dot click — CS50 doesn't teach it this way.)</span></div><div class="mm-card"><b>from random import choice — one tool on your desk</b><pre style="margin:.4rem 0;font-family:var(--mono);font-size:.84rem;white-space:pre-wrap;overflow-x:auto">from random import choice
+coin = choice(['heads', 'tails'])</pre><span><code>from random import choice</code> lifts just the <strong>one tool</strong> <code>choice</code> onto your desk, so you grab it bare, no dot: <code>choice(...)</code>. But the box <code>random</code> itself never came to your room — only the single tool you named. So if you later reach for the box by name, it isn't there.</span></div></div></div>
+  <details class="predict"><summary>Predict before you run it: you write <code>from random import choice, randint</code> (two tools, no box), then call them <strong>bare</strong> — <code>choice([...])</code> and <code>randint(1, 10)</code>. Both work bare, or do you still need a <code>random.</code> somewhere?</summary><div style="margin:.2rem 0 .6rem"><p>Both work bare: <code>from random import choice, randint</code> puts <em>both</em> tools on your desk, so <code>choice([...])</code> and <code>randint(1, 10)</code> each run with no dot. The dot is only for the box (<code>import random</code>). The trap is the reverse — if you imported only <code>choice</code> and then wrote <code>random.randint(...)</code>, the box name <code>random</code> was never brought in, so it fails. Run the cell to confirm both bare calls work.</p></div></details>
+  <p class="cell-note">Live — both tools imported by name, both called bare. Re-run for fresh values.</p><textarea class="py">from random import choice, randint
+
+print(choice(["heads", "tails"]))
+print(randint(1, 10))</textarea>
+  <p>And the reverse trap, just so you've seen the error once: this next box imports <strong>only</strong> <code>choice</code>, then reaches for <code>random.randint</code> — but the box name <code>random</code> was never brought in. <strong>This one is supposed to fail; you can't break anything.</strong> Run it to see the error, then read the line below:</p>
+  <p class="cell-note">Live — supposed to crash. Run it to see the error, then read the next line. The fix is line 1: import random.</p><textarea class="py">from random import choice
+
+# We only imported `choice` — the name `random` was never brought in:
+print(random.randint(1, 10))</textarea>
+  <p>That's a <code>NameError: name 'random' is not defined</code> — the same <code>NameError</code> you met in Lecture 3 (Exceptions). Here it just means the name <code>random</code> was never loaded. <code>random.anything</code> only works after a plain <code>import random</code>.</p>
+  <h2>More random tools: randint and shuffle</h2>
+  <p><code>random.randint(a, b)</code> gives a random whole number from <code>a</code> to <code>b</code> — and unlike many Python ranges, <strong>both ends are included</strong>, so <code>randint(1, 10)</code> can return <code>1</code>, <code>10</code>, or anything between. Run it a few times:</p>
+  <p class="cell-note">Live — re-run for a fresh number from 1 to 10 (both ends possible). A die would be randint(1, 6).</p><textarea class="py">import random
+
+number = random.randint(1, 10)
+print(number)</textarea>
+  <p><code>random.shuffle(cards)</code> reorders a list <strong>in place</strong> — it rearranges the very list you hand it, like shuffling a physical deck. Here we shuffle a tiny deck, then loop over it to print each card (the <code>for</code>-over-a-list from Lecture 2). Run it a few times to see the order change:</p>
+  <p class="cell-note">Live — shuffle rearranges cards itself; then we loop to print. Re-run for different orders.</p><textarea class="py">import random
+
+cards = ["jack", "queen", "king"]
+random.shuffle(cards)
+
+for card in cards:
+    print(card)</textarea>
+  <details class="predict"><summary>Predict before you run it: a learner writes <code>cards = random.shuffle(cards)</code> and then <code>print(cards)</code>. What prints — the shuffled deck, or something else?</summary><div style="margin:.2rem 0 .6rem"><p>Something else: it prints <code>None</code>. Surprised? Run the cell below to see it, then read the callout for <em>why</em> — it's a trap almost everyone hits once. (And don't worry: this crash-free cell can't break anything; it's just a surprising result, not an error.)</p></div></details>
+  <p class="cell-note">Live — the common mistake on purpose: assigning shuffle's result. Run it, then read why below.</p><textarea class="py">import random
+
+cards = ["jack", "queen", "king"]
+cards = random.shuffle(cards)   # mistake: shuffle returns None
+print(cards)</textarea>
+  <div class="callout note"><span class="tag">Why it printed None (Lecture 2's None)</span><p>In Lecture 2 you met <strong><code>None</code></strong>, the no-value object. Here's where it bites. <code>random.shuffle(cards)</code> does its work <strong>to <code>cards</code> directly</strong> and hands back <strong>nothing</strong> — it returns <code>None</code>. So <code>cards = random.shuffle(cards)</code> throws your freshly shuffled deck away and stores <code>None</code> instead. <code>shuffle</code> isn't failing; it already shuffled the list. The rule: call <code>random.shuffle(cards)</code> on its own line, then just use <code>cards</code>. Never assign its result.</p></div>
+  <div class="quiz"><p class="quiz-q">A function <code>tidy(deck)</code> does <code>random.shuffle(deck)</code> inside and has no <code>return</code> line. You call <code>result = tidy(my_deck)</code>. What is <code>result</code>, and what happened to <code>my_deck</code>?</p><div class="opts"><button class="opt" type="button" data-correct><code>result</code> is <code>None</code>; <code>my_deck</code> was rearranged in place</button><button class="opt" type="button"><code>result</code> is the shuffled list; <code>my_deck</code> was left unchanged</button><button class="opt" type="button"><code>result</code> is a brand-new shuffled list; <code>my_deck</code> was left unchanged</button><button class="opt" type="button"><code>result</code> is <code>None</code>; <code>my_deck</code> was left unchanged</button></div><div class="why">A function with no <code>return</code> line hands back <code>None</code>, so <code>result</code> is <code>None</code>. But <code>random.shuffle</code> worked <strong>in place</strong> on the list <code>tidy</code> was given, so <code>my_deck</code> itself is now shuffled. That's the whole point of in-place: the change lands on the original; the call returns nothing.</div></div>
+  <h2>statistics: averaging numbers</h2>
+  <p>New problem, new wall: you have a list of quiz scores and want the class average. You <em>could</em> sum them and divide by the count by hand every time — but the standard library already did that work. The <code>statistics</code> library gives you everyday math like averages: <code>statistics.mean([...])</code> returns the average of a list of numbers.</p>
+  <p class="cell-note">Live — the average of a list of scores. Edit the numbers and re-run.</p><textarea class="py">import statistics
+
+print(statistics.mean([100, 90]))   # 95</textarea>
+  <div class="callout gotcha"><span class="tag">One small surprise about mean's type</span><p>When the average comes out a whole number from int inputs, <code>statistics.mean</code> returns an <strong>int</strong>: <code>mean([100, 90])</code> is <code>95</code>, not <code>95.0</code>. (CS50's video doesn't show the result; on modern Python it's the int <code>95</code>.) When the average isn't whole, you get a <strong>float</strong> — <code>mean([100, 91])</code> is <code>95.5</code>. <em>(That second example is ours, not from the lecture.)</em> If you want a float every time, just divide yourself: <code>sum(data) / len(data)</code>.</p></div>
+  <div class="quiz"><p class="quiz-q">You imported only <code>choice</code> with <code>from random import choice</code>, then wrote <code>random.randint(1, 10)</code>. What happens?</p><div class="opts"><button class="opt" type="button" data-correct><code>NameError</code> — the box name <code>random</code> was never brought in, only the tool <code>choice</code></button><button class="opt" type="button">It works — <code>from random import choice</code> quietly loads the whole <code>random</code> box too</button><button class="opt" type="button"><code>AttributeError</code> — <code>random</code> exists but has no <code>randint</code></button><button class="opt" type="button">It works, but returns <code>None</code> because <code>randint</code> wasn't imported by name</button></div><div class="why"><code>from random import choice</code> brings in <em>only</em> the tool <code>choice</code> — never the box name <code>random</code>. So <code>random.randint</code> has no <code>random</code> to reach into, and Python raises <code>NameError: name 'random' is not defined</code>. To use <code>random.randint</code>, do a plain <code>import random</code>; to call it bare, <code>from random import randint</code>.</div></div>
+  <h2>Command-line arguments: reading what the user typed</h2>
+  <p>Here's a fresh wall. So far your programs run in a white box, or you'd <code>input()</code> to ask the user a question. But real command-line tools don't stop to ask — you tell them everything up front, like <code>pip install cowsay</code> (you'll type exactly that soon) or <code>git clone ...</code>. You want <code>python greet.py David</code> to greet David immediately, no prompt. The words after the filename are <strong>command-line arguments</strong>, and reading them is the skill here.</p>
+  <div class="callout later"><span class="tag">Why these boxes have no Run button</span><p>A browser tab has no command line, so it has no arguments to read — <code>sys.argv</code> holds only an empty slot 0, and <code>sys.argv[1]</code> has nothing to reach. That's why every box in this section is <strong>greyed (terminal only)</strong>: copy each into a <code>.py</code> file and run it in your own terminal, following the note on the box. Same reason every time, so I'll keep the later notes short.</p></div>
+  <p>The <code>sys</code> library holds those typed words in a list called <code>sys.argv</code> ('argument vector'). The catch everyone hits: <strong><code>sys.argv[0]</code> is the program's own filename</strong>, not the first word you typed. Your real arguments start at index <strong>1</strong>, so for <code>python name.py David</code>, <code>sys.argv[1]</code> is <code>"David"</code>.</p>
+  <p class="cell-note">Terminal only — save as name.py, then: python name.py David</p><div class="codeblock"><pre><code>import sys
+
+# Run as:  python name.py David
+print(sys.argv[0])   # name.py   &lt;- the SCRIPT's own name
+print(sys.argv[1])   # David     &lt;- the first word YOU typed
+
+print("hello, my name is", sys.argv[1])</code></pre></div>
+  <p>Now: what if the user runs <code>python name.py</code> with <strong>no</strong> name? Then <code>sys.argv</code> has only slot 0 (the filename), so <code>sys.argv[1]</code> reaches into a slot that isn't there and the program crashes with <code>IndexError: list index out of range</code>. This program shows the crash on purpose:</p>
+  <p class="cell-note">Terminal only — save as name.py. <code>python name.py</code> (no name) crashes with IndexError; <code>python name.py David</code> works.</p><div class="codeblock"><pre><code>import sys
+
+# With no name typed, sys.argv is just ["name.py"] -&gt; index 1 doesn't exist
+print("hello, my name is", sys.argv[1])</code></pre></div>
+  <p>One way to handle that is the <code>try</code>/<code>except</code> you met in Lecture 3 — catch the <code>IndexError</code> the same way you caught a <code>ValueError</code> from <code>int("cat")</code>. If indexing fails, the user gave too few arguments:</p>
+  <p class="cell-note">Terminal only — save as name.py. <code>python name.py</code> -&gt; 'Too few arguments'; <code>python name.py David</code> -&gt; greets David.</p><div class="codeblock"><pre><code>import sys
+
+try:
+    print("hello, my name is", sys.argv[1])
+except IndexError:
+    print("Too few arguments")</code></pre></div>
+  <p>But <code>except IndexError</code> only catches <em>too few</em> — it can't notice <em>too many</em> names. The clearer guard is to <strong>check how long <code>sys.argv</code> is</strong> before you index, using the same <code>len</code> from Lecture 2. Here's the off-by-one to hold onto: because slot 0 is always the filename, <em>one name given</em> means a length of <strong>2</strong> (filename + name).</p>
+  <details class="predict"><summary>Predict before you read on: the user runs <code>python name.py David</code> — exactly one name. What does <code>len(sys.argv)</code> equal?</summary><div style="margin:.2rem 0 .6rem"><p><strong>2.</strong> <code>sys.argv</code> is <code>['name.py', 'David']</code> — slot 0 is the filename, slot 1 is the name — so its length is 2, not 1. This is the lecture's signature off-by-one: 'exactly one name' is <code>len(sys.argv) == 2</code>, never <code>== 1</code>. The next cell prints the list and its length so you can see it on your own machine.</p></div></details>
+  <p class="cell-note">Terminal only — save as args.py. Try: <code>python args.py</code> (len 1), <code>python args.py David</code> (len 2).</p><div class="codeblock"><pre><code>import sys
+
+print(sys.argv)        # e.g. ['args.py', 'David']
+print(len(sys.argv))   # e.g. 2  -&gt;  filename + one name</code></pre></div>
+  <p>Now guard the program with <code>if</code>/<code>elif</code>/<code>else</code> (Lecture 1): too few, too many, or exactly right. 'Exactly one name' is <code>len(sys.argv) == 2</code>:</p>
+  <p class="cell-note">Terminal only — save as name.py. <code>python name.py</code> -&gt; Too few; <code>python name.py David</code> -&gt; greets; <code>python name.py David Carter</code> -&gt; Too many.</p><div class="codeblock"><pre><code>import sys
+
+if len(sys.argv) &lt; 2:
+    print("Too few arguments")
+elif len(sys.argv) &gt; 2:
+    print("Too many arguments")
+else:
+    print("hello, my name is", sys.argv[1])</code></pre></div>
+  <h2>sys.exit: guard and bail out early</h2>
+  <p>There's a cleaner shape than wrapping the whole program in an <code>else</code>: check the inputs at the top, and if they're wrong, <strong>quit immediately</strong>. <code>sys.exit(message)</code> prints <code>message</code> and ends the program right there — nothing after it runs. This is the <em>guard-and-bail</em> pattern: bail out on bad input up front, then write the rest knowing the input is good. We keep <strong>both</strong> guards (too few <em>and</em> too many), each its own <code>sys.exit</code>. Notice the final <code>print</code> is <strong>un-indented</strong> — no <code>else</code> needed, because if the input was bad we never reached it:</p>
+  <p class="cell-note">Terminal only — save as name.py. <code>python name.py</code> -&gt; 'Too few'; <code>python name.py David Carter</code> -&gt; 'Too many'; <code>python name.py David</code> greets David.</p><div class="codeblock"><pre><code>import sys
+
+if len(sys.argv) &lt; 2:
+    sys.exit("Too few arguments")
+elif len(sys.argv) &gt; 2:
+    sys.exit("Too many arguments")
+
+# We only reach here if exactly one name was given:
+print("hello, my name is", sys.argv[1])</code></pre></div>
+  <h2>Slicing a list</h2>
+  <p>To greet <em>several</em> names at once, you first need a way to grab 'everything except slot 0.' That tool is a <strong>slice</strong>. <code>list[1:]</code> makes a <strong>new list</strong> from index 1 onward. Two rules to lock in: the <strong>start index is included</strong>, and when you give an <strong>end index, that end is excluded</strong>. So <code>nums[1:3]</code> keeps index 1 and 2, but <em>not</em> index 3. Try it:</p>
+  <p class="cell-note">Live — start included, end excluded. Edit the numbers to see the cut move.</p><textarea class="py">nums = [10, 20, 30, 40]
+
+print(nums[1:3])   # [20, 30]      -&gt; index 1 and 2; 3 is excluded
+print(nums[1:])    # [20, 30, 40]  -&gt; index 1 to the end</textarea>
+  <p>Now apply it to <code>sys.argv</code>. Since <code>sys.argv[0]</code> is always the filename, <code>sys.argv[1:]</code> is exactly 'the words the user typed' — loop over it with the same <code>for</code>-over-a-list to greet everyone:</p>
+  <p class="cell-note">Terminal only — save as name.py, then: python name.py David Carter Emma</p><div class="codeblock"><pre><code>import sys
+
+# sys.argv[1:] = every word AFTER the script name
+for name in sys.argv[1:]:
+    print("hello, my name is", name)</code></pre></div>
+  <div class="quiz"><p class="quiz-q">You run <code>python greet.py Alice Bob</code>. What is <code>sys.argv[1:]</code>, and why slice it?</p><div class="opts"><button class="opt" type="button" data-correct><code>['Alice', 'Bob']</code> — the slice starts at index 1, dropping <code>sys.argv[0]</code> (the filename) and keeping just the words the user typed</button><button class="opt" type="button"><code>['greet.py', 'Alice', 'Bob']</code> — slicing returns the whole list</button><button class="opt" type="button"><code>['greet.py', 'Alice']</code> — <code>[1:]</code> drops the last item, not the first</button><button class="opt" type="button"><code>['Alice']</code> — <code>[1:]</code> keeps only index 1</button></div><div class="why"><code>sys.argv</code> is <code>['greet.py', 'Alice', 'Bob']</code>. The slice <code>[1:]</code> means 'from index 1 to the end,' so it drops the script name at index 0 and yields <code>['Alice', 'Bob']</code> — every word the user typed, and nothing else. Since slot 0 is always the filename, slicing it off is exactly how you loop over only the user's input.</div></div>
+  <h2>Packages and pip: installing other people's code</h2>
+  <p><code>random</code>, <code>statistics</code>, and <code>json</code> come <em>with</em> Python. But what if you want a tool nobody at Python HQ wrote — say, a program that prints an ASCII-art cow saying your text? Millions of such libraries — <strong>packages</strong> — are published by other people on a site called <strong>PyPI</strong> (the Python Package Index). To use one you first <strong>install</strong> it with <strong><code>pip</code></strong>, a command you run <strong>in your terminal</strong>, not inside Python. Two distinct steps, easy to mix up: <strong><code>pip install</code></strong> (terminal, once) downloads the package; <strong><code>import</code></strong> (in your code) loads it so you can use it.</p>
+  <div class="callout later"><span class="tag">Terminal only</span><p>Run in your terminal: <code>pip install cowsay</code>, then save the code as <code>say.py</code> and run <code>python say.py David</code>.</p></div>
+  <p class="cell-note">Terminal only — save as say.py. Swap <code>cow</code> for <code>trex</code> and re-run to get a dinosaur instead.</p><div class="codeblock"><pre><code>import cowsay
+import sys
+
+if len(sys.argv) == 2:
+    cowsay.cow("hello, " + sys.argv[1])
+    # Try this too:  cowsay.trex("hello, " + sys.argv[1])</code></pre></div>
+  <details class="predict"><summary>Predict: you skip <code>pip install cowsay</code> and just write <code>import cowsay</code> at the top of your program, then run it. What happens?</summary><div style="margin:.2rem 0 .6rem"><p>It crashes with <code>ModuleNotFoundError: No module named 'cowsay'</code>. <code>import</code> only <em>loads</em> a package that's already on your machine — it never downloads one. The fix is the two-step: run <code>pip install cowsay</code> in your terminal first (once), <em>then</em> <code>import cowsay</code> in your code. See the gotcha below for one extra wrinkle: the install name and the import name don't always match.</p></div></details>
+  <div class="callout gotcha"><span class="tag">pip install and import are TWO steps</span><p>A big beginner trap: thinking <code>import cowsay</code> alone fetches the package, or that <code>pip</code> runs <em>inside</em> Python. It doesn't. The fix: run <strong><code>pip install cowsay</code> in your terminal</strong> first, <em>then</em> <code>import cowsay</code> in your code. One real-world snag: the <strong>install name can differ from the import name</strong> — you <code>pip install Pillow</code> but <code>import PIL</code>. (Our examples, <code>cowsay</code> and <code>requests</code>, happen to match.)</p></div>
+  <h2>APIs: fetching live data from the internet</h2>
+  <p>Last wall, the most exciting one: you want <strong>live</strong> data — today's top songs, today's weather — that you could never type into a list yourself, because it changes by the minute. An <strong>API</strong> (Application Programming Interface) is a web address that hands back <em>data</em> instead of a web page, usually as <strong>JSON</strong> text. The <code>requests</code> package fetches it. <code>requests.get(url)</code> goes to the address and brings back a <strong>response</strong> object — and the response is <strong>not the data itself</strong>, a distinction we'll make hands-on in a moment.</p>
+  <div class="callout later"><span class="tag">Terminal only — also needs the internet</span><p>Run in your terminal: <code>pip install requests</code>, then save as <code>itunes.py</code> and run <code>python itunes.py weezer</code>. Use a <strong>single word</strong> like <code>weezer</code> so the URL just works. <em>(Beyond this lecture: multi-word terms like 'taylor swift' need URL-encoding — ignore that for now.)</em></p></div>
+  <p class="cell-note">Terminal only — save as itunes.py, then: python itunes.py weezer</p><div class="codeblock"><pre><code>import requests
+import sys
+
+if len(sys.argv) != 2:
+    sys.exit("Usage: python itunes.py SONG")
+
+response = requests.get(
+    "https://itunes.apple.com/search?entity=song&amp;limit=1&amp;term=" + sys.argv[1]
+)
+
+print(response.json())</code></pre></div>
+  <p>Notice <code>response.json()</code> in there: that's the call that turns the response <em>into</em> data you can use. That raw print is an unreadable wall of text, though. Before we tidy it, let's do the one piece of JSON you <em>can</em> try live, right here — no internet needed. The <code>json</code> library's <code>json.dumps(obj, indent=2)</code> takes a Python object and <strong>dumps</strong> it out as a tidy, indented <strong>string</strong>:</p>
+  <p class="cell-note">Live — pretty-print a Python dict you typed yourself. Edit it and re-run to feel how indent works.</p><textarea class="py">import json
+
+song = {"trackName": "Buddy Holly", "artist": "Weezer", "genres": ["Rock", "Pop"]}
+
+print(json.dumps(song, indent=2))</textarea>
+  <div class="mental-model"><span class="tag">Mental model — JSON has two doors</span><p>Two functions move data across the JSON boundary, in opposite directions. Picture <strong>two doors</strong> — one IN, one OUT — and you'll never mix them up.</p><div class="mm-diagram"><div class="mm-card"><b>The IN door — response.json() (text -&gt; Python)</b><pre style="margin:.4rem 0;font-family:var(--mono);font-size:.84rem;white-space:pre-wrap;overflow-x:auto">response = requests.get(url)
+data = response.json()        # text -&gt; Python
+songs = data['results']       # now you can index it</pre><span><code>response.json()</code> is the <strong>IN</strong> door: it takes the JSON <strong>text</strong> the internet sent back and parses it <em>into</em> a Python dict/list you can index. After this call you're working with normal Python objects.</span></div><div class="mm-card"><b>The OUT door — json.dumps(obj, indent=2) (Python -&gt; text)</b><pre style="margin:.4rem 0;font-family:var(--mono);font-size:.84rem;white-space:pre-wrap;overflow-x:auto">import json
+print(json.dumps(data, indent=2))   # Python -&gt; text</pre><span><code>json.dumps(obj, indent=2)</code> is the <strong>OUT</strong> door: it takes a Python object and turns it <em>into</em> a pretty <strong>text</strong> string for a human to read. (Beyond CS50: <code>json.loads(text)</code> is the standalone IN door if your JSON is already in a string.)</span></div></div></div>
+  <p>So back in the terminal, wrap the response in the OUT door and the wall of text becomes readable:</p>
+  <p class="cell-note">Terminal only — same setup. python itunes.py weezer  -&gt;  now the JSON is neatly indented.</p><div class="codeblock"><pre><code>import json
+import requests
+import sys
+
+if len(sys.argv) != 2:
+    sys.exit("Usage: python itunes.py SONG")
+
+response = requests.get(
+    "https://itunes.apple.com/search?entity=song&amp;limit=1&amp;term=" + sys.argv[1]
+)
+
+print(json.dumps(response.json(), indent=2))</code></pre></div>
+  <p>Once you can see the shape, pull out just what you need. The parsed dict has a <code>"results"</code> key holding a list of songs; loop over it and print each one's <code>"trackName"</code>. Bump <code>limit</code> to <code>50</code> for more results:</p>
+  <p class="cell-note">Terminal only — same setup. python itunes.py weezer  -&gt;  prints a list of matching track names.</p><div class="codeblock"><pre><code>import requests
+import sys
+
+if len(sys.argv) != 2:
+    sys.exit("Usage: python itunes.py SONG")
+
+response = requests.get(
+    "https://itunes.apple.com/search?entity=song&amp;limit=50&amp;term=" + sys.argv[1]
+)
+
+data = response.json()
+for result in data["results"]:
+    print(result["trackName"])</code></pre></div>
+  <div class="callout note"><span class="tag">This loop is pure Lecture 2</span><p>Same dict-by-key and <code>for</code>-over-a-list from Lecture 2 — <code>data["results"]</code> reaches a list, <code>result["trackName"]</code> reads a value by key. The only new thing is <em>where the data came from</em>: the internet (through the IN door, <code>response.json()</code>) instead of a literal you typed. (<code>data</code> is just a name; CS50 calls it <code>o</code>.)</p></div>
+  <h2>Your own module: functions you can import</h2>
+  <p>Here's the secret that takes the magic out of modules: a module is <strong>not special</strong> — it's just an ordinary <code>.py</code> file full of functions, defined like <code>square(n)</code> in Lecture 0. <code>random</code> is someone's file of functions; so is <code>statistics</code>. When you write your own file of functions, <em>you've made a module</em>, and another file can <code>import</code> it. In a real project that's two separate files run from your terminal — so the two cells below are terminal-only, showing the real cross-file import. First the toolbox file, <code>sayings.py</code>:</p>
+  <p class="cell-note">Terminal only — save as sayings.py. Just functions: this is your module. Running it directly does nothing visible; it's meant to be imported.</p><div class="codeblock"><pre><code>def hello(name):
+    print(f"hello, {name}")
+
+
+def goodbye(name):
+    print(f"goodbye, {name}")</code></pre></div>
+  <p>Now a second file, <code>say.py</code>, imports a tool from <em>your own</em> box. <code>from sayings import goodbye</code> takes the <code>goodbye</code> function out of your file — the same <code>from ... import</code> move as <code>from random import choice</code>, except the box is one you wrote. It even reads a name from the command line, just like the earlier <code>name.py</code>:</p>
+  <p class="cell-note">Terminal only — save as say.py beside sayings.py, then: python say.py David</p><div class="codeblock"><pre><code>import sys
+from sayings import goodbye
+
+if len(sys.argv) == 2:
+    goodbye(sys.argv[1])</code></pre></div>
+  <p>To <em>feel</em> <code>from ... import</code> work without a terminal, here's a live version: we define <code>goodbye</code> and call it in the same box (one box can't span files), so you can press Run and see the call fire. On your machine it would be the two separate files above.</p>
+  <p class="cell-note">Live — adaptation for the browser: goodbye defined and called in one box. On your machine, use the two-file version above.</p><textarea class="py"># Stands in for sayings.py:
+def goodbye(name):
+    print(f"goodbye, {name}")
+
+
+# Stands in for say.py (where you'd write: from sayings import goodbye):
+goodbye("David")</textarea>
+  <p><em>You'll sometimes see <code>if __name__ == "__main__":</code> at the bottom of a module — it's covered in a later lecture; ignore it for now.</em></p>
+  <div class="callout note"><span class="tag">Active-recall challenge</span><p>Prove a module is just functions: in any white box above, write <code>def double(n): return n <em> 2</code>, then call <code>print(double(21))</code> and Run. To verify a stdlib tool live, drop <code>import statistics; print(statistics.mean([2, 4, 6]))</code> into a box. (Reminder: white boxes run here; greyed boxes are terminal only. The two deliberate-surprise boxes above — the <code>random.randint</code> NameError and the <code>cards = random.shuffle(cards)</code> None — are </em>meant* to error or surprise, not hang.)</p></div>
+  <div class="gotcha-list"><h2 id="gotchas">Common mistakes at a glance</h2><ul><li><strong>The dot is the box.</strong> After <code>import random</code>, write <code>random.choice(...)</code> (reach in). After <code>from random import choice</code>, call it bare, <code>choice(...)</code> — and <code>random.anything</code> then raises <code>NameError</code> (Lecture 3's error), because <code>from ... import</code> brings in only the named tool, never the box itself.</li><li><strong><code>random.shuffle</code> returns <code>None</code> and changes the list in place.</strong> Never write <code>cards = random.shuffle(cards)</code> — that throws the shuffled deck away and leaves <code>cards</code> set to <code>None</code>. Call <code>random.shuffle(cards)</code> on its own line, then use <code>cards</code>.</li><li><strong><code>statistics.mean</code>'s type follows the answer.</strong> For int inputs, a whole average comes back as an int (<code>mean([100, 90])</code> is <code>95</code>), otherwise a float (<code>mean([100, 91])</code> is <code>95.5</code>). Want a float always? Use <code>sum(data) / len(data)</code>.</li><li><strong><code>sys.argv[0]</code> is the program's own filename</strong>, not the first word typed. Real arguments start at index <strong>1</strong>, which is why 'one name given' means <code>len(sys.argv) == 2</code>, and why you slice <code>sys.argv[1:]</code> to loop over just the user's words.</li><li><strong>A slice <code>list[1:]</code> returns a new list:</strong> the start index is included, an end index (if given) is excluded — <code>nums[1:3]</code> keeps index 1 and 2, not 3. A slice never returns a bare single item.</li><li><strong>A browser cell has no command line, no <code>pip</code>, no internet.</strong> Every <code>sys.argv</code>, <code>cowsay</code>, and <code>requests</code> example is terminal only — run them in your own terminal, with the command shown on each box.</li><li><strong><code>pip install</code> and <code>import</code> are two different steps.</strong> <code>pip install cowsay</code> runs in your <strong>terminal</strong> (once) to download it; <code>import cowsay</code> runs in your <strong>code</strong> to load it. Importing without installing raises <code>ModuleNotFoundError</code>. The install name can differ from the import name (install <code>Pillow</code>, import <code>PIL</code>).</li><li><strong>Reading <code>sys.argv[1]</code> with no argument raises <code>IndexError</code>.</strong> Guard by checking <code>len(sys.argv)</code> first (which also catches <em>too many</em> args), or catch it with <code>try</code>/<code>except IndexError</code> (the specific type, never a bare <code>except</code>). <code>sys.exit(message)</code> prints the message and stops the program right there.</li><li><strong>Never name your own file the same as a library.</strong> Run <code>python random.py</code> with <code>import random</code> inside and Python imports your own file, crashing <code>random.choice</code> with <code>AttributeError: partially initialized module 'random' ... (most likely due to a circular import)</code>. Same for <code>requests.py</code>, <code>statistics.py</code>.</li><li><strong><code>requests.get(url)</code> returns a response, not the data.</strong> Call <code>response.json()</code> to parse the JSON body into a Python dict/list you can index, like <code>response.json()["results"]</code>.</li><li><strong>JSON has two doors that run opposite ways.</strong> <code>response.json()</code> is the IN door — JSON <strong>text into</strong> a Python object you can index. <code>json.dumps(obj, indent=2)</code> is the OUT door — a Python object <strong>into</strong> a pretty text string.</li></ul></div>
+  <h2>Recap &amp; next step</h2><p>The big ideas, one line each:</p><ul><li><strong>The toolbox + the dot.</strong> <code>import random</code> puts the whole box in your room, so you reach each tool with a dot (<code>random.choice</code>, <code>random.randint</code>, <code>random.shuffle</code>). <code>from random import choice</code> puts one tool on your desk, so you call it bare (<code>choice(...)</code>) — and then <code>random.anything</code> raises a <code>NameError</code>.</li><li><strong>random.</strong> <code>shuffle</code> rearranges a list <strong>in place</strong> and returns <code>None</code>, so never assign its result.</li><li><strong>statistics.</strong> <code>mean</code> keeps the natural type — <code>95</code> (int) for a whole average, <code>95.5</code> (float) otherwise.</li><li><strong>Browser vs terminal.</strong> Only the standard library runs in white boxes; <code>sys.argv</code>, <code>pip</code>, and <code>requests</code> are terminal only.</li><li><strong>Command line.</strong> The filename sits in <code>sys.argv[0]</code>, so real arguments start at index 1 (one name -&gt; <code>len</code> is 2); guard with <code>len(sys.argv)</code> and <code>if</code>/<code>elif</code>/<code>else</code> (or <code>try</code>/<code>except IndexError</code>), bail with <code>sys.exit(message)</code>, and slice <code>sys.argv[1:]</code> to loop over the user's words.</li><li><strong>Packages.</strong> <code>pip install</code> (terminal) and <code>import</code> (code) are separate steps; <code>pip</code> pulls packages from PyPI.</li><li><strong>APIs and JSON's two doors.</strong> <code>requests.get(url)</code> returns a response; <code>.json()</code> is the IN door (text -&gt; Python dict), <code>json.dumps(obj, indent=2)</code> is the OUT door (Python -&gt; pretty text).</li><li><strong>Your own module.</strong> Just functions you can import — <code>from sayings import goodbye</code> mirrors <code>from random import choice</code>.</li></ul><p>Next up is the Pset 4 problem set — reach for the standard library before writing your own, and validate <code>sys.argv</code>'s length before you index it.</p>
+  <p><a href="index.html">← Back to all lectures</a></p>
+</main>
+</div>
+
+<footer class="site">CS50P interactive notes · Lecture 4 — Libraries · run, edit, and break things freely.</footer>
+<script src="assets/notes.js" defer></script>
+</body>
+</html>
