@@ -1,0 +1,249 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Lecture 1 — Conditionals · CS50P Notes</title>
+<link rel="icon" href="data:,">
+<link rel="stylesheet" href="assets/notes.css">
+<script>try{var t=localStorage.getItem('cs50p-theme');if(t)document.documentElement.setAttribute('data-theme',t);}catch(e){}</script>
+</head>
+<body>
+<div id="progress"></div>
+
+<header class="site">
+  <a class="brand" href="index.html">← CS50P Notes</a>
+  <span class="spacer"></span>
+  <button class="theme-toggle" type="button" aria-pressed="false">🌙 Dark</button>
+</header>
+
+<div class="wrap">
+<nav class="toc" aria-label="On this page">
+  <details open><summary>Contents</summary><p class="toc-title">On this page</p><ol></ol></details>
+</nav>
+
+<main>
+<h1>Lecture 1 — Conditionals</h1>
+  <p class="subtitle lead">Teaching your program to make decisions: ask a yes/no question, branch with if / elif / else, combine tests with and / or, and write a function that hands back a True/False answer.</p>
+  <div class="callout note"><span class="tag">How to use these notes</span><p>Every code box below is <em>live</em> — edit it and press <em>Run</em> to execute real Python right in your browser (the first run downloads Python once, about 10 seconds). When a cell uses <code>input()</code>, a small pop-up asks what to type. That's all you need to start; a couple of practice tips appear at the first input cell.</p></div>
+  <div class="objectives"><h2>What you'll be able to do</h2><ul><li>Write comparisons (<code>&lt;</code>, <code>&lt;=</code>, <code>&gt;</code>, <code>&gt;=</code>, <code>==</code>, <code>!=</code>) and know each one hands back a real <code>True</code>/<code>False</code></li><li>Write a plain <code>if</code>, then a two-way <code>if</code>/<code>else</code>, indenting the block under the colon</li><li>Chain branches with <code>elif</code>/<code>else</code> — and explain why a row of separate <code>if</code>s can double-fire while a chain is one fork that runs only the FIRST match</li><li>Combine conditions with <code>and</code>/<code>or</code>, chain comparisons like <code>90 &lt;= score &lt;= 100</code>, and dodge the <code>or</code> truthiness trap (<code>if x == 1 or 2</code>)</li><li>Use <code>%</code> to test parity and write a function that <em>returns</em> a bool — the Pythonic <code>return n % 2 == 0</code></li></ul></div>
+  <h2>Comparisons: questions that answer True or False</h2>
+  <p>So far a program runs every line, top to bottom. <em>Conditionals</em> let it choose: do something <em>only if</em> something is true. That "something" is a <strong>comparison</strong> — a yes/no question about two values. The very next cell needs only two of them: <code>&lt;</code> (<em>less than</em>) and <code>==</code> (<em>is equal to</em>, two equals signs). Run this and watch the type that comes back:</p>
+  <p class="cell-note">A comparison produces a value you can store — its type is bool.</p><textarea class="py">answer = 3 &lt; 5
+print(answer)
+print(type(answer))
+
+print(5 == 5)
+print(7 != 7)</textarea>
+  <p>A comparison isn't just decoration — it <strong>evaluates to a real value</strong>: either <code>True</code> or <code>False</code>. That value has a type, <code>bool</code>, and you can store it, print it, and pass it around just like a number or string. Python has six comparison operators in all — here's the full set as a <strong>reference to glance back at</strong> (you only need <code>&lt;</code> and <code>==</code> for the next cell):</p>
+  <ul><li><code>&lt;</code> — <em>less than</em> — <code>3 &lt; 5</code></li><li><code>&lt;=</code> — <em>less than or equal to</em> — <code>5 &lt;= 5</code></li><li><code>&gt;</code> — <em>greater than</em> — <code>7 &gt; 2</code></li><li><code>&gt;=</code> — <em>greater than or equal to</em> — <code>4 &gt;= 4</code></li><li><code>==</code> — <em>is equal to</em> (two equals signs!) — <code>5 == 5</code></li><li><code>!=</code> — <em>is not equal to</em> — <code>7 != 8</code></li></ul>
+  <div class="callout gotcha"><span class="tag">One = or two? (the #1 beginner bug)</span><p>You met <code>=</code> in Lecture 0 as the <em>assignment</em> operator: it stores the value on the right into the name on the left — not algebra. <code>==</code> is its question-asking partner: it <em>compares</em> two values and answers <code>True</code>/<code>False</code>. So <code>x = 5</code> <strong>puts 5 into x</strong>, while <code>x == 5</code> <strong>asks "is x equal to 5?"</strong>. Read <code>==</code> out loud as "is equal to?". Writing <code>if x = 5:</code> is a <code>SyntaxError</code> (Python catches you), but training your eye on <code>==</code> is what really prevents the bug — when a comparison looks wrong, count your equals signs.</p></div>
+  <div class="quiz"><p class="quiz-q">What does <code>7 != 7</code> evaluate to, and what <em>type</em> is it?</p><div class="opts"><button class="opt" type="button" data-correct><code>False</code> — a <code>bool</code></button><button class="opt" type="button"><code>True</code> — a <code>bool</code></button><button class="opt" type="button"><code>0</code> — an <code>int</code></button><button class="opt" type="button">It's a <code>SyntaxError</code></button></div><div class="why"><code>!=</code> means "not equal". 7 <em>is</em> equal to 7, so "not equal" is <code>False</code>. Every comparison hands back a real <code>bool</code> (<code>True</code>/<code>False</code>), never a number — that fact powers the rest of this lecture.</div></div>
+  <h2>The if statement</h2>
+  <p>An <code>if</code> runs an indented block of code only when its condition is <code>True</code>. The line ends with a colon, and the body is <strong>indented</strong> (4 spaces) — the same colon-and-indent shape as <code>def</code> from Lecture 0. That indentation is how Python knows what's "inside" the <code>if</code>.</p>
+  <p>Here's <code>compare.py</code>. It opens with the <code>int(input(...))</code> shape you met in Lecture 0 for reading numbers from the user — the only new part is the <code>if</code>.</p>
+  <p class="cell-note">compare.py — your first live input cell. Try x=2, y=3 (prints), then run it again with x=3, y=2 (prints nothing). Tip: break things on purpose, then re-type the fix in your own editor and run <code>python file.py</code> — that muscle memory matters.</p><textarea class="py">x = int(input("What's x? "))
+y = int(input("What's y? "))
+
+if x &lt; y:
+    print("x is less than y")</textarea>
+  <p>With <code>x = 2</code>, <code>y = 3</code> you'll see the message. Run it again with <code>x = 3</code>, <code>y = 2</code> and you'll see <em>nothing</em> — the condition was <code>False</code>, so Python skipped the indented line entirely.</p>
+  <div class="callout later"><span class="tag">Beyond the lecture · input() always returns text</span><p><code>input()</code> hands back a <code>str</code>. If you drop the <code>int(...)</code> and compare the raw text, Python compares it <em>character by character, left to right, by Unicode code-point value</em> — not by numeric size — so <code>'10' &lt; '9'</code> is actually <code>True</code>, because the character <code>'1'</code> sorts before <code>'9'</code>. Always convert with <code>int()</code> <em>before</em> comparing numbers. Run the cell below to see the trap and the fix:</p></div>
+  <p class="cell-note">Why int() matters — text compares character by character, not by numeric size.</p><textarea class="py">print("10" &lt; "9")   # text: '1' sorts before '9' -&gt; True (!)
+print(10 &lt; 9)       # numbers: 10 is not less than 9 -&gt; False</textarea>
+  <h2>Control flow: separate ifs vs. elif vs. else</h2>
+  <p><code>compare.py</code> handles one case. Before we add more, look at what happens when you simply stack independent <code>if</code>s — and pick conditions that can <em>overlap</em>. At <code>score = 95</code>, both of these are true. Run it and count the lines:</p>
+  <p class="cell-note">Two separate ifs with OVERLAPPING conditions — both fire. Watch TWO lines print.</p><textarea class="py">score = 95
+
+if score &gt;= 90:
+    print("A-range")
+if score &gt;= 60:
+    print("passing")</textarea>
+  <p>Two lines printed. That's the catch with separate <code>if</code>s: each is asked <em>independently</em>, every run, with no link between them — so when conditions overlap, several fire at once. The fix is <code>elif</code> ("else if"): it chains the tests so Python stops at the <strong>first</strong> true one and skips the rest. (For the <code>&lt;</code>/<code>&gt;</code>/<code>==</code> case in <code>compare.py</code> the conditions can't overlap, so separate <code>if</code>s only waste a little work there — but the habit of chaining is what keeps overlap bugs away.) Going back to <code>compare.py</code> with all three cases:</p>
+  <p class="cell-note">if / elif / else — Python stops at the first match.</p><textarea class="py">x = int(input("What's x? "))
+y = int(input("What's y? "))
+
+if x &lt; y:
+    print("x is less than y")
+elif x &gt; y:
+    print("x is greater than y")
+else:
+    print("x is equal to y")</textarea>
+  <p>Notice the final <code>else</code> instead of a third <code>elif x == y:</code>. Once <code>x</code> isn't less than <code>y</code> and isn't greater than <code>y</code>, it <em>must</em> be equal — so <code>else</code> (the catch-all) is both shorter and impossible to get wrong. Use <code>else</code> whenever the last branch is "everything that's left."</p>
+  <div class="mental-model"><span class="tag">Mental model — the idea to hold onto</span><p>Hold these two pictures side by side. A stack of separate <code>if</code>s and an <code>if</code>/<code>elif</code>/<code>else</code> chain look almost identical but behave very differently — and the difference is <em>which branches run</em>.</p><div class="mm-diagram"><div class="mm-card"><b>if / elif / else  =  one fork in the road</b><pre style="margin:.4rem 0;font-family:var(--mono);font-size:.84rem;white-space:pre-wrap;overflow-x:auto">if x &lt; y:    'less'
+elif x &gt; y:  'greater'
+else:        'equal'</pre><span>You hit the forks one at a time and take the FIRST open road — then never see the others. Python stops at the first True. Exactly ONE branch runs.</span></div><div class="mm-card"><b>separate ifs  =  a row of gates</b><pre style="margin:.4rem 0;font-family:var(--mono);font-size:.84rem;white-space:pre-wrap;overflow-x:auto">if score &gt;= 90: 'A-range'
+if score &gt;= 60: 'passing'</pre><span>Every gate is checked on its own, every run. If conditions overlap (95 clears both), several open at once — as you just saw. There is no link between them.</span></div></div></div>
+  <div class="callout later"><span class="tag">Coming from C or Java? (optional)</span><p>It's <code>elif</code>, not <code>else if</code>. Blocks are defined by <em>indentation</em>, not braces <code>{}</code> (and no semicolons). And Python uses the words <code>and</code>/<code>or</code> (which you'll meet next) — never <code>&amp;&amp;</code> or <code>||</code>.</p></div>
+  <h2>The or operator</h2>
+  <p><code>or</code> joins two conditions and is <code>True</code> when <strong>at least one</strong> side is true. Look back at <code>compare.py</code>: "less than OR greater than" is just a wordy way of saying "not equal." So <code>or</code> lets us collapse two of its branches into one:</p>
+  <p class="cell-note">or is True when at least one side is true. Try x=2,y=3 and x=5,y=5.</p><textarea class="py">x = int(input("What's x? "))
+y = int(input("What's y? "))
+
+if x &lt; y or x &gt; y:
+    print("x is not equal to y")
+else:
+    print("x is equal to y")</textarea>
+  <div class="callout gotcha"><span class="tag">Repeat the comparison on each side of or</span><p>You must write the variable again on each side: <code>x &lt; y or x &gt; y</code>. The tempting shorthand for "is the day Sat or Sun" — <code>if day == "Sat" or "Sun":</code> — is a <em>silent bug</em>: it has no error, but it fires for <strong>every</strong> value, not just Sat and Sun. Why? The bare <code>"Sun"</code> on the right is a non-empty string, and Python treats that as <code>True</code> — so the whole condition is always true. (That "a value counts as True" idea is <em>truthiness</em>; the section just below makes it concrete.) The rule for now: put a full comparison on <em>both</em> sides of <code>or</code> — <code>day == "Sat" or day == "Sun"</code>.</p></div>
+  <div class="callout later"><span class="tag">Beyond the lecture · sometimes or is overkill</span><p><code>or</code> shines for "is it one of these?", but don't reach for it when a single comparison says the same thing. "less than OR greater than" is exactly "not equal," so the <code>if x &lt; y or x &gt; y:</code> above is even cleaner as <code>if x != y:</code>. Prefer the shortest form that reads clearly.</p></div>
+  <h2>Beyond the lecture · why that or bug happens: truthy &amp; falsy</h2>
+  <div class="callout later"><span class="tag">Beyond the lecture · these notes add this</span><p>Truthiness isn't in CS50's Lecture 1 — it's a robustness idea these notes add to explain the silent <code>or</code> bug you just met. Read it now while that bug is fresh.</p></div>
+  <p>Outside of comparisons, Python treats some plain values as stand-ins for <code>True</code>/<code>False</code>: any non-empty string and any non-zero number count as <code>True</code>; an empty string <code>""</code> and <code>0</code> count as <code>False</code>. Python calls these <em>truthy</em> and <em>falsy</em>. Run this to see it directly — note the last line, the classic trap:</p>
+  <p class="cell-note">Truthiness made concrete — this is what <code>if</code> sees when a non-bool sits in a condition.</p><textarea class="py">print(bool(2))     # any non-zero number -&gt; True
+print(bool(0))     # zero -&gt; False
+print(bool("hi"))  # any non-empty string -&gt; True
+print(bool(""))    # empty string -&gt; False
+print(bool("0"))   # TRAP: "0" is a non-empty string -&gt; True (!)</textarea>
+  <p>That's why <code>if day == "Sat" or "Sun":</code> always fires: the bare <code>"Sun"</code> on the right is a non-empty string, so it's <em>truthy</em>, which makes the whole condition true no matter what <code>day</code> is. Watch the broken and fixed versions side by side:</p>
+  <p class="cell-note">BROKEN vs FIXED — bare "Sun" is truthy, so the broken version fires for any day.</p><textarea class="py">day = "Mon"
+
+# BROKEN: bare "Sun" is truthy, so this fires for ANY day
+if day == "Sat" or "Sun":
+    print("broken version says: it's the weekend (!)")
+
+# FIXED: a full comparison on each side of `or`
+if day == "Sat" or day == "Sun":
+    print("fixed version says: it's the weekend")
+else:
+    print("fixed version says: back to work")</textarea>
+  <details class="predict"><summary>Predict: what does <code>print(bool("0"))</code> show — and how does that differ from <code>print(bool(0))</code>?</summary><div style="margin:.2rem 0 .6rem"><p><code>bool("0")</code> is <code>True</code>; <code>bool(0)</code> is <code>False</code>. The string <code>"0"</code> is a <em>character</em>, not the number zero — and any non-empty string is truthy, so its content doesn't matter. Only the empty string <code>""</code> is falsy. The number <code>0</code> is the falsy one. This is exactly why a bare value sneaks past <code>or</code>.</p></div></details>
+  <div class="quiz"><p class="quiz-q">Which condition correctly checks whether <code>n</code> is 0 or 5?</p><div class="opts"><button class="opt" type="button" data-correct><code>if n == 0 or n == 5:</code></button><button class="opt" type="button"><code>if n == 0 or 5:</code></button><button class="opt" type="button"><code>if n == "0" or n == "5":</code></button><button class="opt" type="button"><code>if n = 0 or n = 5:</code></button></div><div class="why"><code>or</code> joins two complete questions, so you must write <code>n ==</code> on <em>both</em> sides. <code>n == 0 or 5</code> leaves a bare <code>5</code> — which is truthy — so the whole thing is always true (a silent bug). <code>n == "0"</code> compares against the <em>string</em> <code>"0"</code>, which never equals the number <code>0</code>. And <code>if n = 0</code> uses assignment <code>=</code> inside an <code>if</code>, a <code>SyntaxError</code>.</div></div>
+  <h2>The and operator</h2>
+  <p><code>and</code> is <code>True</code> only when <strong>both</strong> sides are true. It's perfect for "is this value inside a range?" — you bound it from below <em>and</em> from above. An A grade is at least 90 and at most 100, so one band looks like this:</p>
+  <p class="cell-note">One bounded check with <code>and</code> — both sides must be true. Try score=95, then 105.</p><textarea class="py">score = int(input("Score: "))
+
+if score &gt;= 90 and score &lt;= 100:
+    print("Grade: A")
+else:
+    print("Not an A")</textarea>
+  <p>With <code>and</code>, a 95 prints "Grade: A" (it clears both sides) but a 105 doesn't (it fails <code>score &lt;= 100</code>). Now stack a band per grade into <code>grade.py</code>. Each band is written the <strong>same way</strong> — <code>&gt;= low and &lt; high</code> — except the very top, which caps at <code>&lt;= 100</code>:</p>
+  <p class="cell-note">grade.py — enter a score like 85. Every band uses the same <code>&gt;= low and &lt; high</code> shape.</p><textarea class="py">score = int(input("Score: "))
+
+if score &gt;= 90 and score &lt;= 100:
+    print("Grade: A")
+elif score &gt;= 80 and score &lt; 90:
+    print("Grade: B")
+elif score &gt;= 70 and score &lt; 80:
+    print("Grade: C")
+elif score &gt;= 60 and score &lt; 70:
+    print("Grade: D")
+else:
+    print("Grade: F")</textarea>
+  <p>The A band uses <code>&lt;= 100</code> (not <code>&lt; 90</code>) only because 100 is the top of the scale — there's no higher band to hand off to. Every band below it uses strict <code>&lt; high</code> so the boundary score lands in exactly one band: an 80 is a B, not a C.</p>
+  <div class="callout later"><span class="tag">Beyond the lecture · short-circuit</span><p><code>and</code> and <code>or</code> stop evaluating as soon as the answer is decided: <code>and</code> stops at the first false side, <code>or</code> stops at the first true side — so the second side might never run. That's handy when the right side is slow or could error. (You've now used both operators, so this trick applies to either one.)</p></div>
+  <h2>Chaining comparisons</h2>
+  <p><code>score &gt;= 90 and score &lt;= 100</code> is so common that Python lets you write it the way you'd write it on paper: <code>90 &lt;= score &lt;= 100</code>. It means exactly "score is between 90 and 100, inclusive," and the value of <code>score</code> is computed once and reused for both comparisons.</p>
+  <p class="cell-note">The Pythonic chained form reads like math. Edit score and re-run.</p><textarea class="py">score = 95
+
+if 90 &lt;= score &lt;= 100:
+    print("in the A range")
+else:
+    print("not in the A range")</textarea>
+  <div class="callout note"><span class="tag">What a chain means</span><p><code>90 &lt;= score &lt;= 100</code> is expanded by Python into <code>90 &lt;= score and score &lt;= 100</code> — with <code>score</code> evaluated a single time and reused for both comparisons. (So <code>score</code> still takes part in <em>two</em> comparisons; it's just <em>computed</em> once.) This reads naturally, but most other languages can't do it, so it's a distinctly Pythonic move. When in doubt, the explicit <code>and</code> form always works too.</p></div>
+  <div class="quiz"><p class="quiz-q">What is <code>90 &lt;= score &lt;= 100</code> shorthand for?</p><div class="opts"><button class="opt" type="button" data-correct><code>90 &lt;= score and score &lt;= 100</code></button><button class="opt" type="button"><code>90 &lt;= score or score &lt;= 100</code></button><button class="opt" type="button"><code>(90 &lt;= score) &lt;= 100</code></button><button class="opt" type="button"><code>90 &lt;= score == 100</code></button></div><div class="why">Python expands a chained comparison into an <code>and</code> of the neighboring pairs, computing <code>score</code> once and reusing it. The <code>(90 &lt;= score) &lt;= 100</code> reading is what most other languages would do — Python doesn't.</div></div>
+  <p>Now a cleaner idea for <code>grade.py</code>. Because <code>elif</code> is checked top-to-bottom and only reaches a rung once all the ones above it failed, you can drop the upper bounds entirely — just list the cutoffs <strong>highest first</strong>:</p>
+  <p class="cell-note">The clean one-sided ladder — each elif only fires because the higher ones failed.</p><textarea class="py">score = 85
+
+if score &gt;= 90:
+    print("Grade: A")
+elif score &gt;= 80:
+    print("Grade: B")
+elif score &gt;= 70:
+    print("Grade: C")
+elif score &gt;= 60:
+    print("Grade: D")
+else:
+    print("Grade: F")</textarea>
+  <p>The one-sided ladder only works because the order is right. Flip it so the <em>loosest</em> cutoff comes first and watch a 95 grab the wrong grade — the <code>&gt;= 60</code> rung swallows everything 60 and up, so <code>A</code> becomes unreachable:</p>
+  <p class="cell-note">ANTI-EXAMPLE — inverted ladder. A 95 should be an A. (Same else as the correct one — the ONLY change is the cutoff order.)</p><textarea class="py">score = 95
+
+if score &gt;= 60:
+    print("Grade: D")
+elif score &gt;= 70:
+    print("Grade: C")
+elif score &gt;= 80:
+    print("Grade: B")
+elif score &gt;= 90:
+    print("Grade: A")
+else:
+    print("Grade: F")</textarea>
+  <details class="predict"><summary>Predict: in that inverted ladder, what grade does a 95 print — and what is the smallest change that fixes it?</summary><div style="margin:.2rem 0 .6rem"><p>Grade: D. Python checks the first rung, <code>score &gt;= 60</code>, which is true for 95, so it prints "D" and stops — the <code>&gt;= 90</code> rung lower down is never reached. The first matching rung wins, so the fix is to reorder the rungs highest cutoff first (<code>&gt;= 90</code>, then <code>&gt;= 80</code>, …); no condition needs to change, only their order.</p></div></details>
+  <div class="callout later"><span class="tag">Beyond the lecture · this assumes a valid 0–100 score</span><p>Dropping the upper bounds is a clean refactor <em>only for in-range input</em>. Bounded <code>grade.py</code> gives a 105 an <code>F</code> (it fails <code>&gt;= 90 and score &lt;= 100</code> and falls to <code>else</code>), while the one-sided ladder gives a 105 an <code>A</code> (105 <code>&gt;= 90</code>). For real input you'd guard first — <code>if score &gt; 100 or score &lt; 0: print("Invalid")</code> — but for a known 0–100 score the two ladders agree.</p></div>
+  <h2>Modulo % and parity (parity.py)</h2>
+  <div class="callout note"><span class="tag">Remember from Lecture 0</span><p><code>%</code> is the <em>remainder</em> operator from Lecture 0's operators cell — <code>7 % 2</code> is <code>1</code>. A number is <strong>even</strong> exactly when its remainder after dividing by 2 is <code>0</code>, i.e. <code>x % 2 == 0</code>.</p></div>
+  <p class="cell-note">parity.py — enter any whole number.</p><textarea class="py">x = int(input("What's x? "))
+
+if x % 2 == 0:
+    print("Even")
+else:
+    print("Odd")</textarea>
+  <p>Look closely at what <code>parity.py</code> does: it asks the comparison <code>x % 2 == 0</code>, gets back a <code>True</code>/<code>False</code>, and acts on it. That's a tidy little decision — but it's locked inside this one script. What if a <em>function</em> could hand that <code>True</code>/<code>False</code> back to us, so any program could ask "is this even?" The next section does exactly that.</p>
+  <h2>Functions that return a bool</h2>
+  <p>In Lecture 0, <code>square(n)</code> handed a value back to your code via <code>return</code>. A function can return <em>any</em> value — and <code>True</code>/<code>False</code> are values too. So we can refactor <code>parity.py</code> into a function <code>is_even(n)</code> that hands back a <code>bool</code>.</p>
+  <p class="cell-note">parity.py, refactored: is_even returns a bool. main() defined first, called last.</p><textarea class="py">def main():
+    x = int(input("What's x? "))
+    if is_even(x):
+        print("Even")
+    else:
+        print("Odd")
+
+
+def is_even(n):
+    if n % 2 == 0:
+        return True
+    else:
+        return False
+
+
+main()</textarea>
+  <p>Here we define <code>main()</code> first and call it at the bottom — a tidy habit worth keeping as programs grow. And notice <code>if is_even(x):</code> — no <code>== True</code> needed, because <code>is_even</code> already <em>returns</em> a <code>bool</code>, which is exactly what <code>if</code> wants. The function hands back a value; the <code>if</code> consumes it.</p>
+  <h2>Pythonic boolean return</h2>
+  <p>That <code>is_even</code> works, but look closely: we test <code>n % 2 == 0</code> (which is <em>already</em> <code>True</code> or <code>False</code>) and then hand back <code>True</code> or <code>False</code> based on it. A first tightening uses a <em>conditional expression</em> ("X if condition else Y") to fold the four lines into one return:</p>
+  <p class="cell-note">Step toward Pythonic: a conditional expression on one line.</p><textarea class="py">def is_even(n):
+    return True if n % 2 == 0 else False
+
+
+print(is_even(4))
+print(is_even(7))</textarea>
+  <p>But that's still circular — we test something that's already a <code>bool</code>, then rebuild a <code>bool</code> from it. Since <strong>a comparison already evaluates to a bool</strong>, we can just return it directly:</p>
+  <p class="cell-note">The Pythonic form — return the comparison itself.</p><textarea class="py">def is_even(n):
+    return n % 2 == 0
+
+
+print(is_even(4))
+print(is_even(7))</textarea>
+  <div class="callout gotcha"><span class="tag">A comparison IS a bool</span><p>Wrapping <code>n % 2 == 0</code> in <code>if … return True else return False</code> (or <code>True if … else False</code>) is like answering "is it raining?" with "if it is raining, then yes, otherwise no." The comparison <em>is</em> the answer. Just return it.</p></div>
+  <div class="quiz"><p class="quiz-q">Why is <code>return n % 2 == 0</code> preferred over the version that returns <code>True</code>/<code>False</code>?</p><div class="opts"><button class="opt" type="button" data-correct><code>n % 2 == 0</code> is already a <code>bool</code>, so returning <code>True</code>/<code>False</code> just re-states the answer</button><button class="opt" type="button">It runs the modulo operation twice as fast</button><button class="opt" type="button"><code>if</code>/<code>else</code> can't return values</button><button class="opt" type="button"><code>==</code> rounds the result, so it's more accurate</button></div><div class="why">A comparison evaluates to <code>True</code>/<code>False</code> by itself. Returning it directly is shorter and clearer — there's no need to convert a bool into a bool.</div></div>
+  <h2>Branching on a value: match / case</h2>
+  <p>Just like Lecture 0's greeter that printed <code>hello, NAME</code>, we read a name with <code>input()</code> — but this time we <strong>branch</strong> on it, sorting Harry Potter characters into houses. First, with tools you already have: an <code>if</code>/<code>elif</code> chain, using the <code>or</code> grouping from earlier to gather the Gryffindors:</p>
+  <p class="cell-note">Houses with if/elif and or — type Harry, Draco, or anything else.</p><textarea class="py">name = input("What's your name? ")
+
+if name == "Harry" or name == "Hermione" or name == "Ron":
+    print("Gryffindor")
+elif name == "Draco":
+    print("Slytherin")
+else:
+    print("Who?")</textarea>
+  <p>When you're matching one value against several fixed options, <code>match</code>/<code>case</code> reads more cleanly — and unlike <code>or</code>, it scales to many options without repeating the variable each time. The variable goes after <code>match</code>, each <code>case</code> lists a value to compare against, and <code>case _</code> is the catch-all default (like <code>else</code>). Combine alternatives in one <code>case</code> with the pipe <code>|</code> (read it as "or") — the direct parallel of the <code>or</code> grouping you just wrote. <code>match</code> checks cases top-to-bottom, runs the <em>first</em> match, and stops:</p>
+  <p class="cell-note">match/case — | combines alternatives, case _ is the default.</p><textarea class="py">name = input("What's your name? ")
+
+match name:
+    case "Harry" | "Hermione" | "Ron":
+        print("Gryffindor")
+    case "Draco":
+        print("Slytherin")
+    case _:
+        print("Who?")</textarea>
+  <p>That reads more cleanly than the <code>if</code>/<code>elif</code> chain, especially as the number of cases grows — each option is one short line and the variable <code>name</code> appears only once. (You <em>can</em> also write each value on its own <code>case</code> line without the pipe, but grouping with <code>|</code> keeps related options together.) Unlike <code>switch</code> in C or Java, <code>match</code> has <em>no fall-through</em>: it runs only the first matching case, then exits. There's also a subtler "capture" behavior with bare names you'll meet much later — for now, always match against a literal like <code>case "Harry":</code>.</p>
+  <div class="callout later"><span class="tag">Heads up · match needs Python 3.10+</span><p><code>match</code>/<code>case</code> was added in <strong>Python 3.10</strong>, and scales nicely once you have many fixed options. It runs in these browser cells (Python 3.12), but on an older <em>local</em> Python — including the 3.9 that ships on many machines — <code>python file.py</code> raises a <code>SyntaxError</code>. For just two or three values, the <code>if</code>/<code>elif</code>/<code>else</code> version above reads fine and runs everywhere; check your version with <code>python --version</code> if <code>match</code> errors.</p></div>
+  <details class="predict"><summary>Predict: with the match cell above, you run it and type "harry" (lowercase). What prints?</summary><div style="margin:.2rem 0 .6rem"><p>Who? — the cases test for the exact string <code>"Harry"</code> with a capital H, and <code>"harry"</code> doesn't equal it. So none of the literal cases match and it falls to the wildcard <code>case _:</code>. Comparisons are case-sensitive; <code>match</code> compares values exactly, just like <code>==</code>. Up next is Problem Set 1, where you'll wire these branches into real problems.</p></div></details>
+  <div class="gotcha-list"><h2 id="gotchas">Common mistakes at a glance</h2><ul><li><code>=</code> <strong>assigns</strong>, <code>==</code> <strong>compares</strong>. <code>if x = 5:</code> is a <code>SyntaxError</code> — read <code>==</code> as "is equal to?" and count your equals signs when a test looks wrong.</li><li>A comparison evaluates to a real <code>bool</code> (<code>True</code>/<code>False</code>) — you can store it and <code>return</code> it directly. Don't wrap it in <code>if … return True else return False</code> (or <code>True if … else False</code>).</li><li>Separate <code>if</code>s are a <strong>row of gates</strong> — <em>all</em> get checked, and overlapping conditions can open more than one (a 95 clears both <code>&gt;= 90</code> and <code>&gt;= 60</code>). <code>if</code>/<code>elif</code>/<code>else</code> is <strong>one fork in the road</strong> that stops at the first true branch. Use <code>elif</code> when you want exactly one.</li><li>In an <code>elif</code> ladder, <strong>order matters</strong>: put the highest cutoff first, or a loose rung like <code>score &gt;= 60</code> matches a 95 first and makes <code>A</code> unreachable.</li><li><code>if x == 1 or 2:</code> runs for every x — a bare <code>2</code> is <em>truthy</em> (non-zero), so the condition is always truthy. Repeat the comparison: <code>if x == 1 or x == 2:</code>. Same trap with strings: <code>name == "Harry" or "Ron"</code>.</li><li>Truthy/falsy: any non-zero number and any non-empty string act as <code>True</code> in a condition — even <code>"0"</code>! Only <code>0</code> and <code>""</code> act as <code>False</code>. That's why a bare value sneaks past <code>or</code>.</li><li><code>input()</code> returns a <code>str</code>. Convert with <code>int()</code> before comparing numbers, or <code>'10' &lt; '9'</code> comes out <code>True</code> (text compares character by character, left to right, by Unicode code-point value).</li><li>Dropping the upper bounds in a one-sided ladder assumes valid 0–100 input — a 105 prints <code>A</code> there but <code>F</code> in bounded <code>grade.py</code>. Guard the range first if input could be out of bounds.</li><li><code>match</code>/<code>case</code> needs <strong>Python 3.10+</strong>. It works in the browser cells (Python 3.12) but raises a <code>SyntaxError</code> on an older local Python (e.g. 3.9) — fall back to <code>if</code>/<code>elif</code>/<code>else</code> (check with <code>python --version</code>). <code>match</code> has no fall-through and <code>case _:</code> is the catch-all (like <code>else</code>).</li></ul></div>
+  <h2>Recap &amp; next step</h2><p>You can now make your programs <em>decide</em>: comparisons hand back a real <code>True</code>/<code>False</code>, <code>if</code>/<code>elif</code>/<code>else</code> is one fork in the road that picks exactly one branch and stops at the first match (while a row of separate <code>if</code>s are independent gates that can double-fire on overlapping conditions), <code>and</code>/<code>or</code> combine and chain conditions, <code>%</code> tests parity, and a function can <code>return</code> a bool — <code>return n % 2 == 0</code> is the cleanest form, since a comparison is already a <code>bool</code>. These conditionals build directly on Lecture 0's <code>input</code>/<code>def</code> basics, so they slotted onto tools you already had. CS50's Lecture 1 programs are <code>compare.py</code>, <code>grade.py</code>, <code>parity.py</code>, <code>is_even</code>, and the houses sorter; the truthiness section, the string-vs-int comparison gotcha, range guarding, and the inverted-ladder anti-example are extra robustness lessons these notes add. The one thing to watch on your own machine: <code>match</code>/<code>case</code> won't run on Python 3.9, so use <code>if</code>/<code>elif</code>/<code>else</code> there. Next up is Problem Set 1, where you'll wire comparisons and <code>elif</code> ladders into real problems — sketch the branches as pseudocode comments first, convert any input to a number before you compare it, and skim the Common mistakes above for a fast refresher.</p>
+  <p><a href="index.html">← Back to all lectures</a></p>
+</main>
+</div>
+
+<footer class="site">CS50P interactive notes · Lecture 1 — Conditionals · run, edit, and break things freely.</footer>
+<script src="assets/notes.js" defer></script>
+</body>
+</html>

@@ -183,6 +183,9 @@ kbd { font-family: var(--mono); font-size: .82em; background: var(--panel); bord
 .cell-out .err b { color: inherit; }
 @media (prefers-reduced-motion: reduce) { .cell-out { transition: none; } }
 
+/* caption shown just above a code cell */
+.cell-note { color: var(--muted); font-size: .92rem; margin: 1.15rem 0 .35rem; }
+
 /* static (non-runnable) code block + copy */
 .codeblock { position: relative; }
 .codeblock pre { margin: 0; background: var(--code-bg); border: 1px solid var(--rule); border-radius: 11px; padding: .9rem 1rem; overflow-x: auto; }
