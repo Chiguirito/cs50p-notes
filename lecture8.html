@@ -1,0 +1,372 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Lecture 8 — Object-Oriented Programming · CS50P Notes</title>
+<link rel="icon" href="data:,">
+<link rel="stylesheet" href="assets/notes.css">
+<script>try{var t=localStorage.getItem('cs50p-theme');if(t)document.documentElement.setAttribute('data-theme',t);}catch(e){}</script>
+</head>
+<body>
+<div id="progress"></div>
+
+<header class="site">
+  <a class="brand" href="index.html">← CS50P Notes</a>
+  <span class="spacer"></span>
+  <button class="theme-toggle" type="button" aria-pressed="false">🌙 Dark</button>
+</header>
+
+<div class="wrap">
+<nav class="toc" aria-label="On this page">
+  <details open><summary>Contents</summary><p class="toc-title">On this page</p><ol></ol></details>
+</nav>
+
+<main>
+<h1>Lecture 8 — Object-Oriented Programming</h1>
+  <p class="subtitle lead">A <code>dict</code> can <em>hold</em> a student's <code>name</code> and <code>house</code>, but it can't check the house is real or <em>do</em> anything with it. A <strong>class</strong> is your own type that bundles data with behavior — and can refuse to exist in a bad state. This lecture builds one <code>Student</code> class, one feature at a time.</p>
+  <div class="objectives"><h2>What you'll be able to do</h2><ul><li>Define your own type with <code>class Student:</code> and an <code>__init__</code> constructor that runs automatically at <code>Student("Harry", "Gryffindor")</code>, storing data on <code>self</code> and reading it back with <code>student.name</code></li><li>Reject bad data at creation with <code>raise ValueError(...)</code> (the same <code>raise</code> from Lecture 3), and give your object a readable <code>print()</code> with <code>__str__</code></li><li>Add behavior with <strong>instance methods</strong>, and guard an attribute with <code>@property</code> + a setter so <em>every</em> write is validated</li><li>Put behavior on the class with a <code>@classmethod</code> — a factory like <code>Student.get()</code> that returns <code>cls(...)</code>, or shared behavior like <code>Hat.sort("Harry")</code> over a class variable</li><li>Reuse code with <strong>inheritance</strong> (<code>class Student(Wizard):</code> + <code>super().__init__(...)</code>) and teach operators your types with <code>__add__</code></li></ul></div>
+  <div class="callout note"><span class="tag">How to run these boxes</span><p><strong>White box, Run button</strong> = real Python, runs right here. Edit it, press <strong>Run</strong> (or <strong>Cmd/Ctrl + Enter</strong>); <strong>Esc</strong> steps back out. The first run downloads Python once (about 10 seconds), then it's instant — you can't break anything, so change a line and re-Run freely. Every box below <strong>hard-codes its values</strong> (e.g. <code>Student("Harry", "Gryffindor")</code>) so you can <em>predict</em> the output before you Run, and each box is <strong>self-contained</strong> — it defines its class <em>and</em> uses it, so you never scroll up.</p></div>
+  <h2>You've used classes all along</h2>
+  <p>Before we build anything, lower the stakes: a class is not new machinery bolted onto Python — it <em>is</em> Python. You've been making objects since the very beginning: every <code>"text"</code> is a <code>str</code> object and every number an <code>int</code> (from Lecture 0), every <code>[]</code> a <code>list</code> and every <code>{}</code> a <code>dict</code> (from Lecture 2). Ask <code>type(...)</code> and you'll see the blueprint each one came from. And the methods you already call — <code>str.lower()</code>, <code>list.append()</code>, <code>dict.get()</code> — are exactly the <em>instance methods</em> of those classes, reached with the same dot syntax. Predict the four <code>type(...)</code> lines.</p>
+  <p class="cell-note">Run it — int, str, list, dict are all classes; their methods are the instance methods you already call.</p><textarea class="py">print(type(50))
+print(type("hi"))
+print(type([]))
+print(type({}))
+
+print("HI".lower())          # str method — returns "hi"
+
+nums = [1]
+nums.append(2)               # list method (lists are Lecture 2)
+print(nums)
+
+print({"a": 1}.get("a"))     # dict method</textarea>
+  <p>So building a class isn't learning a new language — it's learning to make your <em>own</em> type that behaves like the built-in ones. With that comfort, let's see why you'd want one.</p>
+  <h2>Why classes? A dict gets you close, then stops</h2>
+  <p>Picture one student — a <code>name</code> and a <code>house</code> — bundled two ways. First a <strong>tuple</strong> (think of the <code>a, b = ...</code> unpacking you did in Lecture 6 on <code>line.rstrip().split(",")</code> — that <code>split</code> returns a <em>list</em>, but the unpacking move is identical): ordered, but <strong>immutable</strong> and addressed by <em>position</em>, easy to get backwards. The last line tries to change it. Predict whether it works.</p>
+  <p class="cell-note">Run it — a tuple is positional AND immutable. student[0] is the name only because you remember it is. The last line tries to change a value.</p><textarea class="py">student = ("Harry", "Gryffindor")
+print(student[0], "from", student[1])
+
+student[0] = "Ron"   # tuples are immutable — does this work?</textarea>
+  <p>A <strong>list</strong> is the same shape but <strong>mutable</strong> — you <em>can</em> reassign <code>student[1]</code> — yet it's still positional and <strong>order-fragile</strong>: nothing stops you putting the name where the house goes. Watch the third line silently mix them up.</p>
+  <p class="cell-note">Run it — a list is mutable but still positional. The third line swaps the two values, and nothing complains — the name is now in the house slot.</p><textarea class="py">student = ["Harry", "Gryffindor"]
+print(student[0], "from", student[1])
+
+student[1] = "Slytherin"          # mutable: reassign works
+print(student[0], "from", student[1])
+
+student = ["Gryffindor", "Harry"]  # oops — swapped, and nobody stops us
+print(student[0], "from", student[1])</textarea>
+  <p>The real upgrade is the <strong>dict</strong> (the keyed collection from Lecture 2), which gives every value a <em>name</em> — <code>student["name"]</code> says what it means. But watch the last line carefully before you predict.</p>
+  <p class="cell-note">Predict the LAST line: student.get("hous") is a typo'd key. Does it error, or print something? (The first f-string just reads two values.)</p><textarea class="py">student = {"name": "Harry", "house": "Gryffindor"}
+
+print(f"{student['name']} from {student['house']}")
+
+print(student.get("hous"))   # typo'd key — error, or not?</textarea>
+  <div class="callout note"><span class="tag">The dict is the best of the three — but two gaps remain</span><p>A list reaches a value by <em>position</em>, a dict by <em>key</em> — and the dict is the closest we got to bundling a student. But two gaps remain. <strong>Gap one:</strong> nothing checks the values. You could store <code>house = "Hogwarts"</code> (not a real house) and the dict shrugs — just as the typo'd <code>student.get("hous")</code> slid through and returned <code>None</code> instead of complaining. <strong>Gap two:</strong> a dict carries <em>no behavior</em> — it holds data but can't <em>do</em> anything. A <strong>class</strong> closes both: it can <strong>validate itself when created</strong> and it can <strong>carry its own methods</strong>. That's the whole lecture — one <code>Student</code> class, one feature at a time.</p></div>
+  <h2>class, __init__, and self: your own type</h2>
+  <p>You can declare a new <em>kind</em> of thing in one line: <code>class Student:</code>. The simplest version is empty — you then attach <code>name</code> and <code>house</code> from <em>outside</em>, one assignment at a time. This works, but watch how loose it is: nothing forces a student to have a name, and nothing stops a fake house. (CS50 sets these from <code>input(...)</code> here; we hard-code them.) Predict the lines.</p>
+  <p class="cell-note">Run it — a bare class, attributes set from OUTSIDE. It works, but nothing is required and nothing is checked.</p><textarea class="py">class Student:
+    pass
+
+student = Student()
+student.name = "Harry"
+student.house = "Gryffindor"
+
+print(student.name, "from", student.house)
+
+student.house = "Hogwarts"   # not a real house — but nobody stops us (gap one)
+print(student.house)</textarea>
+  <p>That's tedious <em>and</em> unsafe. The fix is the <strong>constructor</strong>: <code>def __init__(self, name, house):</code> runs <strong>automatically</strong> the moment you write <code>Student("Harry", "Gryffindor")</code>. Its job is to take the arguments (<code>(self, name, house)</code> takes parameters just like a <code>def square(n)</code> would) and <strong>store them on <code>self</code></strong> — the particular object being built. Afterwards you read those values back with dot notation: <code>student.name</code>. Predict the two lines.</p>
+  <p class="cell-note">Run it — __init__ runs at Student(...) and sets up the object in one step. self is THIS object being built.</p><textarea class="py">class Student:
+    def __init__(self, name, house):
+        self.name = name
+        self.house = house
+
+student = Student("Harry", "Gryffindor")
+
+print(student.name)
+print(student.house)</textarea>
+  <details class="predict"><summary>Recall this <code>class Student</code> with <code>__init__(self, name, house)</code>. Stamp out two: <code>s1 = Student("Harry", "Gryffindor")</code> and <code>s2 = Student("Draco", "Slytherin")</code>. After <code>s2.house = "Ravenclaw"</code>, what does <code>print(s1.house, s2.house)</code> show?</summary><div style="margin:.2rem 0 .6rem"><p>It prints <strong><code>Gryffindor Ravenclaw</code></strong>. Each <code>Student(...)</code> call stamped out a <em>separate</em> object with its own <code>self</code>, so <code>s1</code> and <code>s2</code> carry independent <code>house</code> values — changing <code>s2</code> leaves <code>s1</code> untouched. One blueprint, many independent objects.</p></div></details>
+  <div class="callout note"><span class="tag">The __ marks a dunder — a hook Python calls for you</span><p>The double underscores in <code>__init__</code> mark it as a <strong>dunder</strong> (double-underscore) method: a hook Python calls <em>for you</em> automatically — here, the instant you write <code>Student(...)</code>. You never call <code>__init__</code> yourself, and it returns nothing — its only job is to set up <code>self</code>. You'll meet more dunders below — <code>__str__</code> for printing, then <code>__add__</code> for <code>+</code> — but the idea is always the same: you define the method, Python decides when to fire it.</p></div>
+  <div class="mental-model"><span class="tag">Mental model — blueprint vs. object vs. self</span><p>Three words people mix up — keep these apart and the rest of the lecture is easy:</p><div class="mm-diagram"><div class="mm-card"><b>class = the blueprint (one mold)</b><pre style="margin:.4rem 0;font-family:var(--mono);font-size:.84rem;white-space:pre-wrap;overflow-x:auto">class Student: ...</pre><span>Written <strong>once</strong>. It describes the <em>shape</em> every student will have, but it is <strong>not</strong> a student itself — it's the cookie-cutter. Nothing exists yet.</span></div><div class="mm-card"><b>instance = one object (a stamping)</b><pre style="margin:.4rem 0;font-family:var(--mono);font-size:.84rem;white-space:pre-wrap;overflow-x:auto">student = Student("Harry", "Gryffindor")</pre><span>This presses out <strong>one</strong> cookie. <code>Student(...)</code> calls <code>__init__</code> automatically. Stamp as many as you like — each is a separate object with its own <code>name</code> and <code>house</code> (just like s1/s2 above).</span></div><div class="mm-card"><b>the dot picks the object</b><span>You already saw <code>student.name</code> read off <em>one</em> object, and <code>"HI".lower()</code> work on the string to the <strong>left of the dot</strong>. The thing on the left of the dot is the object being worked on — and inside a method (coming soon), Python hands you that object as <code>self</code>.</span></div></div></div>
+  <div class="callout later"><span class="tag">Aside — the CS50 videos add a little scaffolding</span><p>In the lecture videos, Brian wraps these classes in extra helper functions and a startup line so the program can run from the terminal. We skip that and hard-code values inline so each box runs on its own and you can predict it — the class itself is identical to what's on screen.</p></div>
+  <h2>raise: reject bad data at the door</h2>
+  <p>Now close gap one. Because <code>__init__</code> runs at creation, it's the perfect place to <strong>validate</strong> — and Lecture 3's <code>raise</code> is exactly the tool. Guard both fields: if the name is empty, or the house isn't one of the four real ones, <code>raise ValueError("...")</code> and the object is <em>never built</em>. A valid student works as before; predict its line.</p>
+  <p class="cell-note">Run it — validation in __init__ guards BOTH name and house. A real student succeeds. (The next box tries a fake house on purpose.)</p><textarea class="py">class Student:
+    def __init__(self, name, house):
+        if not name:
+            raise ValueError("Missing name")
+        if house not in ["Gryffindor", "Hufflepuff", "Ravenclaw", "Slytherin"]:
+            raise ValueError("Invalid house")
+        self.name = name
+        self.house = house
+
+student = Student("Harry", "Gryffindor")
+print(student.name, "from", student.house)</textarea>
+  <div class="callout note"><span class="tag">Recall: raise ValueError, from Lecture 3</span><p><code>raise ValueError("Invalid house")</code> is the same move from Lecture 3 — reject bad data the instant you see it, and the caller catches it with <code>try</code>/<code>except ValueError</code>. The only new part: it now fires inside <code>__init__</code>, so a <code>Student</code> can never be <em>born</em> in a bad state. (The four house strings are just <em>some</em> four valid houses; their exact spelling matters, their order doesn't.)</p></div>
+  <div class="callout gotcha"><span class="tag">Some boxes are labelled 'Supposed to raise' — Run them to SEE the error</span><p>The next box is <strong>meant to fail</strong> — that's the first of a few labelled this way. It asks for the house <code>"Hogwarts"</code>, which isn't real, so <code>__init__</code> hits <code>raise ValueError("Invalid house")</code> and the student is never created. That's the <em>point</em>: a class can refuse to exist in a bad state — something the bare class above (or a <code>dict</code>) never does. Run it, read the red <code>ValueError</code>, then change <code>"Hogwarts"</code> to a real house and watch it succeed.</p></div>
+  <p class="cell-note">Supposed to raise — "Hogwarts" is not a house. Run to see ValueError: Invalid house.</p><textarea class="py">class Student:
+    def __init__(self, name, house):
+        if not name:
+            raise ValueError("Missing name")
+        if house not in ["Gryffindor", "Hufflepuff", "Ravenclaw", "Slytherin"]:
+            raise ValueError("Invalid house")
+        self.name = name
+        self.house = house
+
+student = Student("Harry", "Hogwarts")   # not a real house -&gt; ValueError
+print(student.name)</textarea>
+  <h2>__str__: a readable print()</h2>
+  <p>Most boxes from here on print a student, so give it a readable <em>face</em>. Try to <code>print</code> a student now and Python has no idea what you'd want to <em>see</em>, so it falls back to an ugly <code>&lt;__main__.Student object at 0x...&gt;</code>. That address form isn't a bug — it's just the <em>default</em> when you haven't told Python how to show your object. Predict that this box prints exactly that kind of gibberish.</p>
+  <p class="cell-note">Run it — printing an object with no __str__ gives the default, unhelpful representation.</p><textarea class="py">class Student:
+    def __init__(self, name, house):
+        self.name = name
+        self.house = house
+
+student = Student("Harry", "Gryffindor")
+print(student)   # ugly default: &lt;__main__.Student object at 0x...&gt;</textarea>
+  <p>Define <code>__str__(self)</code> to <strong>return</strong> the string <code>print()</code> should show. It's another <strong>dunder</strong> — the hook Python calls whenever an object is printed or turned into a string. Note it must <em>return</em> the text, not <code>print</code> it. Same object as before, now readable — predict the line.</p>
+  <p class="cell-note">Run it — __str__ returns the text print() shows. Same object, now readable.</p><textarea class="py">class Student:
+    def __init__(self, name, house):
+        self.name = name
+        self.house = house
+
+    def __str__(self):
+        return f"{self.name} from {self.house}"
+
+student = Student("Harry", "Gryffindor")
+print(student)</textarea>
+  <h2>Instance methods: giving objects behavior</h2>
+  <p>Now close gap two: a class can carry <strong>behavior</strong>. A method is just a <code>def</code> <em>inside the class</em> whose first parameter is <code>self</code>, so it can read that object's data. Start with the simplest possible one — <code>greet()</code> just reads <code>self.name</code> and <code>self.house</code> back out. You call it on the instance: <code>student.greet()</code>. Predict the printed line.</p>
+  <p class="cell-note">Run it — the simplest instance method. greet() reads self.name and self.house. You call it on the object: student.greet().</p><textarea class="py">class Student:
+    def __init__(self, name, house):
+        self.name = name
+        self.house = house
+
+    def greet(self):
+        return f"{self.name} from {self.house} says hi"
+
+student = Student("Harry", "Gryffindor")
+print(student.greet())</textarea>
+  <div class="callout note"><span class="tag">`self` is a parameter, not a keyword — and you never pass it</span><p><code>self</code> is <strong>not</strong> a special word you must memorize — it's just the conventional name for the <strong>first parameter</strong>, which Python fills in automatically with <em>this</em> object. When you write <code>student.greet()</code>, that's secretly <code>Student.greet(student)</code>: the thing on the <strong>left of the dot</strong> becomes <code>self</code>. Two consequences: every method lists <code>self</code> first, and inside a method you must write <code>self.name</code> to reach the object's data — a bare <code>name</code> is just a local variable that vanishes when the method ends.</p></div>
+  <p>Now a richer method. Give a student a <code>patronus</code> (CS50 carries it on the same <code>Student</code>), and let <code>charm()</code> return an emoji using Lecture 1's <code>match</code>. Predict which <code>case</code> runs for <code>"Stag"</code>, then Run to see the emoji. Try changing the patronus to <code>"Otter"</code>.</p>
+  <p class="cell-note">Run it — charm() reads self.patronus and matches on it. The new attribute patronus is set in __init__ alongside name and house. Try patronus = "Otter".</p><textarea class="py">class Student:
+    def __init__(self, name, house, patronus):
+        self.name = name
+        self.house = house
+        self.patronus = patronus
+
+    def __str__(self):
+        return f"{self.name} from {self.house}"
+
+    def charm(self):
+        match self.patronus:
+            case "Stag":
+                return "\U0001F434"
+            case "Otter":
+                return "\U0001F9A6"
+            case "Jack Russell terrier":
+                return "\U0001F436"
+            case _:
+                return "\U0001FA84"
+
+student = Student("Harry", "Gryffindor", "Stag")
+print("Expecto Patronum!")
+print(student.charm())</textarea>
+  <div class="callout note"><span class="tag">Recall: match runs the first case (L1)</span><p><code>match self.patronus</code> is the <code>match</code>/<code>case</code> from Lecture 1 — it checks cases top-to-bottom, runs the <em>first</em> match with no fall-through, and <code>case _</code> is the catch-all default. The only new twist: the value being matched lives on <code>self</code>. (CS50 returns literal emoji here; Stag maps to a horse, a well-known quirk. The <code>\U0001F434</code> form is just a portable way to write that emoji by its code — the output is identical.)</p></div>
+  <div class="callout gotcha"><span class="tag">Heads up — match needs Python 3.10+</span><p>These cells run Python 3.12, so <code>match</code>/<code>case</code> works here. But on the Python 3.9 that ships on many Macs it raises a <code>SyntaxError</code> — on your own machine, write <code>charm()</code> with <code>if</code>/<code>elif</code>/<code>else</code> instead (check your version with <code>python --version</code>).</p></div>
+  <div class="quiz"><p class="quiz-q">Suppose you wrote <code>def charm():</code> — forgetting the <code>self</code> parameter — and then called <code>student.charm()</code>. What happens?</p><div class="opts"><button class="opt" type="button" data-correct>A <code>TypeError</code> about the argument count — Python still passes the instance as the first argument, but the def has nowhere to put it</button><button class="opt" type="button">It runs fine; <code>self</code> is optional for methods that don't need data</button><button class="opt" type="button"><code>student.charm()</code> silently does nothing because there's no <code>self</code></button><button class="opt" type="button">A <code>NameError</code>, because <code>charm</code> isn't defined without <code>self</code></button></div><div class="why"><code>student.charm()</code> is always rewritten to <code>Student.charm(student)</code> — Python passes the object on the <strong>left of the dot</strong> as the first argument no matter what. If your <code>def</code> lists <em>zero</em> parameters, that auto-passed instance has nowhere to land, so you get a <code>TypeError</code> reporting that <code>charm()</code> takes 0 positional arguments but 1 was given. That's the flip side of 'you never pass <code>self</code> yourself': Python always tries to, so the method must declare it.</div></div>
+  <h2>@property and @x.setter: validation that can't be skipped</h2>
+  <p>The <code>raise</code> in <code>__init__</code> guarded <em>creation</em> — but does it guard everything? Predict before reading on.</p>
+  <details class="predict"><summary>Suppose <code>Student.__init__</code> validates the house and you build a valid <code>student = Student("Harry", "Gryffindor")</code>. Then you write <code>student.house = "Hogwarts"</code> <strong>after</strong> creation (with house as a plain attribute). Is that rejected?</summary><div style="margin:.2rem 0 .6rem"><p><strong>No.</strong> The <code>raise</code> in <code>__init__</code> only runs at <em>creation</em>. A later plain assignment <code>student.house = "Hogwarts"</code> writes straight to the attribute and skips the check entirely, leaving the object in a bad state. That hole is exactly what a <strong>property + setter</strong> closes: it routes <em>every</em> write — at creation and after — through the same validation.</p></div></details>
+  <p>The fix is a <strong>property</strong>. First, the syntax: a line starting with <code>@</code> is a <strong>decorator</strong> — a label attached to the <code>def</code> right below it that changes how that method behaves. Put <code>@property</code> above a method named <code>house</code> and reading <code>student.house</code> (no parentheses) secretly runs that method — the <em>getter</em>. Pair it with <code>@house.setter</code> (note: the <em>property's</em> name, not <code>@property</code> again) and Python runs <em>that</em> every time someone assigns to <code>student.house</code>. Now the validation lives in one place and fires on creation <strong>and</strong> every later write.</p>
+  <div class="callout note"><span class="tag">Read this BEFORE the cell — __init__ goes through the setter too</span><p>The most important line in the next cell is <code>self.house = house</code> <em>inside</em> <code>__init__</code>. Trace it in four steps:</p><p><strong>1.</strong> <code>house</code> is now a <strong>property</strong>, not a plain attribute. <strong>2.</strong> So <code>self.house = house</code> is an <em>assignment to a property</em> — that <strong>runs the setter</strong>. <strong>3.</strong> The setter validates, then stores the real value in <strong><code>_house</code></strong> (a different name — see the next callout). <strong>4.</strong> Later, reading <code>student.house</code> runs the <strong>getter</strong>, which returns <code>_house</code>.</p><p>So creation and every later write go through the <em>same</em> gate — you write the <code>if house not in [...]</code> check <strong>once</strong>, in the setter, and <code>__init__</code> reuses it for free. CS50 guards <em>both</em> fields this way, so the cell makes <code>name</code> a property too.</p></div>
+  <p class="cell-note">Run it — name AND house are now properties, each with a getter and a validating setter. The self.name/self.house lines in __init__ run those setters, so validation lives in one place.</p><textarea class="py">class Student:
+    def __init__(self, name, house):
+        self.name = name     # runs the name setter
+        self.house = house   # runs the house setter
+
+    def __str__(self):
+        return f"{self.name} from {self.house}"
+
+    @property
+    def name(self):
+        return self._name
+
+    @name.setter
+    def name(self, name):
+        if not name:
+            raise ValueError("Missing name")
+        self._name = name
+
+    @property
+    def house(self):
+        return self._house
+
+    @house.setter
+    def house(self, house):
+        if house not in ["Gryffindor", "Hufflepuff", "Ravenclaw", "Slytherin"]:
+            raise ValueError("Invalid house")
+        self._house = house
+
+student = Student("Harry", "Gryffindor")
+print(student)
+
+student.house = "Slytherin"   # the setter runs again and validates
+print(student)</textarea>
+  <div class="callout gotcha"><span class="tag">Why _house and not house inside the setter?</span><p>The property is <em>named</em> <code>house</code>. If the setter wrote <code>self.house = house</code>, it would call <strong>itself</strong> — an infinite <code>RecursionError</code>, a trap people hit within minutes of writing their first setter. So the actual value is stashed under a <em>different</em> name, <code>_house</code>, and the getter reads it back. The leading underscore is a Python convention meaning 'internal; reach me through the property' — a polite sign, not a lock (<code>student._house = "X"</code> still works). One more thing worth knowing: a property with a getter but <em>no</em> setter is <strong>read-only</strong> — assigning to it raises an <code>AttributeError</code>, since there's no setter to receive the write.</p></div>
+  <div class="callout gotcha"><span class="tag">Supposed to raise — validation can't be bypassed (our demo of the gap you predicted)</span><p>The next box creates a valid student, then tries to sneak in <code>student.house = "Hogwarts"</code> <em>after</em> creation — the exact hole you predicted earlier. Because <code>house</code> is now a property, that assignment <strong>runs the setter</strong>, which raises <code>ValueError</code>. Run it, see the error, then change <code>"Hogwarts"</code> to a real house.</p></div>
+  <p class="cell-note">Supposed to raise — assigning a fake house AFTER creation still goes through the setter. Run to see ValueError.</p><textarea class="py">class Student:
+    def __init__(self, name, house):
+        self.name = name
+        self.house = house
+
+    def __str__(self):
+        return f"{self.name} from {self.house}"
+
+    @property
+    def name(self):
+        return self._name
+
+    @name.setter
+    def name(self, name):
+        if not name:
+            raise ValueError("Missing name")
+        self._name = name
+
+    @property
+    def house(self):
+        return self._house
+
+    @house.setter
+    def house(self, house):
+        if house not in ["Gryffindor", "Hufflepuff", "Ravenclaw", "Slytherin"]:
+            raise ValueError("Invalid house")
+        self._house = house
+
+student = Student("Harry", "Gryffindor")
+student.house = "Hogwarts"   # setter runs -&gt; ValueError, no bypass
+print(student)</textarea>
+  <div class="callout note"><span class="tag">Both gaps are closed — now point the same tools at new jobs</span><p>Gap one (no validation) is shut by <code>raise</code> in <code>__init__</code> and, more thoroughly, by the property setters that guard <em>every</em> write; gap two (no behavior) is shut by instance methods like <code>charm()</code>. And you needed <strong>no new language</strong> — just methods on <code>self</code>. That same machinery scales up. Next, point it at three new jobs: behavior on the class <em>itself</em> (<code>@classmethod</code>), reusing a parent (inheritance), and teaching <code>+</code> your own meaning (<code>__add__</code>).</p></div>
+  <h2>@classmethod: behavior on the class, not an instance</h2>
+  <p>Sometimes a method belongs to the <em>class itself</em>, not to any one object. The most useful kind is a <strong>factory</strong>: a method that <em>builds and returns</em> an instance. This is exactly how CS50 replaces its <code>get_student()</code> helper — instead of a loose function, <code>Student.get()</code> lives on the class. Mark it <code>@classmethod</code>; its first parameter is <code>cls</code> (the class — think 'self, but for the class itself'), and it ends in <code>return cls(...)</code>. Note <code>cls(...)</code> is the same as <code>Student(...)</code>, so it runs <code>__init__</code> and its validation. You call it <strong>on the class</strong>: <code>Student.get()</code>. Predict the line it prints.</p>
+  <p class="cell-note">Run it — a classmethod as a FACTORY. Student.get() builds an instance with cls(...) and returns it. cls(...) is just Student(...), so __init__ runs.</p><textarea class="py">class Student:
+    def __init__(self, name, house):
+        self.name = name
+        self.house = house
+
+    def __str__(self):
+        return f"{self.name} from {self.house}"
+
+    @classmethod
+    def get(cls):
+        # CS50 reads name/house with input(); we hard-code them
+        name = "Harry"
+        house = "Gryffindor"
+        return cls(name, house)   # cls(...) == Student(...) -&gt; runs __init__
+
+student = Student.get()   # called on the class; returns a built Student
+print(student)</textarea>
+  <p>A classmethod can also just carry <strong>shared behavior</strong> with no instance at all. A Sorting Hat doesn't need a particular hat-object to sort a student. The four houses live in a <strong>class variable</strong> — declared in the class body, shared by everything — read here as <code>cls.houses</code> and picked from with Lecture 4's <code>random.choice</code>. Predict the <em>shape</em> of the line (the house is random).</p>
+  <p class="cell-note">Run it — a classmethod called on the class with NO instance. houses is a class variable shared by all. Re-run for a different house.</p><textarea class="py">import random
+
+class Hat:
+    houses = ["Gryffindor", "Hufflepuff", "Ravenclaw", "Slytherin"]
+
+    @classmethod
+    def sort(cls, name):
+        print(name, "is in", random.choice(cls.houses))
+
+Hat.sort("Harry")   # no Hat() needed — called straight on the class</textarea>
+  <div class="callout note"><span class="tag">Recall: random.choice (L4), called on the class</span><p><code>random.choice(cls.houses)</code> is Lecture 4's <code>random.choice</code> picking one item from a list — the Sorting Hat made literal. And just as you called <code>random.choice(...)</code> without ever making a <code>random</code> object, you call <code>Hat.sort("Harry")</code> on the <em>class</em>, no instance needed.</p></div>
+  <div class="callout note"><span class="tag">Three kinds of method, side by side</span><p>Keep the trio straight: an <strong>instance method</strong> takes <code>self</code> and needs an object (<code>student.charm()</code>); a <strong><code>@classmethod</code></strong> takes <code>cls</code> and is called on the class (<code>Student.get()</code> as a factory, or <code>Hat.sort(...)</code> for shared behavior); a <strong><code>@staticmethod</code></strong> takes neither — just a plain function living in the class namespace for organization. CS50 mentions static methods but doesn't lean on them; the takeaway is the contrast — <code>self</code> (one object) vs <code>cls</code> (the class) vs neither.</p></div>
+  <div class="quiz"><p class="quiz-q">If <code>sort</code> were instead a plain instance method, <code>def sort(self, name):</code>, what would <code>Hat.sort("Harry")</code> do?</p><div class="opts"><button class="opt" type="button" data-correct>It treats <code>"Harry"</code> as <code>self</code> — so <code>self</code> is the string, <code>name</code> is missing, and you'd get a <code>TypeError</code> for the missing argument</button><button class="opt" type="button">It works the same; <code>self</code> and <code>cls</code> are interchangeable</button><button class="opt" type="button">Python silently creates a temporary <code>Hat()</code> and uses it as <code>self</code></button><button class="opt" type="button"><code>Hat.sort("Harry")</code> is always an error for any kind of method</button></div><div class="why">Calling on the class with <code>Hat.sort("Harry")</code> passes <code>"Harry"</code> as the <strong>first</strong> parameter. For an instance method that first slot is <code>self</code>, so <code>self</code> would wrongly become the string <code>"Harry"</code> and <code>name</code> would be left unfilled — a <code>TypeError</code> reporting a missing required argument. <code>@classmethod</code> is exactly what makes the first parameter <code>cls</code> (the class) instead, so calling on the class is correct and no instance is needed. (Python never fabricates a temporary <code>Hat()</code> for you.)</div></div>
+  <h2>Inheritance: reuse with class Child(Parent)</h2>
+  <p>A <code>Student</code> and a <code>Professor</code> are both <strong>Wizards</strong> — they share a <code>name</code> and the rule that a wizard <em>must</em> have one (the same <code>if not name</code> guard, now lifted into the parent). Rather than copy it, put it in a parent class <code>Wizard</code>, then write <code>class Student(Wizard):</code> and <code>class Professor(Wizard):</code>. A <code>Wizard</code> works on its own too. Each child's <code>__init__</code> calls <code>super().__init__(name)</code> to run the <strong>parent's</strong> constructor (which validates and stores <code>name</code>), then adds its own extra (<code>house</code> or <code>subject</code>). Predict the four printed lines.</p>
+  <p class="cell-note">Run it — Wizard is the parent and works alone (Albus). Student and Professor inherit; super().__init__(name) runs the parent constructor that validates and stores name.</p><textarea class="py">class Wizard:
+    def __init__(self, name):
+        if not name:
+            raise ValueError("Missing name")
+        self.name = name
+
+class Student(Wizard):
+    def __init__(self, name, house):
+        super().__init__(name)   # run Wizard.__init__ first
+        self.house = house
+
+class Professor(Wizard):
+    def __init__(self, name, subject):
+        super().__init__(name)
+        self.subject = subject
+
+wizard = Wizard("Albus")            # the parent works on its own
+print(wizard.name)
+
+student = Student("Harry", "Gryffindor")
+professor = Professor("Severus", "Defense Against the Dark Arts")
+
+print(student.name, "from", student.house)
+print(professor.name, "teaches", professor.subject)</textarea>
+  <details class="predict"><summary>In the <code>Student(Wizard)</code> above, suppose you <strong>delete</strong> the <code>super().__init__(name)</code> line, leaving only <code>self.house = house</code>. You then build <code>student = Student("Harry", "Gryffindor")</code> and run <code>print(student.name)</code>. What happens?</summary><div style="margin:.2rem 0 .6rem"><p>You get an <strong><code>AttributeError</code></strong> — the <code>Student</code> object has no attribute <code>name</code>. Defining <code>Student.__init__</code> <em>replaces</em> the parent's — so without the <code>super()</code> call, <code>Wizard.__init__</code> never runs, <code>self.name</code> is never set, and the missing-name check is skipped too. The next box lets you <em>see</em> it fail.</p></div></details>
+  <p class="cell-note">Supposed to raise — Student.__init__ forgets super().__init__(name), so name is never set. Run to see AttributeError.</p><textarea class="py">class Wizard:
+    def __init__(self, name):
+        if not name:
+            raise ValueError("Missing name")
+        self.name = name
+
+class Student(Wizard):
+    def __init__(self, name, house):
+        self.house = house        # forgot super().__init__(name) !
+
+student = Student("Harry", "Gryffindor")
+print(student.name)   # AttributeError: name was never set
+
+# Fix: add  super().__init__(name)  as the first line of __init__, then re-run.</textarea>
+  <div class="callout note"><span class="tag">New connection — exceptions are a class hierarchy too</span><p>In Lecture 3 you caught a <code>ValueError</code> with <code>try</code>/<code>except ValueError</code>. Here's something you <em>weren't</em> told then: <code>ValueError</code> is itself a <strong>class</strong>, and Python's exceptions are arranged by inheritance — <code>ValueError</code>, <code>TypeError</code>, and friends all descend from a common base, <code>Exception</code>. Because <code>except</code> catches a class <em>and its subclasses</em>, <code>except Exception:</code> would catch them all — the same parent/child (<strong>IS-A</strong>) relationship you built with <code>Student(Wizard)</code>. (Python's <code>isinstance(student, Wizard)</code> would confirm that link returns <code>True</code>, though we don't need it here.) So inheritance isn't an exotic OOP feature; it's quietly underneath the error handling you already use.</p></div>
+  <h2>Operator overloading: define what + means for your objects</h2>
+  <p>Adding two <code>Student</code>s makes no sense — but adding two bank <strong>Vaults</strong> does. Same machinery, new running example. Why does <code>+</code> add numbers but <em>join</em> strings (the same <code>+</code> you've used since Lecture 0)? Because each class defines its own <code>__add__</code>. Your custom classes have none — so <code>+</code> simply doesn't work yet. (CS50 jumps straight to the finished <code>Vault</code>; we show the failure first so you see <em>why</em> <code>__add__</code> is needed.) Predict what the next box does.</p>
+  <p class="cell-note">Supposed to raise — a Vault with NO __add__. potter + weasley has no meaning yet. Run to see the TypeError.</p><textarea class="py">class Vault:
+    def __init__(self, galleons, sickles, knuts):
+        self.galleons = galleons
+        self.sickles = sickles
+        self.knuts = knuts
+
+potter = Vault(100, 50, 25)
+weasley = Vault(25, 50, 100)
+
+print(potter + weasley)   # no __add__ defined -&gt; TypeError: unsupported operand type(s)</textarea>
+  <p>Now teach <code>+</code> what to do. Defining <code>__add__(self, other)</code> makes <code>potter + weasley</code> return a <strong>new</strong> Vault with the totals — <code>self</code> is the <strong>left</strong> operand, <code>other</code> is the <strong>right</strong>. Predict the third printed line.</p>
+  <p class="cell-note">Run it — __add__ defines + for Vaults. potter + weasley calls potter.__add__(weasley): self is the left, other is the right.</p><textarea class="py">class Vault:
+    def __init__(self, galleons, sickles, knuts):
+        self.galleons = galleons
+        self.sickles = sickles
+        self.knuts = knuts
+
+    def __str__(self):
+        return f"{self.galleons} Galleons, {self.sickles} Sickles, {self.knuts} Knuts"
+
+    def __add__(self, other):
+        galleons = self.galleons + other.galleons
+        sickles = self.sickles + other.sickles
+        knuts = self.knuts + other.knuts
+        return Vault(galleons, sickles, knuts)
+
+potter = Vault(100, 50, 25)
+weasley = Vault(25, 50, 100)
+
+print(potter)
+print(weasley)
+print(potter + weasley)   # a brand-new Vault with the totals</textarea>
+  <details class="predict"><summary>Given the <code>Vault</code> above, what is <code>type(potter + weasley)</code> — and does the original <code>potter</code> change?</summary><div style="margin:.2rem 0 .6rem"><p><code>type(potter + weasley)</code> is <strong><code>&lt;class '__main__.Vault'&gt;</code></strong> — <code>__add__</code> builds and returns a <em>brand-new</em> <code>Vault</code>. And <strong><code>potter</code> does not change</strong>: <code>__add__</code> only reads <code>self.galleons</code> etc. and constructs a fresh object, it never assigns back to <code>self</code>. That's the well-behaved pattern for <code>+</code> — return a new value rather than mutating the operands, exactly like <code>100 + 25</code> gives you <code>125</code> without altering <code>100</code>.</p></div></details>
+  <div class="callout later"><span class="tag">Going further — the rest of the dunder family</span><p>Lecture 8 itself defines only three dunders: <code>__init__</code>, <code>__str__</code>, and <code>__add__</code>. But <code>__add__</code> belongs to a larger family that wires operators to your objects — <code>__eq__</code> for <code>==</code>, <code>__lt__</code> for <code>&lt;</code>, <code>__len__</code> for <code>len(...)</code>, and more — each one defined the same way, after which the operator 'just works'. One sibling worth knowing now, because it pairs with the <code>__str__</code> you learned: <strong><code>__repr__</code></strong> is <code>__str__</code>'s developer-facing twin — it's what shows when you print a <em>list</em> of objects, like <code>[student]</code>. If you define only <code>__str__</code>, printing <code>[student]</code> still falls back to the ugly <code>&lt;...object at 0x...&gt;</code>; defining <code>__repr__</code> fixes that. These are all correct Python but beyond the lecture — file them away and reach for them when a specific need arises.</p></div>
+  <div class="gotcha-list"><h2 id="gotchas">Common mistakes at a glance</h2><ul><li><strong><code>self</code> is a parameter, not a keyword — and you never pass it.</strong> <code>student.greet()</code> <em>looks</em> like zero arguments, yet Python rewrites it to <code>Student.greet(student)</code>. Forget <code>self</code> in the <code>def</code> and you get a <code>TypeError</code> about the argument count; write a bare <code>name = name</code> instead of <code>self.name = name</code> and the value vanishes into a local, then <code>student.name</code> raises <code>AttributeError</code>.</li><li><strong><code>__init__</code> returns nothing — it configures <code>self</code>.</strong> Don't write <code>return self</code> or <code>return self.name</code> in <code>__init__</code>; just assign <code>self.name = name</code>. The object already exists when <code>__init__</code> runs; <code>Student(...)</code> hands it back for you.</li><li><strong>Reading an attribute that was never set is an <code>AttributeError</code>, not <code>None</code>.</strong> Unlike <code>dict.get("hous")</code> (which returns <code>None</code>), <code>student.hous</code> raises. That's a feature — typos fail loudly instead of silently.</li><li><strong>Inside a <code>@x.setter</code>, assign to the <code>_backing</code> name, never to <code>self.x</code>.</strong> Writing <code>self.house = house</code> in the <code>house</code> setter calls the setter again — infinite <code>RecursionError</code>. Use <code>self._house = house</code>; the getter returns <code>self._house</code>. (The leading underscore is convention, not a lock.)</li><li><strong>Define the getter with <code>@property</code>, then the setter with <code>@house.setter</code> (the property's name, not <code>@property</code> again).</strong> Both methods are named <code>house</code>. With only a getter the attribute is read-only — assigning raises an <code>AttributeError</code>. Validating only in <code>__init__</code> leaves a hole that routing every write through the setter closes.</li><li><strong>A class variable is shared by ALL instances.</strong> <code>houses = [...]</code> in the class body is one object for the whole class — shared state lives on the class, per-object data goes on <code>self</code> in <code>__init__</code>. Great for constants like the four houses; a trap if you <code>.append</code> to a <em>mutable</em> class variable expecting a per-object copy.</li><li><strong><code>@classmethod</code> takes <code>cls</code>, not <code>self</code>, and is called on the class.</strong> <code>Student.get()</code> (a factory) returns <code>cls(...)</code> and <code>Hat.sort("Harry")</code> needs no <code>Hat()</code>. Read the class variable as <code>cls.houses</code>, not a hard-coded class name, so subclasses work too.</li><li><strong>Defining a child <code>__init__</code> overrides the parent — call <code>super().__init__(...)</code>.</strong> Otherwise the parent's setup (here, validating and storing <code>name</code>) never runs, and <code>self.name</code> won't exist (<code>AttributeError</code>). Child IS-A parent, but only the constructor you actually call runs.</li><li><strong><code>__add__</code> should return a <em>new</em> object, not mutate <code>self</code>.</strong> <code>potter + weasley</code> must build and return a fresh <code>Vault</code>; assigning back to <code>self</code> would make <code>+</code> quietly change its left operand. Without any <code>__add__</code>, <code>+</code> on your objects is a <code>TypeError: unsupported operand type(s)</code>.</li><li><strong><code>__str__</code> must <code>return</code> the string, not <code>print</code> it.</strong> If you <code>print(...)</code> inside <code>__str__</code> and return <code>None</code>, then <code>print(student)</code> shows your line <em>and</em> a stray <code>None</code>. Return the text; let the caller print.</li><li><strong><code>match</code>/<code>case</code> (used in <code>charm()</code>) needs Python 3.10+.</strong> It runs in the browser (3.12) but raises <code>SyntaxError</code> on the 3.9 that ships on many Macs — use <code>if</code>/<code>elif</code>/<code>else</code> there. Everything else in this lecture runs on 3.9.</li></ul></div>
+  <h2>Recap &amp; next step</h2><p><strong>Big picture:</strong> a class is a mold, each instance is a separate stamping, and <code>self</code> is the object on the left of the dot — your own type that bundles data with behavior and can guarantee its own correctness, the two things a <code>dict</code> could not.\n\n<strong>What each piece does:</strong>\n- <code>class Name:</code> + <code>def __init__(self, ...)</code> — define a type and construct objects; store data on <code>self</code>.\n- <code>raise ValueError(...)</code> — reject bad data at creation (gap one).\n- <code>__str__</code> — a readable <code>print()</code> for your object.\n- <code>def method(self)</code> — give objects behavior (gap two); called as <code>obj.method()</code>.\n- <code>@property</code> + <code>@x.setter</code> — guard an attribute so <em>every</em> write is validated; stash the real value in <code>_backing</code>, never assign the property's own name in the setter.\n- <code>@classmethod</code> / <code>cls</code> — behavior on the class: a factory like <code>Student.get()</code> that <code>return cls(...)</code>, or shared behavior like <code>Hat.sort(\"Harry\")</code>, over a shared class variable.\n- <code>class Child(Parent)</code> + <code>super().__init__(...)</code> — reuse code; child IS-A parent.\n- <code>__add__</code> — teach <code>+</code> your type; returns a <em>new</em> object (with <code>__eq__</code>/<code>__lt__</code>/<code>__repr__</code> as further siblings beyond the lecture).\n\nThis built on earlier lectures — <code>raise</code> and <code>try</code>/<code>except ValueError</code> (L3), <code>match</code> (L1), <code>random.choice</code> (L4), the <code>a, b = ...</code> unpacking of a split (L6), and the fact that <code>int</code>/<code>str</code> (L0) and <code>list</code>/<code>dict</code> (L2) are themselves classes whose methods (<code>list.append</code>, <code>dict.get</code>, <code>str.lower</code>) you already call.\n\n<strong>Next:</strong> Problem Set 8 — design your own classes: validate in <code>__init__</code>, give them a readable <code>__str__</code>, and reach for <code>@property</code> when a write must always be checked.</p>
+  <p><a href="index.html">← Back to all lectures</a></p>
+</main>
+</div>
+
+<footer class="site">CS50P interactive notes · Lecture 8 — Object-Oriented Programming · run, edit, and break things freely.</footer>
+<script src="assets/notes.js" defer></script>
+</body>
+</html>
