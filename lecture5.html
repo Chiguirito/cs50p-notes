@@ -1,0 +1,225 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Lecture 5 — Unit Tests · CS50P Notes</title>
+<link rel="icon" href="data:,">
+<link rel="stylesheet" href="assets/notes.css">
+<script>try{var t=localStorage.getItem('cs50p-theme');if(t)document.documentElement.setAttribute('data-theme',t);}catch(e){}</script>
+</head>
+<body>
+<div id="progress"></div>
+
+<header class="site">
+  <a class="brand" href="index.html">← CS50P Notes</a>
+  <span class="spacer"></span>
+  <button class="theme-toggle" type="button" aria-pressed="false">🌙 Dark</button>
+</header>
+
+<div class="wrap">
+<nav class="toc" aria-label="On this page">
+  <details open><summary>Contents</summary><p class="toc-title">On this page</p><ol></ol></details>
+</nav>
+
+<main>
+<h1>Lecture 5 — Unit Tests</h1>
+  <p class="subtitle lead">Eyeballing your output doesn't scale. You'll learn to write code that tests code: keep your tests in a file beside your program, state a fact with the built-in <code>assert</code>, watch a wrong answer raise an <code>AssertionError</code>, report more than one failure (first by hand with <code>try</code>/<code>except</code>, then for free with <code>pytest</code>), check that bad input fails the right way, and discover why a function must <em>return</em> — not print — to be testable.</p>
+  <div class="objectives"><h2>What you'll be able to do</h2><ul><li>Keep tests in a separate <code>test_*.py</code> file that borrows the function under test with <code>from calculator import square</code></li><li>Write <code>assert CONDITION</code> checks, reading <strong>silence</strong> as a pass and a False <code>assert</code> as an <code>AssertionError</code> that halts — the raise-and-stop you met in Lecture 3</li><li>Group checks into <code>test_</code> functions, knowing one passing case can hide a bug a second case catches — <code>n + n</code> equals <code>n * n</code> only at <code>0</code> and <code>2</code></li><li>Use <code>pytest</code> (a terminal tool) to run each <code>test_</code> function <strong>independently</strong> and report <strong>every</strong> failure for free, and <code>pytest.raises</code> to test error paths</li><li>Make a function testable by <strong>returning</strong> its result rather than printing it (Lecture 0's <code>square</code>/<code>None</code> lesson), and organize tests into a <code>test/</code> package with an empty <code>__init__.py</code></li></ul></div>
+  <div class="callout note"><span class="tag">How these notes work</span><p><strong>White box, Run button</strong> = real Python, runs right here. Edit it, press <strong>Run</strong> (or <strong>Cmd/Ctrl + Enter</strong>); press <strong>Esc</strong> to step back out. The first run downloads Python once (about 10 seconds), then it's instant.</p><p>Each runnable box starts <strong>fresh</strong> — variables and functions from one box don't carry into the next, so each box re-defines what it needs. That matters below: a few boxes deliberately re-paste a <strong>broken</strong> <code>square</code> so you can watch a test catch it. When that happens, the note on the box says so.</p></div>
+  <div class="callout note"><span class="tag">Do this before every Run: predict</span><p>Before you press Run, <strong>say what you expect</strong>. For testing, the choice is almost always between just two outcomes: <strong>nothing visible (silence)</strong>, or <strong>an error that stops the program</strong>. Testing trips people up because the right answer is often <em>nothing visible</em> — and "nothing happened" feels like "nothing ran." Predicting first turns each surprise into a lesson.</p></div>
+  <h2>Why test your own code?</h2>
+  <p>Until now you checked your programs by <strong>eyeballing</strong> the output — run it, type something, see if it looks right — or you leaned on CS50's automatic checks. That works for a tiny program, but it doesn't scale: real programs have dozens of functions, you change one line, and you quietly break another. Professionals fix this by <strong>writing code that tests their code</strong>: small checks that run in a second and shout the moment something is wrong. That's a <strong>unit test</strong> — a check on one small piece (one <em>unit</em>) of your program.</p>
+  <p>All lecture we'll test one tiny function, <code>square(n)</code> — the very function from <strong>Lecture 0</strong>, where you saw that <code>print(n <em> n)</code> hands back <code>None</code> but <code>return n </em> n</code> hands back the value. It returns <code>n <em> n</code>, so <code>square(2)</code> should be <code>4</code> and <code>square(3)</code> should be <code>9</code>. It's simple enough that the right answer is obvious, which lets us focus on the </em>testing*, not the math — and that Lecture 0 print-vs-return contrast comes back to bite us at the very end.</p>
+  <h2>Two files: the program, and the test beside it</h2>
+  <p>From the start, real projects keep your code in one file and your tests in a <strong>separate</strong> file that <strong>borrows</strong> the function under test. So here is the program, <code>calculator.py</code>. It asks for a number and squares it; <code>square</code> does the actual work.</p>
+  <p class="cell-note">Terminal only — save as calculator.py. The if __name__ line just decides whether main() runs when you run this file directly; ignore it for now (Lecture 4 mentioned it in passing too).</p><div class="codeblock"><pre><code>def main():
+    x = int(input("What's x? "))
+    print("x squared is", square(x))
+
+
+def square(n):
+    return n * n
+
+
+if __name__ == "__main__":
+    main()</code></pre></div>
+  <p>The test lives next door in <code>test_calculator.py</code>. Its first line, <code>from calculator import square</code>, means <em>go find <code>calculator.py</code> next door and borrow its <code>square</code> function</em> — the same <code>from ... import</code> move you used in Lecture 4 (<code>from sayings import goodbye</code>, <code>from random import choice</code>), except now the file you borrow from is your own.</p>
+  <h2>The clumsy first version: if / print</h2>
+  <p>Here's the most obvious way to test <code>square</code> with no new tool: <strong>check the answer with an <code>if</code> and <code>print</code> a complaint</strong> when it's wrong. It works — but watch how verbose it gets, because every check needs its own <code>if</code> and its own message. The box below is a runnable copy of <code>test_calculator.py</code>: it re-pastes <code>square</code> at the top (a runnable stand-in for the real <code>from calculator import square</code>) so you can press Run. Predict before you run: with a correct <code>square</code>, how many lines print?</p>
+  <p class="cell-note">Live runnable copy of test_calculator.py — the inline square stands in for 'from calculator import square'. Predict first: with a correct square, what (if anything) prints? Then Run.</p><textarea class="py">def square(n):
+    return n * n
+
+
+def test_square():
+    if square(2) != 4:
+        print("2 squared was not 4")
+    if square(3) != 9:
+        print("3 squared was not 9")
+
+
+test_square()</textarea>
+  <p>Nothing printed, because both checks were fine — but look at the <em>cost</em>: two lines of <code>if</code>/<code>print</code> per fact, and a typo'd message is its own silent bug. Python has a built-in keyword that says the same thing in <strong>one word</strong>: <code>assert</code>.</p>
+  <h2>assert: state a fact you believe is true</h2>
+  <p>The keyword <strong><code>assert</code></strong> takes a condition and says "this had better be true." Write <code>assert square(2) == 4</code>: if <code>square(2)</code> really is <code>4</code>, the condition is <strong>True</strong> and <code>assert</code> does <strong>absolutely nothing</strong> — no output, the program just rolls on. That silence <em>is</em> the test passing. We keep the checks inside a <code>test_square()</code> function (the shape <code>pytest</code> will want later) and call it at the bottom so it runs here. The trailing <code>print</code> is ours: since a passing test is silent, that line is our only proof execution reached the end.</p>
+  <p class="cell-note">Live — predict first: what does this print? Then Run.</p><textarea class="py">def square(n):
+    return n * n
+
+
+def test_square():
+    assert square(2) == 4
+    assert square(3) == 9
+
+
+test_square()
+print("test_square passed!")</textarea>
+  <div class="callout gotcha"><span class="tag">assert is a statement, not a function — no parentheses</span><p>You just typed <code>assert</code> for the first time, so bank the one rule that matters: write <code>assert square(2) == 4</code> with <strong>no wrapping parentheses</strong>. If you want a message, the comma goes <strong>outside</strong>: <code>assert square(3) == 9, "square(3) should be 9"</code>. (The trap of writing <code>assert(cond, "msg")</code> instead is in the gotchas appendix — skip it for now.)</p></div>
+  <div class="mental-model"><span class="tag">Mental model — a test is a tripwire</span><p>Here's the picture to carry through the whole lecture, and it's the engine behind every testing tool: an <code>assert</code> is a <strong>tripwire</strong> strung across a fact you believe is true. You've just run a passing one — silent. Next you'll trip one on purpose.</p><div class="mm-diagram"><div class="mm-card"><b>A passing test is silence</b><pre style="margin:.4rem 0;font-family:var(--mono);font-size:.84rem;white-space:pre-wrap;overflow-x:auto">assert square(2) == 4   # step over: silence
+assert square(3) == 9   # step over: silence</pre><span>Step over the wire cleanly — the fact is <strong>True</strong> — and you hear <strong>nothing</strong>. That silence <em>is</em> the test passing, not the test failing to run. Beginners read silence as 'it didn't run'; flip it — silence means it ran and <em>passed</em>.</span></div><div class="mm-card"><b>A tripped wire is a WIN</b><pre style="margin:.4rem 0;font-family:var(--mono);font-size:.84rem;white-space:pre-wrap;overflow-x:auto">def square(n):
+    return n + n   # broken
+assert square(3) == 9   # foot catches the wire</pre><span>A <strong>False</strong> condition catches the wire: the alarm fires (an <code>AssertionError</code> is <strong>raised</strong>) and you <strong>stop dead, right there</strong>. Lines after it never run. Tripping the wire isn't failure on <em>your</em> part — it's the wire succeeding. A red failure is the test <strong>earning its keep</strong> by catching a bug before your users do.</span></div></div></div>
+  <h2>A failing assert: watch the tripwire trip</h2>
+  <p>Let's trip the wire on purpose. Each box starts fresh, so we re-paste <code>square</code> here — this time deliberately <strong>broken</strong>: it does <code>n + n</code> instead of <code>n <em> n</code>. Two asserts run in a row. Predict before you run: which one trips the alarm — the </em>first<em> or the </em>second*? <strong>This box is supposed to fail — run it to see the <code>AssertionError</code>; you can't break anything.</strong></p>
+  <details class="predict"><summary>With the broken <code>square</code> (which does <code>n + n</code>), which assert trips first — <code>square(2) == 4</code> or <code>square(3) == 9</code>?</summary><div style="margin:.2rem 0 .6rem"><p>The <strong>second</strong> one trips. Quirk to remember: <code>n + n</code> equals <code>n * n</code> only when <code>n</code> is <code>2</code> (and <code>0</code>). So <code>square(2)</code> gives <code>2 + 2 == 4</code> — the first assert passes silently. But <code>square(3)</code> gives <code>3 + 3 == 6</code>, not <code>9</code>, so the second assert raises an <code>AssertionError</code> and halts; the final <code>print</code> never runs. Run it and watch.</p></div></details>
+  <p class="cell-note">Live — supposed to FAIL. Run it to see the AssertionError. The broken square does n + n on purpose.</p><textarea class="py">def square(n):
+    return n + n   # BROKEN on purpose: should be n * n
+
+
+assert square(2) == 4
+assert square(3) == 9
+print("this line never runs")</textarea>
+  <div class="callout gotcha"><span class="tag">Why one passing test isn't enough</span><p>As you predicted, the alarm fired on the <strong>second</strong> assert. That is the whole reason you test more than one value: the broken <code>n + n</code> <strong>still passes</strong> <code>square(2) == 4</code>, because <code>2</code> is one of the only two numbers (<code>2</code> and <code>0</code>) where <code>n + n</code> equals <code>n <em> n</code>. If you'd tested only <code>square(2)</code>, you'd have shipped a broken function with a green light. The bug surfaces on <code>square(3)</code> (<code>3 + 3</code> is <code>6</code>, not <code>9</code>) — and later, that's why we test positive, negative, </em>and* zero, not just one lucky case.</p></div>
+  <div class="quiz"><p class="quiz-q">A teammate runs your test cell — <code>assert square(2) == 4</code>, then <code>print("done")</code> — and says "nothing printed except 'done', so the test must not have run." What do you tell them?</p><div class="opts"><button class="opt" type="button" data-correct>The test ran and <strong>passed</strong> — a True <code>assert</code> is silent by design, and <code>done</code> printing is proof execution reached the end</button><button class="opt" type="button">They're right — if the test had run, it would have printed <code>True</code></button><button class="opt" type="button">The test was skipped because <code>assert</code> only runs inside <code>pytest</code></button><button class="opt" type="button">It crashed silently — <code>assert</code> swallows its own output</button></div><div class="why">A passing <code>assert</code> produces <strong>no output</strong> — that silence is exactly what passing looks like. The <code>done</code> line printing afterward is the giveaway: execution rolled right past the assert without tripping it. If the assert had <em>failed</em>, it would have raised an <code>AssertionError</code> and halted, so <code>done</code> would never have printed.</div></div>
+  <h2>Reporting more than one failure: try / except</h2>
+  <p>A plain chain of asserts halts at the <strong>first</strong> failure, so it can only ever tell you about one bug at a time. You can work around that by hand: wrap each <code>assert</code> in a <code>try</code>/<code>except AssertionError</code> that catches the trip and prints a message instead of halting. Now every check runs, and every failure gets reported. Below, <code>square</code> is broken (<code>n + n</code>) again. Predict: with two checks, how many lines print?</p>
+  <p class="cell-note">Live — broken square (n + n) re-pasted on purpose. Predict first: how many lines print? Then Run.</p><textarea class="py">def square(n):
+    return n + n   # BROKEN on purpose
+
+
+def test_square():
+    try:
+        assert square(2) == 4
+    except AssertionError:
+        print("square(2) was not 4")
+    try:
+        assert square(3) == 9
+    except AssertionError:
+        print("square(3) was not 9")
+
+
+test_square()</textarea>
+  <p>One line printed: <code>square(3)</code> failed and got reported, while <code>square(2)</code> slipped through (because <code>2 + 2</code> happens to equal <code>4</code>). The win is that the program <strong>didn't halt</strong> at the first problem — it ran both checks and reported what broke. But look at the <strong>cost</strong>: each check is now a three-line <code>try</code>/<code>except</code>/<code>print</code> block, and every message is hand-typed and could itself be wrong. <em>That verbosity is the problem <code>pytest</code> will solve.</em></p>
+  <div class="callout note"><span class="tag">Where assert belongs</span><p>One boundary to keep straight: <strong><code>assert</code> checks <em>your</em> code; <code>try</code>/<code>except</code> (Lecture 3) handles <em>the user's</em> input.</strong> Use <code>assert</code> to catch your <strong>own</strong> bugs while you're developing. Use <code>try</code>/<code>except</code> to handle whatever a <strong>user</strong> types. Don't reach for <code>assert</code> to validate user input.</p></div>
+  <div class="callout later"><span class="tag">Heads-up: the Run button goes away here</span><p><code>assert</code> and <code>try</code>/<code>except</code> are built into Python, so every white box above ran for real. <strong><code>pytest</code> is not</strong> — it's a third-party tool you install with <code>pip</code> from PyPI, exactly like <code>cowsay</code> and <code>requests</code> in Lecture 4, and you run it from your <strong>terminal</strong>, not from inside Python. So most boxes from here down are <strong>greyed (terminal only)</strong>: copy the files onto your own machine, run <code>pip install pytest</code> once, then <code>pytest test_calculator.py</code>. From here you predict, then verify on your own machine — and one box below is live again, clearly tagged.</p></div>
+  <h2>pytest: run every test, report every failure for free</h2>
+  <p>Calling <code>test_square()</code> yourself works for one function, but real projects have dozens of tests across many files. <strong><code>pytest</code></strong> is the standard tool that finds and runs them all. Here is <code>test_calculator.py</code> rewritten the way <code>pytest</code> wants it: split into <strong>separate <code>test_</code> functions</strong> instead of one. <code>pytest</code> finds tests by two naming rules — the <strong>file</strong> must be named <code>test_<em>.py</code>, and each test <strong>function</strong> must start with <code>test_</code>. This also lets us introduce the cases the failing-assert gotcha promised: a good test tries a <strong>positive</strong>, a <strong>negative</strong>, </em>and* <strong>zero</strong>, so each lands in its own function.</p>
+  <p class="cell-note">Terminal only — save as test_calculator.py beside calculator.py. Then: pip install pytest (once), then pytest test_calculator.py</p><div class="codeblock"><pre><code>from calculator import square
+
+
+def test_positive():
+    assert square(2) == 4
+    assert square(3) == 9
+
+
+def test_negative():
+    assert square(-2) == 4
+    assert square(-3) == 9
+
+
+def test_zero():
+    assert square(0) == 0</code></pre></div>
+  <p>Splitting into separate <code>test_</code> functions is how <code>pytest</code> gives you the report-everything behavior you built by hand — with <strong>zero</strong> boilerplate. It runs each <code>test_</code> function <strong>independently</strong>, so a failure in <code>test_positive</code> doesn't stop <code>test_negative</code> or <code>test_zero</code>. One <code>pytest</code> run shows <strong>every</strong> failing test at once: a red <strong>F</strong> for each that failed, a green dot for each that passed.</p>
+  <details class="predict"><summary>You rename <code>test_zero</code> to <code>check_zero</code> and run <code>pytest test_calculator.py</code>. Does pytest run the zero check?</summary><div style="margin:.2rem 0 .6rem"><p><strong>No.</strong> <code>pytest</code> only runs functions named <code>test_*</code>. Renamed to <code>check_zero</code>, it's <strong>silently skipped</strong> — no error, no warning. When a test seems to be ignored, check the prefix first.</p></div></details>
+  <p>You can't run <code>pytest</code> in a browser, but you <em>can</em> feel the payoff. This live box is a <strong>hand-rolled stand-in</strong> that mimics pytest's per-test output: a tiny <code>report</code> helper prints PASS or FAIL for each check on its own line, so more than one failure shows up in a single run. The <code>square</code> here is broken (<code>n + n</code>). Predict: how many FAILs print? Then Run.</p>
+  <p class="cell-note">Live — a stand-in that MIMICS pytest's per-test PASS/FAIL output. Broken square (n + n) on purpose. Predict the FAIL count, then Run.</p><textarea class="py">def square(n):
+    return n + n   # BROKEN: should be n * n
+
+
+def report(name, condition):
+    print(name, "PASS" if condition else "FAIL")
+
+
+report("positive", square(3) == 9)
+report("negative", square(-2) == 4)
+report("zero", square(0) == 0)</textarea>
+  <p>Two FAILs print: <strong>positive</strong> (<code>3 + 3</code> is <code>6</code>, not <code>9</code>) and <strong>negative</strong> (<code>-2 + -2</code> is <code>-4</code>, not <code>4</code>). <strong>zero</strong> prints PASS, because <code>0 + 0</code> equals <code>0 <em> 0</code> — zero is the other number where the broken <code>n + n</code> accidentally agrees with <code>n </em> n</code>. Important: <strong>you won't write <code>report()</code> yourself.</strong> This cell only <em>mimics</em> pytest's output so you can see it in the browser. With real <code>pytest</code> you write plain <code>assert</code>s inside <code>test_</code> functions, and pytest prints the F-and-dot summary for you — no <code>report</code>, no <code>try</code>/<code>except</code>, no boilerplate.</p>
+  <div class="quiz"><p class="quiz-q"><code>test_calculator.py</code> has <code>test_positive</code>, <code>test_negative</code>, and <code>test_zero</code>. Both <code>test_positive</code> and <code>test_zero</code> are broken. What does one <code>pytest</code> run report?</p><div class="opts"><button class="opt" type="button" data-correct>Two red <strong>F</strong>s — one for <code>test_positive</code> and one for <code>test_zero</code> — because pytest runs each test_ function independently</button><button class="opt" type="button">One failure only — pytest stops at the first broken test, just like a chain of asserts</button><button class="opt" type="button">Nothing — a broken test makes pytest stay silent</button><button class="opt" type="button">A <code>SyntaxError</code>, because two tests can't fail in the same file</button></div><div class="why"><code>pytest</code> runs each <code>test_</code> function <strong>independently</strong>, so one failing test never silences another — you get a red <strong>F</strong> for <code>test_positive</code> <em>and</em> a red <strong>F</strong> for <code>test_zero</code> in one run, plus a green dot for <code>test_negative</code>. A plain chain of <code>asserts</code>, by contrast, halts at the first <code>AssertionError</code>.</div></div>
+  <h2>Testing the error path: what should NOT work</h2>
+  <p>Good tests don't only check that correct input gives the right answer — they also check that <em>wrong</em> input fails the <em>right</em> way. What does <code>square("cat")</code> do? It tries to compute <code>"cat" <em> "cat"</code>, and Python won't multiply a string by <strong>another string</strong> — <code>"cat" </em> 3</code> works fine (it's <code>"catcatcat"</code>, the repetition you've seen), but string-times-string doesn't. The result is a <strong><code>TypeError</code></strong>. A good test asserts that this error genuinely happens. Heads-up: this next box is <strong>LIVE</strong> again (<code>try</code>/<code>except</code> is built-in) before we return to terminal-only <code>pytest</code> boxes.</p>
+  <details class="predict"><summary>What does <code>square("cat")</code> do — return a weird string, or raise something? If it raises, which exception?</summary><div style="margin:.2rem 0 .6rem"><p>It <strong>raises a <code>TypeError</code></strong>. <code>square("cat")</code> computes <code>"cat" <em> "cat"</code>, and Python won't multiply one string by another (the message is <code>can't multiply sequence by non-int of type 'str'</code>). String times </em>int<em> repeats; string times </em>string* raises. So it doesn't quietly misbehave — it raises, which is exactly the error path a good test pins down.</p></div></details>
+  <p class="cell-note">Live — catching the error with try/except. square('cat') is 'cat' * 'cat', which raises TypeError.</p><textarea class="py">def square(n):
+    return n * n
+
+
+try:
+    square("cat")
+except TypeError:
+    print("raised TypeError, as expected")</textarea>
+  <p>That <code>try</code>/<code>except TypeError</code> is structurally identical to Lecture 3's <code>try</code>/<code>except ValueError</code> — you're proving the error happened. <code>pytest</code> expresses the <em>same</em> idea with <code>pytest.raises</code>: "this block must raise a <code>TypeError</code>." Here's the <strong>complete</strong> <code>test_calculator.py</code> with the error-path test folded in — note <code>import pytest</code> at the top:</p>
+  <p class="cell-note">Terminal only — the FULL test_calculator.py. Run: pip install pytest (once), then pytest test_calculator.py</p><div class="codeblock"><pre><code>import pytest
+
+from calculator import square
+
+
+def test_positive():
+    assert square(2) == 4
+    assert square(3) == 9
+
+
+def test_negative():
+    assert square(-2) == 4
+    assert square(-3) == 9
+
+
+def test_zero():
+    assert square(0) == 0
+
+
+def test_str():
+    with pytest.raises(TypeError):
+        square("cat")</code></pre></div>
+  <div class="callout note"><span class="tag">Terminal only — put just the failing call in the with block</span><p>Inside <code>with pytest.raises(TypeError):</code>, put <strong>only</strong> the call you expect to fail. Once it raises, <code>pytest</code> is satisfied; any follow-up assertions belong <strong>after</strong> the <code>with</code> block, not inside it.</p></div>
+  <h2>The key lesson: a function must RETURN to be testable</h2>
+  <p>Here's the most important idea in the lecture, and it decides whether <em>any</em> of the above even works. Suppose you have a greeting function in <code>hello.py</code> that just <strong>prints</strong> its greeting, and you write a test for it: <code>assert hello("David") == "hello, David"</code>. The text <code>hello, David</code> clearly shows on screen when you call it — so predict before you run: does the assert pass, fail with an error, or something stranger? Most people guess it passes. <strong>This cell is supposed to fail; run it to see the <code>AssertionError</code> — you can't break anything.</strong></p>
+  <details class="predict"><summary><code>hello("David")</code> prints <code>hello, David</code> on screen. So does <code>assert hello("David") == "hello, David"</code> pass?</summary><div style="margin:.2rem 0 .6rem"><p>It <strong>fails</strong> with <code>AssertionError</code>. <code>hello</code> only <strong>prints</strong>; it has no <code>return</code>, so it hands back <strong><code>None</code></strong> — just like <code>r = square(5)</code> was <code>None</code> in Lecture 0 when <code>square</code> only printed. The check is really <code>assert None == "hello, David"</code>, which is False, so the alarm trips. The text you saw on screen was printed <em>as a side effect</em>; it was never <em>returned</em>, and <code>assert</code> can only compare what a function returns.</p></div></details>
+  <p class="cell-note">Live — supposed to FAIL. hello only PRINTS, so it returns None; the assert compares None to the string. Run it to see the AssertionError.</p><textarea class="py">def hello(to="world"):
+    print("hello,", to)   # prints, but does NOT return
+
+
+assert hello("David") == "hello, David"   # really: None == 'hello, David' -&gt; False
+print("this line never runs")</textarea>
+  <div class="callout note"><span class="tag">Remember: return vs. print, from Lecture 0</span><p><code>print</code> just <strong>shows</strong> a value on screen, while <code>return</code> hands it <strong>back to your code</strong> — and a function with no <code>return</code> hands back <strong><code>None</code></strong> (the no-value object from Lecture 2). This is the exact print-vs-return run you did in Lecture 0 (<code>r = square(5)</code> was <code>None</code>), now biting you: <code>hello("David")</code> only <strong>prints</strong>, so it returns <code>None</code>, and <code>assert None == "hello, David"</code> is False. <strong>To be testable, a function must RETURN its result, not print it.</strong></p></div>
+  <p>The fix is one word. Change <code>print(...)</code> to <code>return</code> an f-string, so <code>hello</code> hands its greeting <em>back</em> and the asserts have a real string to compare against. Predict: silence from both asserts, then <code>passed</code>. Run it:</p>
+  <p class="cell-note">Live — fixed: hello now RETURNS the string, so it's testable. Both asserts pass silently; the final print proves we reached the end.</p><textarea class="py">def hello(to="world"):
+    return f"hello, {to}"
+
+
+assert hello() == "hello, world"
+assert hello("David") == "hello, David"
+print("passed")</textarea>
+  <div class="quiz"><p class="quiz-q">A function <code>greet(name)</code> does <code>print(f"hi {name}")</code> AND ends with <code>return name</code>. You write <code>assert greet("Sam") == "hi Sam"</code>. What happens?</p><div class="opts"><button class="opt" type="button" data-correct><code>AssertionError</code> — <code>greet</code> returns <code>"Sam"</code> (the name), not <code>"hi Sam"</code>; the printed text isn't what's returned</button><button class="opt" type="button">It passes — <code>greet</code> both prints and returns, so the printed <code>hi Sam</code> is compared</button><button class="opt" type="button"><code>TypeError</code> — you can't compare a function's result to a string</button><button class="opt" type="button">Nothing — a function that prints can't be tested, so the assert is skipped</button></div><div class="why"><code>assert</code> compares only what a function <strong>returns</strong>. <code>greet</code> <em>prints</em> <code>hi Sam</code> but <em>returns</em> <code>"Sam"</code>, so the check is <code>"Sam" == "hi Sam"</code> — False — and it raises an <code>AssertionError</code>. A function having a <code>return</code> isn't enough; it must return the value you're testing. The printed text is a side effect that never comes back into your code.</div></div>
+  <h2>Organizing tests into a folder</h2>
+  <p>Now that <code>hello.py</code> <strong>returns</strong> its greeting, it's testable — so let's give its tests a home. As a project grows, you don't want test files cluttered among your real code; you tuck them into a <strong><code>test/</code></strong> folder. Make it with <code>mkdir test</code>, drop your <code>test_*.py</code> files inside, and add an <strong>empty</strong> <code>test/__init__.py</code>, which <strong>marks the folder as a Python package</strong>. Then point <code>pytest</code> at the folder with <code>pytest test</code>.</p>
+  <div class="callout later"><span class="tag">Terminal only — the commands</span><p>In your terminal: <code>mkdir test</code> to make the folder, create <code>test/test_hello.py</code> (below) and an empty <code>test/__init__.py</code> (literally nothing in it), then run <code>pytest test</code>. <code>pytest</code> finds every <code>test_*.py</code> by filename <strong>whether or not</strong> <code>__init__.py</code> exists — the empty <code>__init__.py</code> marks <code>test/</code> as a package, which keeps test module names from colliding across folders in larger suites.</p></div>
+  <p class="cell-note">Terminal only — save as test/test_hello.py. Imports the returning hello from your hello.py.</p><div class="codeblock"><pre><code>from hello import hello
+
+
+def test_default():
+    assert hello() == "hello, world"
+
+
+def test_argument():
+    assert hello("David") == "hello, David"</code></pre></div>
+  <p class="cell-note">Terminal only — save as test/__init__.py. EMPTY on purpose: it marks test/ as a package. Then run: pytest test</p><div class="codeblock"><pre><code># (intentionally empty — this file marks test/ as a package)</code></pre></div>
+  <p>And that loops back to where we started. The whole reason we drilled one tiny <code>square</code> is that the moves scale: in a real project with dozens of functions across many files, one command — <code>pytest test</code> — runs <strong>every</strong> <code>test_</code> in <strong>every</strong> file and reports each pass and failure at once. That 1-line check versus eyeballing everything by hand is the entire point of writing tests.</p>
+  <div class="quiz"><p class="quiz-q">You create <code>test/__init__.py</code> and leave it completely empty. Is that a mistake?</p><div class="opts"><button class="opt" type="button" data-correct>No — an empty <code>__init__.py</code> intentionally marks the folder as a package; it's supposed to be empty</button><button class="opt" type="button">Yes — <code>__init__.py</code> must contain your test functions, or pytest skips the folder</button><button class="opt" type="button">Yes — pytest can't discover any <code>test_*.py</code> until this file holds an import list</button><button class="opt" type="button">No, but it must contain <code>import pytest</code> to work</button></div><div class="why">An empty <code>__init__.py</code> is a deliberate marker that says "this folder is a package." It's <em>meant</em> to be empty — it holds no tests and isn't a forgotten scratch file. Note that <code>pytest test</code> discovers every <code>test_*.py</code> by filename <strong>regardless</strong> of <code>__init__.py</code>; the package marker just keeps module names from colliding in larger suites.</div></div>
+  <div class="gotcha-list"><h2 id="gotchas">Common mistakes at a glance</h2><ul><li><strong><code>assert</code> is a statement, not a function call.</strong> Write <code>assert CONDITION</code> (optionally <code>assert CONDITION, "message"</code>), never <code>assert(CONDITION, "message")</code> — those parentheses build a two-item <strong>tuple</strong>, which is always truthy, so the test passes while checking nothing (modern Python warns <code>SyntaxWarning: assertion is always true, perhaps remove parentheses?</code>).</li><li><strong>A passing test is silent.</strong> A True <code>assert</code> produces <em>no output</em>; "nothing happened" means it passed, not that it failed to run. A trailing <code>print</code> is your only proof execution reached the end.</li><li><strong>A failing <code>assert</code> raises an <code>AssertionError</code> and halts</strong> — it does not return or print <code>False</code>. It's an exception, the same raise-and-stop you met with <code>ValueError</code> in Lecture 3. A tripped test is the test earning its keep, not your fault.</li><li><strong>One passing test can hide a bug.</strong> A broken <code>square</code> returning <code>n + n</code> <em>still passes</em> <code>square(2) == 4</code> and <code>square(0) == 0</code> — <code>0</code> and <code>2</code> are the only numbers where <code>n + n</code> equals <code>n <em> n</code>. It fails on <code>square(3)</code>, <code>square(-2)</code>, <code>square(-3)</code>. Always test more than one value — positive, negative, </em>and* zero.</li><li><strong>A plain chain of <code>asserts</code> stops at the first failure.</strong> To report more by hand you wrap each in <code>try</code>/<code>except AssertionError</code> — which works but is verbose. <code>pytest</code> gives that report-everything behavior for free by running each <code>test_</code> function independently (one red <strong>F</strong> apiece).</li><li><strong><code>pytest</code> is third-party (pip) and runs from the terminal</strong>, never the browser. <code>pip install pytest</code> once, then <code>pytest test_file.py</code>. (<code>assert</code> and <code>try</code>/<code>except</code>, by contrast, are built in and run live.)</li><li><strong><code>pytest</code> only runs <code>test_</code>-named functions</strong> in files named <code>test_<em>.py</code>. A mis-prefixed function (<code>check_square</code>) is </em>silently never run* — no error, just missing coverage. When a test seems ignored, check the prefix first.</li><li><strong>A print-only function returns <code>None</code> and can't be asserted.</strong> <code>assert hello("David") == "hello, David"</code> fails when <code>hello</code> only <em>prints</em>, because it returns <code>None</code> (exactly like <code>r = square(5)</code> in Lecture 0). And a function that <em>does</em> <code>return</code> must return the value you're testing, not just any value.</li><li><strong><code>square("cat")</code> raises a <code>TypeError</code></strong> — it evaluates <code>"cat" <em> "cat"</code>, and Python won't multiply a string by another string (string </em> int repeats: <code>"cat" <em> 3</code> is <code>"catcatcat"</code>; string </em> string raises). Test error paths with <code>pytest.raises(TypeError)</code> (terminal) or <code>try</code>/<code>except TypeError</code> (live), and put only the failing call inside the <code>with</code> block.</li><li><strong><code>assert</code> is for development/testing, not input validation</strong> — use it to catch your <strong>own</strong> bugs while coding, and use <code>try</code>/<code>except</code> (Lecture 3) to handle what a <strong>user</strong> types. (Aside, beyond this lecture: under <code>python -O</code>, asserts are stripped entirely, so never rely on one to check user input.)</li><li><strong>An empty <code>test/__init__.py</code> is on purpose</strong> — it marks the folder as a package; <code>pytest</code> discovers every <code>test_*.py</code> by filename whether or not it exists. It is not a mistake or a file to delete.</li></ul></div>
+  <h2>Recap &amp; next step</h2><p>The big idea is the <strong>tripwire</strong>: an <code>assert</code> is a wire strung across a fact you believe is true. Step over it cleanly (True) and it's <strong>silent</strong> — that silence is the test passing, which is why a final <code>print</code> is your proof you reached the end. Trip it (False) and it <strong>raises an <code>AssertionError</code></strong> that halts the program — the same raise-and-stop you met in Lecture 3, where <code>int("cat")</code> raised a <code>ValueError</code>. A tripped wire isn't your code failing in a new way; it's the test earning its keep. That one behavior is the engine behind every testing tool.</p><p>From the start you keep your code in one file (<code>calculator.py</code>) and your tests in a separate one (<code>test_calculator.py</code>) that borrows the function with <code>from calculator import square</code> — the same <code>from ... import</code> move as Lecture 4. The progression: start with the clumsy <code>if</code>/<code>print</code> check, replace it with a one-word <code>assert</code> on <code>square(n)</code>, and learn that one passing case (<code>square(2)</code>) can hide a bug a second case (<code>square(3)</code>) catches — because <code>n + n</code> equals <code>n <em> n</code> only at <code>0</code> and <code>2</code> — so test more than one value. A plain chain of asserts halts at the first failure, so you report more failures by hand with <code>try</code>/<code>except AssertionError</code> — it works but is verbose, and that verbosity is exactly what <strong><code>pytest</code></strong> removes: third-party like Lecture 4's <code>pip</code> packages, so terminal only, it runs each <code>test_</code> function <strong>independently</strong> and reports <strong>every</strong> failure for free. <code>pytest.raises(TypeError)</code> tests the error path (<code>square("cat")</code> is <code>"cat" </em> "cat"</code>, a <code>TypeError</code> — string times string, not string times int), the professional twin of Lecture 3's <code>try</code>/<code>except</code>.</p><p>The key lesson ties it all together: a function must <strong>return</strong>, not <strong>print</strong>, to be testable — a print-only function returns <code>None</code> (just like <code>r = square(5)</code> in Lecture 0), so <code>assert hello("David") == "hello, David"</code> fails until you <code>return</code> an f-string. Once <code>hello</code> returns, its tests live in a <code>test/</code> folder with an <strong>empty</strong> <code>__init__.py</code> that marks it a package, and <code>pytest test</code> runs every test in every file at once — the payoff that makes the one-function <code>square</code> drill worth it.</p><p>Next up is the <strong>Pset 5</strong> problem set: for each function you write, add tests that try a <strong>positive</strong>, a <strong>negative</strong>, a <strong>zero</strong>, and a <strong>wrong-type</strong> case — and make your functions <strong>return</strong> their results so they're testable in the first place.</p>
+  <p><a href="index.html">← Back to all lectures</a></p>
+</main>
+</div>
+
+<footer class="site">CS50P interactive notes · Lecture 5 — Unit Tests · run, edit, and break things freely.</footer>
+<script src="assets/notes.js" defer></script>
+</body>
+</html>
