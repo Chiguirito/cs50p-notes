@@ -1,0 +1,285 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Lecture 6 — File I/O · CS50P Notes</title>
+<link rel="icon" href="data:,">
+<link rel="stylesheet" href="assets/notes.css">
+<script>try{var t=localStorage.getItem('cs50p-theme');if(t)document.documentElement.setAttribute('data-theme',t);}catch(e){}</script>
+</head>
+<body>
+<div id="progress"></div>
+
+<header class="site">
+  <a class="brand" href="index.html">← CS50P Notes</a>
+  <span class="spacer"></span>
+  <button class="theme-toggle" type="button" aria-pressed="false">🌙 Dark</button>
+</header>
+
+<div class="wrap">
+<nav class="toc" aria-label="On this page">
+  <details open><summary>Contents</summary><p class="toc-title">On this page</p><ol></ol></details>
+</nav>
+
+<main>
+<h1>Lecture 6 — File I/O</h1>
+  <p class="subtitle lead">Everything your program builds in memory vanishes the instant it ends. This lecture makes data <strong>persist</strong>: you'll <code>open</code> a file to <strong>write</strong> and <strong>read</strong> it (closing it yourself first, then letting the <strong><code>with</code></strong> statement do it for you), store rows as <strong>CSV</strong> (first by hand, then with the <code>csv</code> module that survives commas inside a value), and finally peek at <strong>binary</strong> files by stitching images into an animated GIF with <strong>PIL</strong>.</p>
+  <div class="objectives"><h2>What you'll be able to do</h2><ul><li>Explain why a list built in memory is gone when the program exits, and <code>open(name, mode)</code> a file with <code>"w"</code> (overwrite — empties first), <code>"a"</code> (append to the end), or <code>"r"</code> (read, the default)</li><li>Write with <code>file.write(...)</code> — remembering it adds <strong>no</strong> newline, so you type <code>\n</code> yourself — and read back with <code>file.read()</code> (whole file), <code>file.readlines()</code> (a list), or <code>for line in file:</code>, stripping the trailing newline with <code>line.rstrip()</code></li><li>Prefer <code>with open(...) as file:</code> over a bare <code>open()</code> plus <code>file.close()</code>, knowing <code>with</code> auto-closes even on error, and sort what you read with <code>sorted(seq, key=lambda x: ...)</code> or <code>.sort(...)</code> in place</li><li>Parse a CSV by hand with <code>line.rstrip().split(",")</code> and tuple unpacking, build a list of dicts, and feel exactly why that breaks the moment a value contains a comma</li><li>Reach for the <strong><code>csv</code></strong> module — <code>csv.reader</code> (rows as lists, <code>row[0]</code>), <code>csv.DictReader</code> (rows as dicts keyed by the <strong>header</strong>), <code>csv.DictWriter</code> (with <code>fieldnames</code>, <code>writeheader</code>, <code>writerow</code>) — and recognize that binary files like images need a library such as <strong>PIL</strong></li></ul></div>
+  <div class="callout note"><span class="tag">How these notes work</span><p><strong>White box, Run button</strong> = real Python, runs right here. Edit it, press <strong>Run</strong> (or <strong>Cmd/Ctrl + Enter</strong>); press <strong>Esc</strong> to step back out. The first run downloads Python once (about 10 seconds), then it's instant. You can't break anything — edit any box and Run again.</p></div>
+  <div class="callout note"><span class="tag">Do this before every Run: predict</span><p>Before you press Run, <strong>say what you expect to print</strong>. This lecture adds a second thing worth predicting: <em>what ends up on disk</em>. Picture the file's contents, then check yourself — every surprise becomes a lesson.</p></div>
+  <h2>Why files? Memory forgets</h2>
+  <p>Every variable, list, and dictionary you've built so far lives in your computer's <strong>memory</strong>, and memory is wiped clean the instant your program exits. Collect three names in a list, print them, and they're <strong>gone</strong> the moment the program finishes — nothing to come back to tomorrow. To make data <strong>persist</strong>, you write it to a <strong>file</strong> on disk. That's all File I/O is: <strong>I</strong>nput from and <strong>O</strong>utput to files, so your data outlives a single run.</p>
+  <p>Start with the in-memory version, so the gap is obvious. We hard-code the Hogwarts trio (so the box needs no typing) and greet each one — the same <code>for</code>-over-a-list shape from Lecture 2, now wrapped in <code>sorted()</code>, which hands the items back in order. Predict before you run: after this box finishes, where are those three names stored?</p>
+  <p class="cell-note">Live — in-memory only. Predict first: once it finishes, is anything saved to disk? Then Run.</p><textarea class="py">names = ["Hermione", "Harry", "Ron"]
+
+for name in sorted(names):
+    print("hello,", name)</textarea>
+  <p>It greeted everyone in sorted order — and saved <strong>nothing</strong>. The <code>names</code> list lived only in memory; close the program and it's gone. (CS50P's original <em>asks</em> for the names with <code>input()</code>; we hard-code them so the box runs on its own — edit the list and Run again.) The fix is to put those names in a file.</p>
+  <div class="callout note"><span class="tag">Why each file box writes before it reads</span><p>Each runnable box starts <strong>fresh</strong>: a file written in one box is <strong>not</strong> visible to the next. So every box that <em>reads</em> a file first <strong>creates that file in the same box</strong> — it writes a few hard-coded lines, then reads them right back. (That box isolation is a property of these notes, not of normal Python; on your own machine a file you write stays put between runs.) You're free to edit the hard-coded data and Run again.</p></div>
+  <h2>open + close: one name on disk</h2>
+  <p>The built-in <strong><code>open(name, mode)</code></strong> hands you a file you can write to. The plainest way to use it is the original CS50P shape: open the file, <code>file.write(...)</code> text into it, then <strong><code>file.close()</code></strong> it when you're done — you opened it, so you close it. We write a <strong>single</strong> name first, then read it back by looping the file one line at a time, stripping each line and greeting it — the read-back you'll use throughout. Predict the greeting before you run.</p>
+  <p class="cell-note">Live and self-contained — the original open/close style. WRITE one name, close, then re-open and read it back line by line. Edit the name and Run again.</p><textarea class="py"># open with "w" to write; YOU must close it when done
+file = open("names.txt", "w")
+file.write("Hermione\n")
+file.close()
+
+# re-open (no mode = read), loop one line at a time
+file = open("names.txt")
+for line in file:
+    print("hello,", line.rstrip())
+file.close()</textarea>
+  <p>There's the payoff: <code>Hermione</code> is now <strong>on disk</strong>, surviving past the program. The <code>mode</code> you passed says what you intend: <code>"w"</code> means <strong>write</strong>, and the second <code>open</code> passed <strong>no</strong> mode, which defaults to <code>"r"</code> — <strong>read</strong>. Two things to notice in that write. First, <strong><code>write</code> adds no newline</strong> — we typed the <code>\n</code> ourselves; we'll <em>see</em> why that matters next. Second, looping <code>for line in file:</code> hands you one line at a time, and we <code>rstrip()</code> each line — more on both shortly. The <code>\n</code> here is the same backslash-escape idea from Lecture 0; <code>print</code> used to add a newline <em>for</em> you (Lecture 2), but <code>write</code> never does.</p>
+  <h2>The newline trap: write adds none</h2>
+  <p>That <code>\n</code> is worth <em>seeing</em> fail. This box writes two names with <strong>no <code>\n</code></strong> between them and reads the whole file back as one string with <strong><code>file.read()</code></strong>. Predict: what does the file contain — two lines, or one?</p>
+  <p class="cell-note">Live and self-contained — the BROKEN version: no \n between writes. read() returns the WHOLE file as one string. Predict the file's contents, then Run to watch them jam together.</p><textarea class="py"># No \n this time -&gt; watch what happens
+with open("names.txt", "w") as file:
+    file.write("Hermione")
+    file.write("Harry")
+
+# read() returns the whole file as one string
+with open("names.txt") as file:
+    print(file.read())</textarea>
+  <p><code>HermioneHarry</code>, jammed onto one line — <code>write</code> put down exactly the strings you gave it and not a byte more. That's the rule: <strong><code>write</code> adds no newline; you type <code>\n</code> yourself</strong> when you want one record per line. (This box also previews two things: <code>read()</code>, which returns the whole file as one string, and the <strong><code>with</code></strong> statement, which we explain in full just below.)</p>
+  <h2>"w" empties the file first</h2>
+  <p>Now watch what <code>"w"</code> does when the file already has something in it. This box opens <code>names.txt</code> with <code>"w"</code> and writes Hermione, then opens it with <code>"w"</code> <strong>a second time</strong> and writes Harry — the way re-running a <code>"w"</code> program would. Predict: after it runs, does the file hold both names, or just one?</p>
+  <p class="cell-note">Live and self-contained — opens with "w" TWICE, like re-running the program. Predict whether Hermione survives, then Run.</p><textarea class="py">file = open("names.txt", "w")
+file.write("Hermione\n")
+file.close()
+
+# second "w" open, as if you ran the program again
+file = open("names.txt", "w")
+file.write("Harry\n")
+file.close()
+
+file = open("names.txt")
+for line in file:
+    print("hello,", line.rstrip())
+file.close()</textarea>
+  <div class="callout gotcha"><span class="tag">"w" empties the file before your first write</span><p><code>open(name, "w")</code> <strong>empties the file before you write a single byte</strong> — that's why only <code>Harry</code> survived above; the second <code>"w"</code> open wiped <code>Hermione</code> first. Open <code>names.txt</code> with <code>"w"</code> to add one name and you've just deleted every name that was there. To <em>add</em> without erasing, you need a different mode — <code>"a"</code>, right below.</p></div>
+  <h2>append: add without erasing</h2>
+  <p>The direct fix for that overwrite is <strong><code>"a"</code></strong> — <strong>append</strong>: it adds to the <strong>end</strong> of the file, keeping what's already there. This box writes Hermione with <code>"w"</code>, then opens with <code>"a"</code> <strong>twice</strong> to add Harry and Ron — exactly the way running an append program three times would pile names up. Predict the file's final contents before you run.</p>
+  <p class="cell-note">Live and self-contained — "w" sets a baseline, then "a" ADDS twice without erasing, so you SEE the file grow. Predict the three names, then Run.</p><textarea class="py"># baseline: "w" starts the file
+with open("names.txt", "w") as file:
+    file.write("Hermione\n")
+
+# APPEND once: keeps what's there, adds to the end
+with open("names.txt", "a") as file:
+    file.write("Harry\n")
+
+# APPEND again: the file keeps growing
+with open("names.txt", "a") as file:
+    file.write("Ron\n")
+
+with open("names.txt") as file:
+    for line in file:
+        print("hello,", line.rstrip())</textarea>
+  <div class="quiz"><p class="quiz-q">You're writing a program that should add one new line to a log file <em>every time it runs</em>, keeping all the old lines. Which mode do you open with — and what breaks if you pick the other one?</p><div class="opts"><button class="opt" type="button" data-correct><code>"a"</code> (append) — it adds to the end and keeps prior runs. Pick <code>"w"</code> and each run empties the file first, so you only ever see the latest line</button><button class="opt" type="button"><code>"w"</code> (write) — it adds to the end and keeps prior runs. <code>"a"</code> would overwrite the file each run</button><button class="opt" type="button">Either works the same; both keep the old lines and add the new one</button><button class="opt" type="button"><code>"r"</code> (read) — you write through the default read mode to preserve history</button></div><div class="why">A log that grows across runs needs <code>"a"</code> (append): it keeps what's there and adds to the end. <code>"w"</code> <strong>truncates the file to empty before writing</strong>, so each run would wipe every earlier line and leave only the newest — the classic way to lose data by reaching for the wrong mode. <code>"r"</code> can't write at all.</div></div>
+  <h2>with: let Python close the file for you</h2>
+  <p>Every box above used a bare <code>open()</code> and made <em>you</em> remember <code>file.close()</code>. The <strong><code>with</code></strong> statement removes that forgotten-<code>close()</code> bug entirely. <code>with open(...) as file:</code> opens the file, names it <code>file</code> (that's the <code>as</code>), runs the <strong>indented block</strong>, and <strong>closes the file automatically</strong> the moment the block ends — even if a line inside it raises an error. There's no <code>close()</code> to forget. Here's the append again, now in <code>with</code> form — and every box from here on uses <code>with</code>:</p>
+  <p class="cell-note">Live and self-contained — the same append, now with <code>with</code>: no close() to forget. The indented block runs, then Python closes the file at its end.</p><textarea class="py"># with open(...) as file:  opens, runs the block, closes automatically
+with open("names.txt", "w") as file:
+    file.write("Hermione\n")
+
+with open("names.txt", "a") as file:
+    file.write("Ron\n")
+
+with open("names.txt") as file:
+    for line in file:
+        print("hello,", line.rstrip())</textarea>
+  <div class="mental-model"><span class="tag">Mental model — open is a borrow, with is the auto-return</span><p>A small picture for <code>with</code>. Opening a file is like <strong>borrowing</strong> a book from the library: it has to be returned. With a bare <code>open()</code> (what you used above), <em>you</em> must remember to give it back with <code>close()</code>. With <strong><code>with</code></strong>, the return is <strong>automatic</strong> the instant you're done — you literally cannot forget, even if something goes wrong mid-block.</p><div class="mm-diagram"><div class="mm-card"><b>Bare open(): YOU must return it</b><pre style="margin:.4rem 0;font-family:var(--mono);font-size:.84rem;white-space:pre-wrap;overflow-x:auto">file = open("names.txt", "a")
+file.write("Ron\n")
+file.close()   # YOU return the book</pre><span>Miss the <code>close()</code> and the book is still checked out: writes may sit unflushed, the file stays locked. It works only if you never forget — and people forget. Worse, if a line above <code>close()</code> raises, you never reach it at all.</span></div><div class="mm-card"><b>with: returned automatically</b><pre style="margin:.4rem 0;font-family:var(--mono);font-size:.84rem;white-space:pre-wrap;overflow-x:auto">with open("names.txt", "a") as file:
+    file.write("Ron\n")
+# closed HERE, automatically</pre><span>The instant the indented block ends, Python closes the file for you — <strong>even if the block raised an error</strong> (the raise-and-stop from Lecture 3, the same error paths you wrote tests for in Lecture 5). Nothing to remember, nothing to leak.</span></div></div></div>
+  <div class="quiz"><p class="quiz-q">Why is <code>with open("data.txt", "w") as file:</code> preferred over <code>file = open("data.txt", "w")</code> followed by your own <code>file.close()</code>?</p><div class="opts"><button class="opt" type="button" data-correct><code>with</code> closes the file automatically when the block ends (even on error), so you can't forget <code>close()</code> and leave writes unflushed</button><button class="opt" type="button"><code>with</code> is the only way to write to a file; bare <code>open()</code> can only read</button><button class="opt" type="button"><code>with</code> adds a newline after every <code>write</code>, which bare <code>open()</code> does not</button><button class="opt" type="button"><code>with</code> makes the file write faster by skipping the disk</button></div><div class="why"><code>with</code> guarantees the file is <strong>closed</strong> when the block finishes — including if an exception is raised inside it. A bare <code>open()</code> puts that on you, and a forgotten <code>close()</code> can leave buffered writes unflushed or the file locked. Both can write <em>and</em> read; <code>write</code> never adds a newline either way; and <code>with</code> doesn't change disk speed.</div></div>
+  <h2>Reading lines: a list, or one at a time</h2>
+  <p>You've used <code>file.read()</code> (the whole file as one string) and the <code>for line in file:</code> loop (one line at a time, gentle on memory for huge files). There's a third option in between: <strong><code>file.readlines()</code></strong> reads the whole file at once and hands back a <strong>list</strong> of strings, one per line — handy when you want the whole list to index, count with <code>len()</code>, or sort directly. The catch is shared by both line-readers: each string <strong>keeps its trailing <code>\n</code></strong>. This box shows exactly what <code>readlines()</code> returns. Predict before you run: is the <code>\n</code> still attached to each name?</p>
+  <p class="cell-note">Live and self-contained — writes 3 names, then shows readlines() as a raw list. Watch the \n: it's still attached to every string.</p><textarea class="py">with open("names.txt", "w") as file:
+    file.write("Ron\n")
+    file.write("Hermione\n")
+    file.write("Harry\n")
+
+# readlines() reads the WHOLE file into a list, one string per line
+with open("names.txt") as file:
+    lines = file.readlines()
+
+print(lines)</textarea>
+  <div class="callout gotcha"><span class="tag">Lines keep their \n until you rstrip()</span><p><code>readlines()</code> gives <code>['Ron\n', 'Hermione\n', 'Harry\n']</code>, <strong>not</strong> <code>['Ron', ...]</code> — every line still carries its trailing <code>\n</code>. Looping <code>for line in file:</code> has the same issue. Forget to strip it and you get mysterious blank lines, or comparisons that silently fail because <code>"Ron\n" != "Ron"</code>. The cure is <strong><code>line.rstrip()</code></strong>: with no argument it strips <em>all</em> trailing whitespace — the newline, spaces, tabs. (Both <code>read()</code> and <code>readlines()</code> also leave the file's cursor <strong>at the end</strong> afterward, so a <em>second</em> read in the same <code>with</code> block yields nothing — that's why our boxes re-open the file to read what they just wrote.)</p></div>
+  <details class="predict"><summary>You loop the file but forget the strip: <code>for line in file: print("hello,", line)</code>. What looks wrong in the output?</summary><div style="margin:.2rem 0 .6rem"><p>A <strong>blank line after every greeting</strong>. Each <code>line</code> is still <code>"Ron\n"</code>, and <code>print</code> adds its own <code>\n</code> on the end — so you get two <code>\n</code> total, which renders as one blank line between greetings. <code>line.rstrip()</code> removes the file's trailing <code>\n</code> so only <code>print</code>'s newline remains. The same hidden <code>\n</code> is why <code>"Ron\n" == "Ron"</code> is False, which quietly breaks lookups and comparisons.</p></div></details>
+  <h2>CSV by hand: split on the comma</h2>
+  <p>Most real data has more than one field per row — a name <strong>and</strong> a house. The plainest way to store that is <strong>CSV</strong> (Comma-Separated Values): one record per line, fields separated by commas. You parse it by hand: read a line, <code>rstrip()</code> the newline, and <code>split(",")</code> it into pieces. A two-field line splits into a <strong>2-item list</strong>, and <code>name, house = ...</code> drops each piece into its own variable in one go — that's <strong>tuple unpacking</strong>. We greet each student straight away. Predict before you run: what does each line look like <em>before</em> the split, and what does the greeting say?</p>
+  <p class="cell-note">Live and self-contained — writes students.csv, parses each line with split(","), tuple-unpacks into name, house, and greets each one in file order.</p><textarea class="py">with open("students.csv", "w") as file:
+    file.write("Hermione,Gryffindor\n")
+    file.write("Harry,Gryffindor\n")
+    file.write("Draco,Slytherin\n")
+
+with open("students.csv") as file:
+    for line in file:
+        name, house = line.rstrip().split(",")   # tuple unpacking
+        print(f"{name} is in {house}")</textarea>
+  <p>Each line split into exactly two pieces, and we greeted everyone — but in <strong>file order</strong>, not alphabetical. To collect those rows and <em>sort</em> them, we'll build a <strong>list of dicts</strong> (the same list-of-dicts idea from Lecture 2). Sorting a list of dicts needs one tool we haven't met yet, so let's learn it on its own first, then come straight back.</p>
+  <h2>Detour: sorting by a key</h2>
+  <p><code>sorted()</code> on a list of dicts needs a hint: <em>which value do I sort on?</em> You give it a <code>key=</code> — a little function that, given one item, returns the value to sort by. Start with a function you can name. (The lecture goes straight to a <code>lambda</code>; here we name it first to demystify what <code>key=</code> wants.) This box has <strong>no file I/O at all</strong> — just the sorting idea in isolation. Predict the output order before you run.</p>
+  <p class="cell-note">Live, no files — sort a list of dicts with a NAMED key function. get_name(student) returns the value to sort by; sorted() calls it on each item for you.</p><textarea class="py">students = [
+    {"name": "Hermione", "house": "Gryffindor"},
+    {"name": "Harry", "house": "Gryffindor"},
+    {"name": "Draco", "house": "Slytherin"},
+]
+
+def get_name(student):
+    return student["name"]
+
+for student in sorted(students, key=get_name):
+    print(f"{student['name']} is in {student['house']}")</textarea>
+  <p>That works, but a one-line function used once doesn't need a name. A <strong><code>lambda</code> is just that function with no name</strong> (the <code>def</code> you met in Lecture 0, shrunk to one line): <code>lambda s: s["name"]</code> means "given a student <code>s</code>, sort by <code>s["name"]</code>." Here's the <em>exact same sort</em>, the only change being <code>get_name</code> collapsed into a lambda. Same output:</p>
+  <p class="cell-note">Live, no files — the SAME sort, the ONLY change being get_name collapsed into a lambda. You never call the lambda; sorted() does.</p><textarea class="py">students = [
+    {"name": "Hermione", "house": "Gryffindor"},
+    {"name": "Harry", "house": "Gryffindor"},
+    {"name": "Draco", "house": "Slytherin"},
+]
+
+# lambda s: s["name"]  ==  def get_name(s): return s["name"]
+for student in sorted(students, key=lambda s: s["name"]):
+    print(f"{student['name']} is in {student['house']}")</textarea>
+  <div class="callout note"><span class="tag">One more: .sort() reorders in place</span><p><code>sorted(seq, key=...)</code> returns a <strong>new</strong> list and leaves the original alone. Its cousin <strong><code>.sort()</code></strong> takes the same <code>key=</code> but reorders the list <strong>in place</strong> — it changes the list itself and returns <code>None</code>. So <code>students.sort(key=lambda s: s["name"])</code> followed by <code>for student in students:</code> prints the same order. Reach for <code>sorted()</code> when you want a new list, <code>.sort()</code> when you're happy to reorder the one you have.</p></div>
+  <details class="predict"><summary>Swap the order of the three dicts above (put Draco first), keep <code>key=lambda s: s["name"]</code>, and Run. Does the <strong>printed</strong> order change?</summary><div style="margin:.2rem 0 .6rem"><p>No — the printed order stays <strong>Draco, Harry, Hermione</strong>, alphabetical by name. <code>sorted</code> calls the lambda on each item to get its sort key, then orders by that key, so the <em>starting</em> arrangement doesn't matter. (Reminder: you never call the lambda yourself or add <code>()</code> after it — <code>sorted</code> calls it for you.)</p></div></details>
+  <div class="callout gotcha"><span class="tag">Hand over the lambda, don't call it</span><p><code>sorted(seq, key=lambda s: s<a href=")</code> tries to call the string that <code>s["name"]</code> returns as if it were a function, raising <code>TypeError: 'str' object is not callable</code>. And remember: <code>sorted(">"name"])</code> hands <code>sorted</code> a function to call <em>for</em> you, once per item — so you never add <code>()</code> after the lambda. Writing <code>key=lambda s: s["name"</a></code> returns a <strong>new</strong> list, while <code>.sort()</code> reorders the existing list <strong>in place</strong> and returns <code>None</code>.</p></div>
+  <h2>Back to CSV: sort the list of dicts</h2>
+  <p>Now combine the two: the by-hand parse builds a <strong>list of dicts</strong>, and the <code>key=lambda</code> you just learned sorts it alphabetically. Predict the output order before you run.</p>
+  <p class="cell-note">Live and self-contained — parse students.csv into a list of dicts, then sort by name with the lambda key. Edit the data or the lambda key and Run again.</p><textarea class="py">students = []
+
+with open("students.csv", "w") as file:
+    file.write("Hermione,Gryffindor\n")
+    file.write("Harry,Gryffindor\n")
+    file.write("Ron,Gryffindor\n")
+    file.write("Draco,Slytherin\n")
+
+with open("students.csv") as file:
+    for line in file:
+        name, house = line.rstrip().split(",")
+        students.append({"name": name, "house": house})
+
+for student in sorted(students, key=lambda s: s["name"]):
+    print(f"{student['name']} is in {student['house']}")</textarea>
+  <h2>Why split(",") breaks: commas inside a value</h2>
+  <p>Hand-rolled <code>split(",")</code> works right up until a <strong>value itself contains a comma</strong>. Suppose the field isn't a one-word house but a home address like <code>Number Four, Privet Drive</code>. A real CSV protects such a value by wrapping it in quotes: <code>Harry,"Number Four, Privet Drive"</code>. But <code>split(",")</code> knows nothing about quotes — it chops on <strong>every</strong> comma. (The official lecture motivates the <code>csv</code> module by swapping in this kind of data; here we isolate the crash so you can watch it.) Don't read ahead — let Run be the reveal.</p>
+  <p class="cell-note">Live — a constructed demo that's SUPPOSED to fail on the unpack. Predict: how many pieces does split(",") give, and does <code>name, home = ...</code> survive? Then Run. The traceback is the expected output; you can't break anything.</p><textarea class="py">line = 'Harry,"Number Four, Privet Drive"'
+
+pieces = line.rstrip().split(",")
+print("split gave", len(pieces), "pieces:", pieces)
+
+# We expect 2 fields, but split found a comma INSIDE the address too
+name, home = line.rstrip().split(",")
+print("this line never runs")</textarea>
+  <p><code>split(",")</code> returned <strong>three</strong> pieces — it split on the comma <em>inside</em> the address — so <code>name, home = ...</code> raised <strong><code>ValueError: too many values to unpack (expected 2)</code></strong>: you asked for 2 names but handed it 3 values. The comma inside the quoted field is exactly the case naive splitting can't handle — and exactly why the <code>csv</code> module exists.</p>
+  <h2>The csv module: reader and DictReader</h2>
+  <p>Python ships a <strong><code>csv</code></strong> module built exactly for this — <code>import csv</code> (the same <code>import</code> from Lecture 4). <strong><code>csv.reader(file)</code></strong> hands you each row already split <strong>correctly</strong> — it understands quoted fields, so the comma inside <code>"Number Four, Privet Drive"</code> stays put. Each row comes back as a <strong>list</strong>, indexed by number: <code>row[0]</code> is the name, <code>row[1]</code> the home. To mirror the by-hand version, this box builds a list of dicts and sorts it — same downstream output, but parsed safely. Predict the order before you run.</p>
+  <p class="cell-note">Live and self-contained — csv.reader handles the comma INSIDE the quoted address. Each row is a list (row[0], row[1]); we build a list of dicts and sort, just like the by-hand version.</p><textarea class="py">import csv
+
+with open("students.csv", "w") as file:
+    file.write('Harry,"Number Four, Privet Drive"\n')
+    file.write("Ron,The Burrow\n")
+    file.write("Draco,Malfoy Manor\n")
+
+students = []
+with open("students.csv") as file:
+    reader = csv.reader(file)
+    for row in reader:
+        students.append({"name": row[0], "home": row[1]})
+
+for student in sorted(students, key=lambda s: s["name"]):
+    print(f"{student['name']} is from {student['home']}")</textarea>
+  <p>Indexing by <strong>number</strong> is fragile: add a column or reorder them and every index silently points at the wrong field. <strong><code>csv.DictReader</code></strong> fixes that. It treats the <strong>first line as a header row</strong> and hands each later row back as a <strong>dict keyed by those headers</strong> — so <code>row["name"]</code> looks it up by key (reached by key, like the Lecture 2 dict), and your code keeps working even if columns get reordered. Note the file now starts with a <code>name,home</code> header line. Predict what <code>row["name"]</code> and <code>row["home"]</code> hold for the first data row.</p>
+  <p class="cell-note">Live and self-contained — csv.DictReader reads the header row, then yields each row as a dict keyed by header. Access row["name"] / row["home"], not row[0].</p><textarea class="py">import csv
+
+with open("students.csv", "w") as file:
+    file.write("name,home\n")                              # header row
+    file.write('Harry,"Number Four, Privet Drive"\n')
+    file.write("Ron,The Burrow\n")
+    file.write("Draco,Malfoy Manor\n")
+
+students = []
+with open("students.csv") as file:
+    reader = csv.DictReader(file)
+    for row in reader:
+        students.append({"name": row["name"], "home": row["home"]})
+
+for student in sorted(students, key=lambda s: s["name"]):
+    print(f"{student['name']} is from {student['home']}")</textarea>
+  <h2>Writing CSV: DictWriter</h2>
+  <p>Writing CSV has a matching tool: <strong><code>csv.DictWriter</code></strong>. You hand it the <code>fieldnames</code> (the column order), call <strong><code>writeheader()</code></strong> once to write the <code>name,home</code> line, then <strong><code>writerow({...})</code></strong> for each record — a <strong>dict</strong> whose keys match the fieldnames. This single box writes the file and reads it straight back with <code>DictReader</code>. Two payoffs to predict: <code>writeheader()</code> writes the header so <code>DictReader</code> knows its columns, and <code>DictWriter</code> <strong>quotes any value containing a comma for you</strong>, so the addresses survive the round trip as single fields. Predict what the raw file shows around those commas, and what <code>DictReader</code> prints back.</p>
+  <p class="cell-note">Live and self-contained — DictWriter with writeheader()+writerow (auto-quoting the comma in each address), then read back with DictReader in the SAME box. newline="" is the idiomatic way to open a file for csv writing.</p><textarea class="py">import csv
+
+# WRITE: header first (so DictReader finds its columns); commas auto-quoted.
+# newline="" is how you open a file for the csv module.
+with open("students.csv", "w", newline="") as file:
+    writer = csv.DictWriter(file, fieldnames=["name", "home"])
+    writer.writeheader()
+    writer.writerow({"name": "Hermione", "home": "Number Twelve, Grimmauld Place"})
+    writer.writerow({"name": "Harry", "home": "Number Four, Privet Drive"})
+
+# PEEK at the raw text — each address with a comma is wrapped in quotes
+print("--- raw file ---")
+with open("students.csv") as file:
+    print(file.read(), end="")
+
+# ROUND TRIP: DictReader pulls each quoted address back as ONE field
+print("--- read back ---")
+with open("students.csv") as file:
+    for row in csv.DictReader(file):
+        print(f"{row['name']} is from {row['home']}")</textarea>
+  <div class="callout gotcha"><span class="tag">reader gives LISTS, DictReader gives DICTS</span><p>Keep the two readers straight: <code>csv.reader</code> yields a <strong>list</strong> per row, so you index by number (<code>row[0]</code>); <code>csv.DictReader</code> yields a <strong>dict</strong> keyed by the header, so you index by name (<code>row["name"]</code>). Mix them up and you get a <code>KeyError</code> (<code>row[0]</code> on a dict) or the wrong field. For writing, <code>DictWriter</code> needs <code>fieldnames=[...]</code> and a dict-shaped <code>writerow({...})</code>; call <code>writeheader()</code> once <em>before</em> the rows if a later <code>DictReader</code> should find its header instead of mistaking your first record for the column names. Open the file with <code>newline=""</code> when writing CSV (as above) so the module's line endings aren't doubled into blank rows.</p></div>
+  <div class="quiz"><p class="quiz-q">Your CSV holds a value with a literal double-quote inside it, like <code>He said "hi"</code>. A real CSV escapes that by doubling it: <code>"He said ""hi"""</code>. Which read approach gives you the value back intact?</p><div class="opts"><button class="opt" type="button" data-correct><code>csv.reader</code> / <code>csv.DictReader</code> — the csv module understands CSV's quoting and escaping rules, so it restores the embedded quote correctly</button><button class="opt" type="button"><code>line.rstrip().split(",")</code> — splitting on commas restores quotes and commas equally well</button><button class="opt" type="button">Neither — a CSV value can never contain a double-quote character</button><button class="opt" type="button">Only <code>read()</code> on the whole file, since quotes confuse both readers</button></div><div class="why">The <code>csv</code> module implements the full CSV quoting spec: it handles values that contain <strong>commas, newlines, and escaped quotes</strong> (a doubled <code>""</code>), restoring each field exactly. <code>split(",")</code> is blind to all of that — it only ever cuts on commas. That breadth, not just the comma case, is why the <code>csv</code> module exists; a CSV value absolutely <em>can</em> hold a quote, as long as it's escaped.</div></div>
+  <h2>Binary files: a look, not a lab</h2>
+  <div class="callout note"><span class="tag">The one idea here: binary files need a library</span><p>A <strong>text</strong> file (<code>names.txt</code>, <code>students.csv</code>) is lines of characters — you <code>open</code> it, loop lines, <code>split</code>, <code>rstrip</code>. A <strong>binary</strong> file (a <code>.gif</code>, <code>.png</code>, <code>.mp3</code>) is raw <strong>bytes</strong> with no lines to read, so you don't parse it by hand: you hand it to a <strong>library</strong> that knows the format. The <code>open</code>/read/write <em>idea</em> is the same; only the <em>tool</em> changes with the kind of file.</p></div>
+  <p>For images, that library is <strong>PIL</strong> (the Python Imaging Library, installed as <strong>Pillow</strong> with <code>pip install pillow</code> — a third-party package from PyPI, like <code>cowsay</code> and <code>requests</code> in Lecture 4). The classic CS50P example, <code>costumes.py</code>, takes image filenames on the command line and stitches them into a looping animated GIF: <code>Image.open</code> reads each frame, and one <code>.save(...)</code> call writes them out as a single GIF. The filenames arrive via <code>sys.argv</code>, the command-line list from Lecture 4 — and since <code>sys.argv[0]</code> is the program name itself, the code loops over <code>sys.argv[1:]</code> to get just the images, then stitches <strong>all</strong> of them with <code>append_images=images[1:]</code>.</p>
+  <div class="callout later"><span class="tag">Running these for real (and why this one is terminal only)</span><p>Almost everything above runs right here in the sandbox; a few things only happen on your own machine. <strong>Append piles up across runs</strong> there (each run adds a line); the browser boxes simulate that with repeated <code>"a"</code> opens. And this <code>costumes.py</code> can't run in the browser at all: it needs a third-party <code>pip install pillow</code>, and it reads/writes <strong>binary image files</strong> passed as <strong>command-line arguments</strong> (<code>sys.argv</code> is empty inside a notebook cell). So this last one is a <em>look</em>, not a lab — read the shape, don't predict-and-Run. To try it for real: <code>pip install pillow</code>, put two GIFs beside the script, then <code>python costumes.py costume1.gif costume2.gif</code>, and open the resulting <code>costumes.gif</code>.</p></div>
+  <p class="cell-note">Terminal only — save as costumes.py. Run: pip install pillow (once), then python costumes.py costume1.gif costume2.gif costume3.gif... Needs Pillow + real image files + command-line args, so it can't run in the browser.</p><div class="codeblock"><pre><code>import sys
+
+from PIL import Image
+
+images = []
+
+for arg in sys.argv[1:]:
+    image = Image.open(arg)
+    images.append(image)
+
+# save_all=True writes every frame; append_images stitches ALL the rest; loop=0 loops forever
+images[0].save(
+    "costumes.gif",
+    save_all=True,
+    append_images=images[1:],
+    duration=200,
+    loop=0,
+)</code></pre></div>
+  <div class="gotcha-list"><h2 id="gotchas">Common mistakes at a glance</h2><ul><li><strong><code>file.write()</code> does not add a newline.</strong> It writes exactly the string you give it, so two <code>write("Hermione")</code> then <code>write("Harry")</code> calls produce <code>HermioneHarry</code> on one line. Type <code>\n</code> yourself when you want one record per line — <code>print</code> added one <em>for</em> you in Lecture 2; the <code>\n</code> escape itself is the backslash idea from Lecture 0.</li><li><strong><code>open(name, "w")</code> truncates the file to empty before writing</strong> — opening with <code>"w"</code> deletes whatever was there, <em>before</em> your first <code>write</code>. To <em>add</em> to a file instead of replacing it, use <code>"a"</code> (append). <code>"r"</code> (read) is the default when you pass no mode, so <code>open("x")</code> reads.</li><li><strong>A file's cursor only moves forward.</strong> After one <code>for line in file:</code> (or <code>read()</code>/<code>readlines()</code>) it sits at the end, so a <em>second</em> read in the same <code>with</code> block yields nothing — re-open the file to read it again. (This is also why our self-contained boxes re-open to read what they just wrote.)</li><li><strong>A forgotten <code>file.close()</code> is a real bug</strong> — buffered writes may never reach disk and the file can stay locked. You start with bare <code>open()</code>/<code>close()</code> to feel that; then prefer <code>with open(...) as file:</code>, which closes the file automatically when the block ends, even if an error is raised inside it.</li><li><strong>Lines you read keep their trailing <code>\n</code>.</strong> Both <code>file.readlines()</code> and <code>for line in file:</code> hand you <code>"Ron\n"</code>, not <code>"Ron"</code>. Call <code>line.rstrip()</code> or comparisons fail (<code>"Ron\n" != "Ron"</code>) and extra blank lines appear. <code>read()</code> returns the whole file as one string; <code>readlines()</code> returns a list (good for <code>len</code>/indexing/sorting); looping reads one line at a time (gentlest on memory).</li><li><strong>Hand-rolled <code>split(",")</code> breaks on a comma inside a value.</strong> <code>Harry,"Number Four, Privet Drive"</code> splits into <em>three</em> pieces, and <code>name, home = ...</code> then raises <code>ValueError: too many values to unpack (expected 2)</code>. This is exactly why the <code>csv</code> module exists.</li><li><strong><code>csv.reader</code> yields lists (index by number: <code>row[0]</code>); <code>csv.DictReader</code> yields dicts keyed by the header (index by name: <code>row["name"]</code>).</strong> Mixing them gives a <code>KeyError</code> or the wrong field. Prefer <code>DictReader</code> so reordering or adding columns doesn't silently break your indexing.</li><li><strong><code>csv.DictWriter</code> needs <code>fieldnames</code>, and <code>writerow</code> takes a dict whose keys match them.</strong> Call <code>writeheader()</code> once <em>before</em> the rows if you'll read the file back with <code>DictReader</code> — otherwise the reader treats your first record as the column names. Open the file with <code>newline=""</code> when writing CSV so the module's line endings aren't doubled into blank rows.</li><li><strong><code>lambda s: s["name"]</code> is just an unnamed function</strong> — the inline form of <code>def get_name(s): return s["name"]</code>. <code>sorted(seq, key=lambda ...)</code> calls it on each item for you; don't add <code>()</code> after the lambda (that calls the <em>result</em> and errors), and remember <code>sorted()</code> returns a <em>new</em> list while <code>.sort()</code> reorders in place and returns <code>None</code>.</li><li><strong>Images and other binary files aren't text</strong> — you can't loop their 'lines'. Use a library that knows the format (PIL/Pillow for images, <code>pip install pillow</code>), and pass filenames via <code>sys.argv</code> from the terminal — <code>sys.argv[0]</code> is the program name, so the code slices <code>sys.argv[1:]</code> and stitches them all with <code>append_images=images[1:]</code>.</li></ul></div>
+  <h2>Recap &amp; next step</h2><p>The one picture to carry away: <strong>memory forgets; a file remembers.</strong> Data in memory vanishes when a program ends — the gap the very first in-memory box opens — and <strong>files</strong> are how you close it, making data persist past a single run. You <code>open(name, mode)</code> a file — <code>"w"</code> overwrites (it empties the file first!), <code>"a"</code> appends to the end, <code>"r"</code> reads (the default) — and <code>file.write(...)</code> puts text in, <strong>adding no newline</strong> (you type <code>\n</code> yourself, the backslash escape from Lecture 0; <code>print</code> was the one that added a newline for you back in Lecture 2). You first closed files by hand with <code>file.close()</code>, felt how easy that is to forget, then switched to <strong><code>with open(...) as file:</code></strong>, which closes the file for you automatically, even on error (the raise-and-stop from Lecture 3, the same error paths you tested in Lecture 5) — so think of a file as a library book you <em>borrow</em> and must <em>return</em>, and <code>with</code> is the automatic return. To read, use <code>file.read()</code> (whole file as a string), <code>file.readlines()</code> (a list, handy for <code>len</code>/indexing/sorting), or loop <code>for line in file:</code> (one line at a time), and <code>line.rstrip()</code> away the trailing newline before you use or compare the text. Remember the cursor only moves forward, which is why each box re-opens to read what it just wrote.</p><p>For multi-field rows you met <strong>CSV</strong>. By hand, <code>line.rstrip().split(",")</code> plus tuple-unpacking (<code>name, house = ...</code>) parses simple rows, which you collect into a list of dicts (the list-of-dicts shape from Lecture 2) and sort with <code>sorted(students, key=lambda s: s["name"])</code> (new list) or <code>students.sort(...)</code> (in place) — the <code>lambda</code> being nothing more than an unnamed function (a Lecture 0 <code>def</code> with no name) that returns the sort key, learned on its own before applying it. But that hand-rolled split shatters the instant a value contains a comma (<code>"Number Four, Privet Drive"</code>), raising a <code>ValueError</code> on the unpack. That's the whole reason for the <strong><code>csv</code></strong> module: <code>csv.reader</code> returns each row as a list (<code>row[0]</code>), <code>csv.DictReader</code> returns it as a dict keyed by the <strong>header</strong> (resilient to reordering), and <code>csv.DictWriter</code> — with <code>fieldnames</code>, <code>writeheader()</code>, <code>writerow({...})</code> per record, and <code>newline=""</code> on open — writes rows back out, quoting embedded commas for you.</p><p>Finally, <strong>binary</strong> files (images, audio) are raw bytes, not lines, so you reach for a library: PIL/Pillow's <code>Image.open</code> and one <code>.save(...)</code> call stitch frames into a looping animated GIF, driven by filenames from <code>sys.argv</code> (the command-line list from Lecture 4, sliced <code>[1:]</code> past the program name) — a terminal-only program, a look rather than a lab, because it needs a <code>pip</code> install and real image files.</p><p>Next up is <strong>Problem Set 6</strong>: you'll read a CSV, transform or clean its rows, and write a new file back out — pick <code>csv.DictReader</code>/<code>DictWriter</code> over hand-rolled <code>split(",")</code>, and let <code>with</code> handle closing every file you touch.</p>
+  <p><a href="index.html">← Back to all lectures</a></p>
+</main>
+</div>
+
+<footer class="site">CS50P interactive notes · Lecture 6 — File I/O · run, edit, and break things freely.</footer>
+<script src="assets/notes.js" defer></script>
+</body>
+</html>
