@@ -1,0 +1,1121 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>把 bǎ — The Grab-and-Do Structure · HSK 3</title>
+<style>
+  :root{
+    --paper:#faf6f0; --card:#ffffff; --ink:#26221c; --muted:#6d665a;
+    --red:#c2342c; --red-soft:#fbe9e7; --red-deep:#9a2620;
+    --gold:#8a5d14; --gold-soft:#fdf3e0;
+    --blue:#2860b4; --blue-soft:#e7eefb;
+    --green:#247a52; --green-soft:#e4f4ec;
+    --purple:#6d4ec4; --purple-soft:#efeafb;
+    --line:#e8e0d4; --shadow:0 2px 10px rgba(60,45,25,.08);
+    --radius:14px;
+    --hanzi:"PingFang SC","Hiragino Sans GB","Noto Sans SC","Microsoft YaHei",sans-serif;
+  }
+  *{box-sizing:border-box;margin:0;padding:0}
+  html{scroll-behavior:smooth}
+  body{
+    background:var(--paper); color:var(--ink);
+    font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,"Helvetica Neue",Arial,var(--hanzi);
+    line-height:1.6;
+  }
+  .zh{font-family:var(--hanzi)}
+  main{max-width:880px;margin:0 auto;padding:0 18px 80px}
+
+  /* ---------- header ---------- */
+  header{
+    text-align:center; padding:46px 18px 16px; max-width:880px; margin:0 auto;
+  }
+  .seal{
+    display:inline-flex;align-items:center;justify-content:center;
+    width:92px;height:92px;border-radius:18px;
+    background:linear-gradient(145deg,#d04438,#9a2620);
+    color:#fff;font-size:54px;font-family:var(--hanzi);font-weight:700;
+    box-shadow:0 6px 18px rgba(154,38,32,.35), inset 0 0 0 3px rgba(255,255,255,.25);
+    transform:rotate(-3deg); margin-bottom:14px; user-select:none;
+  }
+  header h1{font-size:30px;letter-spacing:.3px}
+  header .sub{color:var(--muted);font-size:16.5px;max-width:560px;margin:6px auto 0}
+  .toggles{display:flex;gap:10px;justify-content:center;margin-top:18px;flex-wrap:wrap}
+  .toggle{
+    border:1.5px solid var(--line);background:var(--card);color:var(--muted);
+    border-radius:999px;padding:7px 16px;font-size:14px;cursor:pointer;
+    transition:all .2s; font-weight:600;
+  }
+  .toggle.on{border-color:var(--red);color:var(--red);background:var(--red-soft)}
+  .toggle:focus-visible{outline:2px solid var(--red);outline-offset:2px}
+
+  /* ---------- nav ---------- */
+  nav{
+    position:sticky;top:0;z-index:50;background:rgba(250,246,240,.92);
+    -webkit-backdrop-filter:blur(8px);backdrop-filter:blur(8px);border-bottom:1px solid var(--line);
+    padding:10px 12px;margin-bottom:8px;
+  }
+  .nav-inner{max-width:880px;margin:0 auto;display:flex;gap:8px;overflow-x:auto;scrollbar-width:none}
+  .nav-inner::-webkit-scrollbar{display:none}
+  nav a{
+    flex:0 0 auto;text-decoration:none;color:var(--muted);font-size:13.5px;font-weight:600;
+    padding:6px 13px;border-radius:999px;border:1px solid transparent;white-space:nowrap;
+  }
+  nav a.active{color:var(--red);background:var(--red-soft);border-color:#f3cdc8}
+
+  /* ---------- sections / cards ---------- */
+  section{padding-top:34px;scroll-margin-top:62px}
+  .kicker{color:var(--red);font-weight:700;font-size:13px;text-transform:uppercase;letter-spacing:1.5px}
+  section>h2{font-size:25px;margin:4px 0 6px}
+  .lede{color:var(--muted);max-width:640px;margin-bottom:18px;font-size:16px}
+  .card{
+    background:var(--card);border:1px solid var(--line);border-radius:var(--radius);
+    box-shadow:var(--shadow);padding:22px;margin-bottom:16px;
+  }
+  .pill-note{
+    display:inline-block;background:var(--gold-soft);border:1px solid #ecd9b4;color:#7c5a1d;
+    border-radius:10px;padding:10px 14px;font-size:14.5px;margin-top:10px;
+  }
+
+  /* ---------- color-coded chips ---------- */
+  .chip{
+    display:inline-block;border-radius:10px;padding:6px 12px;margin:3px;
+    font-family:var(--hanzi);font-size:22px;font-weight:600;border:1.5px solid transparent;
+  }
+  .chip small{display:block;font-size:11px;font-weight:600;letter-spacing:.5px;font-family:inherit;line-height:1.2;margin-top:1px}
+  .c-subj{background:var(--blue-soft);color:var(--blue);border-color:#c4d6f3}
+  .c-ba{background:var(--red-soft);color:var(--red);border-color:#f0c5c0}
+  .c-obj{background:var(--gold-soft);color:var(--gold);border-color:#ecd9b4}
+  .c-verb{background:var(--green-soft);color:var(--green);border-color:#bfe3cf}
+  .c-extra{background:var(--purple-soft);color:var(--purple);border-color:#d8ccf4}
+  .c-plain{background:#f1ede6;color:var(--ink);border-color:var(--line)}
+
+  /* ---------- example sentence rows ---------- */
+  .ex{padding:13px 0;border-top:1px dashed var(--line)}
+  .ex:first-child{border-top:none}
+  .ex .zh-line{font-family:var(--hanzi);font-size:21px;font-weight:600}
+  .ex .py{color:var(--muted);font-size:14.5px;margin-top:1px}
+  .ex .en{color:#4c463c;font-size:14.5px;margin-top:1px}
+  body.hide-py .py{display:none}
+  body.hide-en .en{display:none}
+  body.hide-py .vpy{visibility:hidden}
+  body.hide-en #mFull{visibility:hidden}
+  .speak{
+    border:none;background:var(--red-soft);color:var(--red);cursor:pointer;
+    width:36px;height:36px;border-radius:50%;font-size:15px;vertical-align:middle;
+    margin-left:8px;transition:transform .15s;
+  }
+  .speak:hover{transform:scale(1.12)}
+  .speak:focus-visible{outline:2px solid var(--red);outline-offset:2px}
+
+  /* ---------- transform animation stage ---------- */
+  .stage{
+    position:relative;background:#fffdf9;border:1px solid var(--line);border-radius:12px;
+    padding:26px 18px 20px;text-align:center;overflow:hidden;
+  }
+  .stage-row{position:relative;height:64px;display:flex;justify-content:center;align-items:center;gap:6px}
+  .stage .chip{transition:transform .9s cubic-bezier(.5,.1,.25,1.2), opacity .6s}
+  .stage-cap{color:var(--muted);font-size:14px;margin-top:10px;min-height:22px}
+  .btn{
+    display:inline-block;border:none;background:var(--red);color:#fff;font-weight:700;
+    font-size:15px;padding:11px 24px;border-radius:999px;cursor:pointer;margin-top:14px;
+    box-shadow:0 3px 10px rgba(194,52,44,.3);transition:all .2s;
+  }
+  .btn:hover{background:var(--red-deep);transform:translateY(-1px)}
+  .btn:focus-visible{outline:2px solid var(--red-deep);outline-offset:2px}
+  .btn.secondary{background:var(--card);color:var(--red);border:1.5px solid var(--red);box-shadow:none}
+  .btn:disabled{opacity:.45;cursor:default;transform:none}
+
+  /* ---------- formula machine ---------- */
+  .machine{text-align:center}
+  .machine-row{display:flex;flex-wrap:wrap;justify-content:center;align-items:stretch;gap:6px;margin:8px 0 2px}
+  .slot{border-radius:12px;padding:10px 14px;min-width:84px;transition:background .3s}
+  .slot .role{font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:1px;margin-bottom:2px}
+  .slot .val{font-family:var(--hanzi);font-size:26px;font-weight:700;line-height:1.25}
+  .slot .vpy{font-size:12.5px}
+  .s-subj{background:var(--blue-soft);color:var(--blue)}
+  .s-ba{background:var(--red-soft);color:var(--red)}
+  .s-obj{background:var(--gold-soft);color:var(--gold)}
+  .s-verb{background:var(--green-soft);color:var(--green)}
+  .s-extra{background:var(--purple-soft);color:var(--purple)}
+  .machine .full{margin-top:14px;font-size:15px;color:#4c463c;min-height:24px}
+  .machine-controls{margin-top:12px;display:flex;gap:10px;justify-content:center;align-items:center}
+  .arrow{
+    border:1.5px solid var(--line);background:var(--card);width:42px;height:42px;border-radius:50%;
+    font-size:18px;cursor:pointer;color:var(--ink);transition:all .15s;
+  }
+  .arrow:hover{border-color:var(--red);color:var(--red)}
+  .count{color:var(--muted);font-size:13.5px;min-width:46px}
+
+  /* ---------- rule cards ---------- */
+  .rule{border-left:5px solid var(--red);}
+  .rule h3{font-size:18.5px;display:flex;align-items:center;gap:10px}
+  .rule .num{
+    flex:0 0 auto;display:inline-flex;align-items:center;justify-content:center;
+    width:30px;height:30px;border-radius:50%;background:var(--red);color:#fff;font-size:15px;
+  }
+  .rule p{margin-top:8px;font-size:15px}
+  .good,.bad{
+    display:flex;flex-wrap:wrap;align-items:baseline;gap:8px;margin-top:10px;padding:10px 14px;border-radius:10px;
+    font-family:var(--hanzi);font-size:18.5px;font-weight:600;
+  }
+  .good{background:var(--green-soft)} .bad{background:var(--red-soft)}
+  .good::before{content:"✓";color:var(--green);font-weight:800;font-family:inherit}
+  .bad::before{content:"✗";color:var(--red);font-weight:800;font-family:inherit}
+  .bad s,.bad .strike{text-decoration:line-through;text-decoration-color:rgba(194,52,44,.55);text-decoration-thickness:2px}
+  .gb-note{font-size:13px;color:var(--muted);font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif;font-weight:500;margin-left:auto;align-self:center}
+
+  /* mini try-it quizzes inside rules */
+  .tryit{margin-top:14px;background:#fffdf9;border:1px dashed #e3d6c2;border-radius:10px;padding:14px}
+  .tryit .q{font-size:14px;font-weight:700;color:#7c5a1d;margin-bottom:8px}
+  .tryit .opt{
+    display:block;width:100%;text-align:left;margin-top:7px;padding:10px 14px;border-radius:10px;
+    border:1.5px solid var(--line);background:var(--card);cursor:pointer;
+    font-family:var(--hanzi);font-size:18px;font-weight:600;color:var(--ink);transition:all .15s;
+  }
+  .tryit .opt:hover{border-color:var(--gold)}
+  .tryit .opt.right{border-color:var(--green);background:var(--green-soft)}
+  .tryit .opt.wrong{border-color:var(--red);background:var(--red-soft);animation:shake .35s}
+  .tryit .expl{display:none;margin-top:10px;font-size:14px;color:#4c463c}
+  .tryit .expl.show{display:block}
+  @keyframes shake{0%,100%{transform:translateX(0)}25%{transform:translateX(-5px)}75%{transform:translateX(5px)}}
+
+  /* ---------- endings gallery ---------- */
+  .grid2{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+  @media(max-width:640px){.grid2{grid-template-columns:1fr}}
+  .end-card h3{font-size:17px;display:flex;gap:8px;align-items:center}
+  .end-card h3 .tag{
+    font-family:var(--hanzi);background:var(--purple-soft);color:var(--purple);
+    border-radius:8px;padding:2px 10px;font-size:16px;
+  }
+  .end-card .why{font-size:13.5px;color:var(--muted);margin-top:3px}
+
+  /* ---------- hospital ---------- */
+  .patient{position:relative}
+  .patient .sick{
+    font-family:var(--hanzi);font-size:23px;font-weight:700;background:var(--red-soft);
+    border:1.5px dashed #eaa49d;border-radius:10px;padding:14px 18px;display:inline-block;max-width:100%;
+  }
+  .diagnosis{margin-top:14px;display:flex;flex-wrap:wrap;gap:8px}
+  .diag-btn{
+    border:1.5px solid var(--line);background:var(--card);border-radius:999px;
+    padding:8px 15px;font-size:13.5px;font-weight:600;cursor:pointer;color:var(--ink);transition:all .15s;
+  }
+  .diag-btn:hover{border-color:var(--gold)}
+  .diag-btn.right{border-color:var(--green);background:var(--green-soft);color:var(--green)}
+  .diag-btn.wrong{border-color:var(--red);background:var(--red-soft);color:var(--red);animation:shake .35s}
+  .cure{display:none;margin-top:14px;border-top:1px dashed var(--line);padding-top:12px}
+  .cure.show{display:block;animation:fadein .4s}
+  @keyframes fadein{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:none}}
+  .hosp-nav{display:flex;justify-content:space-between;align-items:center;margin-top:16px}
+  .hosp-count{color:var(--muted);font-size:13.5px}
+
+  /* ---------- builder ---------- */
+  .build-target{font-size:15px;color:#4c463c;background:var(--gold-soft);border:1px solid #ecd9b4;border-radius:10px;padding:10px 14px;display:inline-block}
+  .answer-line{
+    min-height:62px;border:2px dashed #d8cdbb;border-radius:12px;margin-top:14px;
+    padding:9px;display:flex;flex-wrap:wrap;align-items:center;gap:6px;background:#fffdf9;
+  }
+  .answer-line.correct{border-color:var(--green);background:var(--green-soft)}
+  .answer-line.incorrect{border-color:var(--red);animation:shake .35s}
+  .tile{
+    border:1.5px solid var(--line);background:var(--card);border-radius:10px;
+    font-family:var(--hanzi);font-size:21px;font-weight:600;padding:8px 14px;cursor:pointer;
+    transition:all .15s;color:var(--ink);
+  }
+  .tile:hover{border-color:var(--gold);transform:translateY(-2px)}
+  .tile.used{opacity:.25;pointer-events:none}
+  .tile.in-answer:hover{border-color:var(--red);background:var(--red-soft)}
+  .tile-tray{margin-top:14px;display:flex;flex-wrap:wrap;gap:8px}
+  .build-controls{margin-top:14px;display:flex;gap:10px;flex-wrap:wrap;align-items:center}
+  .build-fb{font-size:14.5px;min-height:22px;margin-top:10px;font-weight:600}
+  .build-fb.ok{color:var(--green)} .build-fb.no{color:var(--red)}
+
+  /* ---------- quiz ---------- */
+  .quiz-progress{height:8px;background:#efe8db;border-radius:99px;overflow:hidden;margin-bottom:18px}
+  .quiz-progress>div{height:100%;width:0;background:linear-gradient(90deg,var(--red),var(--gold));transition:width .4s}
+  .q-text{font-size:16.5px;font-weight:700}
+  .q-zh{font-family:var(--hanzi);font-size:23px;font-weight:700;margin-top:10px}
+  .q-opts{margin-top:14px}
+  .q-opt{
+    display:block;width:100%;text-align:left;margin-top:8px;padding:12px 16px;border-radius:11px;
+    border:1.5px solid var(--line);background:var(--card);cursor:pointer;font-size:16px;
+    font-family:var(--hanzi);font-weight:600;color:var(--ink);transition:all .15s;line-height:1.5;
+  }
+  .q-opt:hover{border-color:var(--gold)}
+  .q-opt.right{border-color:var(--green);background:var(--green-soft)}
+  .q-opt.wrong{border-color:var(--red);background:var(--red-soft)}
+  .q-opt:disabled{cursor:default}
+  .q-expl{display:none;margin-top:12px;background:var(--gold-soft);border:1px solid #ecd9b4;border-radius:10px;padding:12px 15px;font-size:14.5px}
+  .q-expl.show{display:block;animation:fadein .4s}
+  .q-foot{display:flex;justify-content:space-between;align-items:center;margin-top:16px}
+  .score-big{font-size:42px;font-weight:800;color:var(--red)}
+
+  /* ---------- cheat sheet ---------- */
+  .cheat{background:linear-gradient(160deg,#fffdf9,#fdf3e0);border:1.5px solid #ecd9b4}
+  .cheat h3{font-size:17px;color:#7c5a1d;margin-bottom:8px}
+  .cheat ul{list-style:none}
+  .cheat li{padding:7px 0;border-top:1px dashed #ecd9b4;font-size:15px}
+  .cheat li:first-child{border-top:none}
+  .cheat .zh{font-weight:700}
+
+  footer{text-align:center;color:var(--muted);font-size:13px;padding:30px 18px 50px;max-width:880px;margin:0 auto}
+  #quizCard{scroll-margin-top:62px}
+  .arrow:focus-visible,.diag-btn:focus-visible,.tryit .opt:focus-visible,.q-opt:focus-visible,
+  .tile:focus-visible,nav a:focus-visible{outline:2px solid var(--red);outline-offset:2px}
+  @media (prefers-reduced-motion:reduce){
+    html{scroll-behavior:auto}
+    .stage .chip{transition:none}
+    .tryit .opt.wrong,.diag-btn.wrong,.answer-line.incorrect{animation:none}
+  }
+</style>
+</head>
+<body>
+
+<header>
+  <div class="seal zh" aria-hidden="true">把</div>
+  <h1>The <span class="zh" style="color:var(--red)">把</span> (bǎ) Construction</h1>
+  <p class="sub">The “grab it &amp; deal with it” sentence — explained, animated, and drilled the way it shows up on your <strong>HSK 3</strong> exam.</p>
+  <div class="toggles">
+    <button class="toggle on" id="togglePy" aria-pressed="true">Pīnyīn: ON</button>
+    <button class="toggle on" id="toggleEn" aria-pressed="true">English: ON</button>
+  </div>
+</header>
+
+<nav aria-label="Sections">
+  <div class="nav-inner">
+    <a href="#idea" class="active">1 · Big idea</a>
+    <a href="#formula">2 · Formula</a>
+    <a href="#rules">3 · Golden rules</a>
+    <a href="#endings">4 · Endings</a>
+    <a href="#must">5 · Must-use 把</a>
+    <a href="#hospital">6 · Error hospital</a>
+    <a href="#builder">7 · Builder</a>
+    <a href="#quiz">8 · Exam quiz</a>
+  </div>
+</nav>
+
+<main>
+<!-- ============ 1 · BIG IDEA ============ -->
+<section id="idea">
+  <span class="kicker">Part 1</span>
+  <h2>The big idea: grab it, then deal with it</h2>
+  <p class="lede">把 originally means <em>“to grasp / to hold.”</em> A 把 sentence literally tells the story in the order it happens: <strong>grab the thing → do something to it → end up with a result.</strong></p>
+
+  <div class="card">
+    <p style="font-size:15px">A normal Chinese sentence is Subject–Verb–Object, just like English. 把 picks the object up and moves it <strong>in front of the verb</strong>, putting a spotlight on <em>what happened to it</em>. Watch:</p>
+    <div class="stage" id="stage">
+      <div class="stage-row" id="stageRow"></div>
+      <div class="stage-cap" id="stageCap" role="status">我喝完茶了 “I finished drinking the tea.” — normal Subject–Verb–Object order</div>
+      <button class="btn" id="transformBtn">Transform with 把 →</button>
+      <button class="speak" id="stageSpeak" data-say="我喝完茶了" title="Listen">🔊</button>
+    </div>
+    <p class="pill-note">💡 Same facts, new focus. <span class="zh">我喝完茶了</span> reports what <em>I did</em>. <span class="zh">我把茶喝完了</span> reports what happened <em>to the tea</em> — it’s gone! That focus on the object’s fate is the whole point of 把.</p>
+  </div>
+
+  <div class="card">
+    <h3 style="font-size:18px">Why does Chinese even need this?</h3>
+    <p style="margin-top:8px;font-size:15px">Because some sentences are <strong>impossible</strong> without it. In Chinese you can’t say <span class="bad" style="display:inline-flex;padding:4px 10px;font-size:17px"><s>放书在桌子上</s></span> — a verb can’t carry both an object <em>and</em> a place behind it. The object has to move forward, and 把 is what moves it:</p>
+    <div class="ex">
+      <div class="zh-line">请<span style="color:var(--red)">把</span>书放在桌子上。<button class="speak" data-say="请把书放在桌子上" title="Listen">🔊</button></div>
+      <div class="py">Qǐng bǎ shū fàng zài zhuōzi shàng.</div>
+      <div class="en">Please put the book on the table.</div>
+    </div>
+    <p class="pill-note">🈶 Fun fact: 把 is also the measure word for things you grip — <span class="zh">一把伞</span> (an umbrella), <span class="zh">一把椅子</span> (a chair). Same “grab” idea. When you see 把, think of a hand ✋ picking the object up.</p>
+  </div>
+</section>
+
+<!-- ============ 2 · FORMULA ============ -->
+<section id="formula">
+  <span class="kicker">Part 2</span>
+  <h2>The formula</h2>
+  <p class="lede">One pattern covers every 把 sentence on the exam. The colors below stay the same through this whole page — learn them once, read everything faster.</p>
+
+  <div class="card machine">
+    <div class="machine-row" id="machineRow">
+      <div class="slot s-subj"><div class="role">Subject</div><div class="val zh" id="mSubj">我</div><div class="vpy" id="mSubjPy">wǒ</div></div>
+      <div class="slot s-ba"><div class="role">把</div><div class="val zh">把</div><div class="vpy">bǎ</div></div>
+      <div class="slot s-obj"><div class="role">Object</div><div class="val zh" id="mObj">门</div><div class="vpy" id="mObjPy">mén</div></div>
+      <div class="slot s-verb"><div class="role">Verb</div><div class="val zh" id="mVerb">关</div><div class="vpy" id="mVerbPy">guān</div></div>
+      <div class="slot s-extra"><div class="role">+ Extra</div><div class="val zh" id="mExtra">上了</div><div class="vpy" id="mExtraPy">shàng le</div></div>
+    </div>
+    <div class="full" id="mFull">“I closed the door.”</div>
+    <div class="machine-controls">
+      <button class="arrow" id="mPrev" aria-label="Previous example">←</button>
+      <span class="count" id="mCount">1 / 6</span>
+      <button class="arrow" id="mNext" aria-label="Next example">→</button>
+      <button class="speak" id="mSpeak" title="Listen">🔊</button>
+    </div>
+    <p class="pill-note" style="text-align:left">📌 Negation (<span class="zh">没 / 别</span>), modal verbs (<span class="zh">想 / 要 / 能 / 应该</span>) and time adverbs (<span class="zh">已经</span>) slot in <strong>before 把</strong> — never after it (Rule 3). One exception: <span class="zh">都</span> covering the object goes after the object, right before the verb — <span class="zh">我把这些东西都搬走了</span> “I moved <em>all</em> these things away.” And in requests the subject simply drops: <span class="zh">请把门关上。</span></p>
+  </div>
+</section>
+
+<!-- ============ 3 · GOLDEN RULES ============ -->
+<section id="rules">
+  <span class="kicker">Part 3</span>
+  <h2>The four golden rules</h2>
+  <p class="lede">Almost every 把 mistake — and every trick question — breaks one of these four. Each rule has a 10-second self-check.</p>
+
+  <div class="card rule">
+    <h3><span class="num">1</span>The object must be <em>specific</em> — something both speakers know</h3>
+    <p>You can only “grab” a thing you can point at: <span class="zh">这本书</span> (this book), <span class="zh">我的手机</span> (my phone), <span class="zh">门</span> (the door we both see). A vague “a/one something” (<span class="zh">一个…</span>) can’t go after 把 — for HSK 3, treat <span class="zh">把 + 一个…</span> as always wrong. The object can be a person too: <span class="zh">把他送到医院去</span> (take <em>him</em> to the hospital), as long as it’s a specific person.</p>
+    <div class="good"><span>我把<u>那杯</u>牛奶喝了。</span><span class="gb-note">that glass — specific ✓</span></div>
+    <div class="bad"><span><s>我把一杯牛奶喝了。</s></span><span class="gb-note">“a glass” — too vague ✗</span></div>
+    <div class="tryit" data-answer="0">
+      <div class="q">Self-check: which one is correct?</div>
+      <button class="opt">请把这些东西搬到楼上去。</button>
+      <button class="opt">请把一些东西搬到楼上去。</button>
+      <div class="expl">✓ <span class="zh">这些东西</span> “these things” is specific; <span class="zh">一些东西</span> “some things” is not — so it can’t be grabbed by 把.</div>
+    </div>
+  </div>
+
+  <div class="card rule">
+    <h3><span class="num">2</span>The verb can never stand alone — something must follow it</h3>
+    <p>把 promises the listener a <strong>result</strong>. A bare verb breaks that promise. After the verb you need at least a 了, or better: a result (<span class="zh">完 / 好 / 错 / 干净</span>), a direction (<span class="zh">到…去 / 过来</span>), a place (<span class="zh">在桌子上</span>), a receiver (<span class="zh">给我</span>), or a light touch (<span class="zh">一下</span>).</p>
+    <div class="good"><span>我把作业做<u>完了</u>。</span><span class="gb-note">done — result delivered ✓</span></div>
+    <div class="bad"><span><s>我把作业做。</s></span><span class="gb-note">did it... and?? ✗</span></div>
+    <div class="tryit" data-answer="1">
+      <div class="q">Self-check: which one is correct?</div>
+      <button class="opt">你把房间打扫。</button>
+      <button class="opt">你把房间打扫一下吧。</button>
+      <div class="expl">✓ <span class="zh">一下</span> “a bit” counts as the extra after the verb. A bare <span class="zh">打扫</span> leaves the sentence hanging.</div>
+    </div>
+  </div>
+
+  <div class="card rule">
+    <h3><span class="num">3</span>Negation &amp; modal verbs go <em>before</em> 把</h3>
+    <p><span class="zh">没 / 别 / 不要</span> and <span class="zh">想 / 要 / 能 / 会 / 应该 / 可以</span> all stand in front of 把. Logic: “didn’t grab it” = the grab-and-deal never happened, so the negation applies to the whole 把-package.</p>
+    <div class="good"><span>我<u>没</u>把作业做完。</span><span class="gb-note">没 before 把 ✓</span></div>
+    <div class="bad"><span><s>我把作业没做完。</s></span><span class="gb-note">没 trapped inside ✗</span></div>
+    <div class="good"><span>我<u>想</u>把汉语学好。</span><span class="gb-note">modal before 把 ✓</span></div>
+    <div class="tryit" data-answer="0">
+      <div class="q">Self-check: “Don’t put your phone on the bed.”</div>
+      <button class="opt">别把手机放在床上。</button>
+      <button class="opt">把手机别放在床上。</button>
+      <div class="expl">✓ <span class="zh">别</span> (don’t) must come before 把, just like 没 and the modals.</div>
+    </div>
+  </div>
+
+  <div class="card rule">
+    <h3><span class="num">4</span>Only “hands-on” action verbs — no feeling, knowing, being</h3>
+    <p>把 needs a verb that physically does something to the object. Verbs of state, feeling or perception change nothing about the object, so they’re banned: <span class="zh">是、有、在、像、喜欢、爱、想(miss)、知道、觉得、希望、认识、看见、听见</span>.</p>
+    <div class="good"><span>我把那本书看完了。</span><span class="gb-note">看完 finishes the book ✓</span></div>
+    <div class="bad"><span><s>我把那本书喜欢。</s></span><span class="gb-note">liking changes nothing ✗ → 我喜欢那本书</span></div>
+    <p style="margin-top:10px;font-size:14px;color:var(--muted)">Wait — <span class="zh">看见</span> is on the banned list, so what about <span class="zh">看</span>? Bare <span class="zh">看</span> (eyes on it) changes nothing, so it can’t take 把 either. But <span class="zh">看完</span> “finish reading” works through the whole book — verb + result passes. Only the pure-perception results <span class="zh">看见</span> “catch sight of” and <span class="zh">听见</span> “hear” can never be rescued this way.</p>
+    <div class="tryit" data-answer="1">
+      <div class="q">Self-check: which verb can work with 把?</div>
+      <button class="opt">知道 (to know)</button>
+      <button class="opt">打开 (to open)</button>
+      <div class="expl">✓ You can open a door — that’s hands-on. Knowing something leaves it untouched, so <span class="zh">知道</span> can never follow 把.</div>
+    </div>
+  </div>
+</section>
+
+<!-- ============ 4 · ENDINGS ============ -->
+<section id="endings">
+  <span class="kicker">Part 4</span>
+  <h2>The ending zoo 🦁</h2>
+  <p class="lede">Rule 2 says the verb needs “something after it.” These are the six endings you’ll actually meet at HSK 3 — with the classic exam sentence for each.</p>
+
+  <div class="grid2">
+    <div class="card end-card">
+      <h3><span class="tag">了</span> Simple completion</h3>
+      <p class="why">The minimum legal ending: it happened, it’s done. Best with “use-it-up” verbs — 喝了 / 吃了 / 卖了. With 写 or 看, reach for a fuller ending (写完了 / 看完了).</p>
+      <div class="ex">
+        <div class="zh-line">我把咖啡喝了。<button class="speak" data-say="我把咖啡喝了" title="Listen">🔊</button></div>
+        <div class="py">Wǒ bǎ kāfēi hē le.</div>
+        <div class="en">I drank the coffee (it’s gone).</div>
+      </div>
+    </div>
+
+    <div class="card end-card">
+      <h3><span class="tag">完 / 好 / 错 / 干净</span> Result</h3>
+      <p class="why">What state did the object end up in? The most common ending in exams.</p>
+      <div class="ex">
+        <div class="zh-line">他把房间打扫干净了。<button class="speak" data-say="他把房间打扫干净了" title="Listen">🔊</button></div>
+        <div class="py">Tā bǎ fángjiān dǎsǎo gānjìng le.</div>
+        <div class="en">He cleaned the room (until it was) clean.</div>
+      </div>
+      <div class="ex">
+        <div class="zh-line">老师把我的名字写错了。<button class="speak" data-say="老师把我的名字写错了" title="Listen">🔊</button></div>
+        <div class="py">Lǎoshī bǎ wǒ de míngzi xiě cuò le.</div>
+        <div class="en">The teacher wrote my name wrong.</div>
+      </div>
+    </div>
+
+    <div class="card end-card">
+      <h3><span class="tag">到…去/来 · 过来 · 起来</span> Direction</h3>
+      <p class="why">Where did the object move? Star of HSK 3 listening dialogues.</p>
+      <div class="ex">
+        <div class="zh-line">他把行李箱搬到楼上去了。<button class="speak" data-say="他把行李箱搬到楼上去了" title="Listen">🔊</button></div>
+        <div class="py">Tā bǎ xínglixiāng bān dào lóushàng qù le.</div>
+        <div class="en">He carried the suitcase upstairs.</div>
+      </div>
+      <div class="ex">
+        <div class="zh-line">请把菜拿过来。<button class="speak" data-say="请把菜拿过来" title="Listen">🔊</button></div>
+        <div class="py">Qǐng bǎ cài ná guòlai.</div>
+        <div class="en">Please bring the food over here.</div>
+      </div>
+    </div>
+
+    <div class="card end-card">
+      <h3><span class="tag">在 + place</span> Placement</h3>
+      <p class="why">Where does the object end up sitting? 把 is <strong>mandatory</strong> here (see Part 5).</p>
+      <div class="ex">
+        <div class="zh-line">她把手机放在包里了。<button class="speak" data-say="她把手机放在包里了" title="Listen">🔊</button></div>
+        <div class="py">Tā bǎ shǒujī fàng zài bāo lǐ le.</div>
+        <div class="en">She put her phone in the bag.</div>
+      </div>
+      <div class="ex">
+        <div class="zh-line">我把护照忘在家里了。<button class="speak" data-say="我把护照忘在家里了" title="Listen">🔊</button></div>
+        <div class="py">Wǒ bǎ hùzhào wàng zài jiā lǐ le.</div>
+        <div class="en">I left (forgot) my passport at home.</div>
+      </div>
+    </div>
+
+    <div class="card end-card">
+      <h3><span class="tag">给 + person</span> Transfer</h3>
+      <p class="why">Who received the object? Used with 送 give, 借 lend, 还 return, 卖 sell…</p>
+      <div class="ex">
+        <div class="zh-line">我把钱还给他了。<button class="speak" data-say="我把钱还给他了" title="Listen">🔊</button></div>
+        <div class="py">Wǒ bǎ qián huán gěi tā le.</div>
+        <div class="en">I gave the money back to him.</div>
+      </div>
+      <div class="ex">
+        <div class="zh-line">你能把这本书借给我吗？<button class="speak" data-say="你能把这本书借给我吗" title="Listen">🔊</button></div>
+        <div class="py">Nǐ néng bǎ zhè běn shū jiè gěi wǒ ma?</div>
+        <div class="en">Can you lend this book to me?</div>
+      </div>
+    </div>
+
+    <div class="card end-card">
+      <h3><span class="tag">一下 / 一遍</span> Light touch &amp; repeats</h3>
+      <p class="why">Soften a request or count the action — both count as a legal ending. (遍 “time through” is technically HSK 4, but every teacher uses it — learn it early.)</p>
+      <div class="ex">
+        <div class="zh-line">请把这个句子读一遍。<button class="speak" data-say="请把这个句子读一遍" title="Listen">🔊</button></div>
+        <div class="py">Qǐng bǎ zhège jùzi dú yí biàn.</div>
+        <div class="en">Please read this sentence once (aloud).</div>
+      </div>
+      <div class="ex">
+        <div class="zh-line">把空调开一下，好吗？<button class="speak" data-say="把空调开一下，好吗" title="Listen">🔊</button></div>
+        <div class="py">Bǎ kōngtiáo kāi yíxià, hǎo ma?</div>
+        <div class="en">Turn on the air conditioning for a bit, OK?</div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ============ 5 · MUST USE ============ -->
+<section id="must">
+  <span class="kicker">Part 5</span>
+  <h2>When 把 is the <em>only</em> option</h2>
+  <p class="lede">Usually 把 is a stylistic choice. But with <em>verb + 在/到 + place</em> the normal order is flat-out ungrammatical, and with <em>verb + 给 + person</em>, 把 is the build the exam expects — HSK loves testing exactly these.</p>
+
+  <div class="card">
+    <h3 style="font-size:18px">① Moving something <u>to a place</u>: verb + 在/到 + place</h3>
+    <p style="margin-top:6px;font-size:15px">放 put, 搬 move, 忘 forget(-leave), 送 deliver… If the place comes right after the verb, the object <strong>must</strong> move up front with 把.</p>
+    <div class="bad"><span><s>他放手机在桌子上了。</s></span><span class="gb-note">verb can’t carry object + place ✗</span></div>
+    <div class="good"><span>他把手机放在桌子上了。</span><span class="gb-note">object grabbed forward ✓</span></div>
+  </div>
+
+  <div class="card">
+    <h3 style="font-size:18px">② Handing a known thing <u>to a person</u>: 送给 / 借给 / 还给 + person</h3>
+    <p style="margin-top:6px;font-size:15px">Here 把 isn’t strictly forced — <span class="zh">我送了一个礼物给客人</span> is fine when the gift is <em>new</em> information. But <span class="zh">给</span> must be followed immediately by the receiver — the thing can never sit between <span class="zh">送给</span> and the person. And once the thing is <em>known</em> (<span class="zh">那个礼物</span>), natives — and the HSK answer key — grab it with 把.</p>
+    <div class="bad"><span><s>我送给那个礼物客人了。</s></span><span class="gb-note">object stuck inside 送给…person ✗</span></div>
+    <div class="good"><span>我把那个礼物送给客人了。</span><span class="gb-note">把 + object + 送给 + person ✓</span></div>
+    <p class="pill-note">🎯 Exam radar: see a verb chunk like <span class="zh">放在 / 搬到 / 忘在 / 借给 / 还给 / 送给</span> in the word-ordering task? A 把 is almost certainly hiding among the pieces. Build: <strong style="color:var(--blue)">Subject</strong> + <strong style="color:var(--red)">把</strong> + <strong style="color:var(--gold)">Object</strong> + <strong style="color:var(--green)">that chunk</strong> + <strong style="color:var(--purple)">place/person</strong>.</p>
+  </div>
+</section>
+
+<!-- ============ 6 · ERROR HOSPITAL ============ -->
+<section id="hospital">
+  <span class="kicker">Part 6</span>
+  <h2>The error hospital 🏥</h2>
+  <p class="lede">Six sick sentences — each breaks exactly one rule. First diagnose <em>which</em> rule is broken, then see the cure. These are the exact traps HSK builds its wrong answers from.</p>
+
+  <div class="card patient" id="hospital-card">
+    <div class="hosp-count" id="hospCount">Patient 1 of 6</div>
+    <div style="margin-top:10px"><span class="sick zh" id="hospSick"></span></div>
+    <div style="font-size:14px;color:var(--muted);margin-top:8px" id="hospHint"></div>
+    <div class="diagnosis" id="hospDiag"></div>
+    <div class="cure" id="hospCure">
+      <div style="font-size:13px;font-weight:700;color:var(--green);text-transform:uppercase;letter-spacing:1px">The cure</div>
+      <div class="ex">
+        <div class="zh-line" id="cureZh"></div>
+        <div class="py" id="curePy"></div>
+        <div class="en" id="cureEn"></div>
+      </div>
+      <div style="font-size:14.5px;color:#4c463c" id="cureWhy" role="status"></div>
+    </div>
+    <div class="hosp-nav">
+      <span></span>
+      <button class="btn" id="hospNext" disabled>Next patient →</button>
+    </div>
+  </div>
+</section>
+
+<!-- ============ 7 · BUILDER ============ -->
+<section id="builder">
+  <span class="kicker">Part 7</span>
+  <h2>Sentence builder 🧱</h2>
+  <p class="lede">This is the HSK 3 writing task (题 71–75), exactly as on the exam: scrambled chunks, you build the sentence. Tap tiles to add them; tap a tile in your answer to send it back.</p>
+
+  <div class="card">
+    <div class="hosp-count" id="buildCount">Sentence 1 of 5</div>
+    <div style="margin-top:10px"><span class="build-target" id="buildTarget"></span></div>
+    <div class="answer-line" id="answerLine"></div>
+    <div class="tile-tray" id="tileTray"></div>
+    <div class="build-fb" id="buildFb" role="status"></div>
+    <div class="build-controls">
+      <button class="btn" id="buildCheck">Check ✓</button>
+      <button class="btn secondary" id="buildReset">Reset</button>
+      <button class="btn secondary" id="buildNext" style="display:none">Next →</button>
+    </div>
+  </div>
+</section>
+
+<!-- ============ 8 · QUIZ ============ -->
+<section id="quiz">
+  <span class="kicker">Part 8</span>
+  <h2>Final exam drill 📝</h2>
+  <p class="lede">Ten HSK-style questions mixing all four rules, the must-use cases, and word order. Aim for 8+ before test day.</p>
+
+  <div class="card" id="quizCard">
+    <div class="quiz-progress"><div id="quizBar"></div></div>
+    <div id="quizBody"></div>
+  </div>
+
+  <div class="card cheat">
+    <h3>📋 Pocket cheat sheet — screenshot me</h3>
+    <ul>
+      <li><strong style="color:var(--blue)">Subject</strong> + <span style="color:var(--muted)">(没/别/想/能/已经)</span> + <strong style="color:var(--red)">把</strong> + <strong style="color:var(--gold)">Object</strong> + <strong style="color:var(--green)">Verb</strong> + <strong style="color:var(--purple)">Extra</strong></li>
+      <li>① Object = specific (<span class="zh">这/那/我的…</span>, never <span class="zh">一个…</span>)</li>
+      <li>② Verb never bare → add <span class="zh">了 / 完 / 好 / 在…/ 到…/ 给…/ 一下</span></li>
+      <li>③ <span class="zh">没·别·想·能·应该</span> always <em>before</em> 把</li>
+      <li>④ No <span class="zh">是·有·在·像·喜欢·爱·知道·觉得·认识·看见·听见</span> as the <em>main verb</em> — action verbs only (the <span class="zh">在</span> inside <span class="zh">放在桌子上</span> is part of the ending, so it’s fine)</li>
+      <li>⑤ <span class="zh">放在 / 搬到 / 忘在</span> + place ⇒ 把 is <em>mandatory</em> · <span class="zh">送给 / 借给 / 还给</span> + person ⇒ 把 is the expected build in 题 71–75</li>
+      <li>⑥ Flip side — <span class="zh">被</span>: <span class="zh">我把蛋糕吃了</span> (spotlight on what I did to it) ↔ <span class="zh">蛋糕被我吃了</span> (the cake got eaten by me). 把 is followed by the thing affected; 被 by the doer</li>
+      <li>🎧 Listening tip: requests often start <span class="zh">请把… / 别把…</span> — the thing being discussed is right after 把</li>
+    </ul>
+  </div>
+</section>
+</main>
+
+<footer>
+  Made for Paul’s HSK 3 prep · Example sentences use HSK 1–3 vocabulary (one flagged HSK 4 word: 遍) ·
+  Tap 🔊 to hear sentences (uses your device’s Chinese voice if installed)
+</footer>
+
+<script>
+(function(){
+"use strict";
+
+/* ---------------- TTS ---------------- */
+function speak(text){
+  if(!("speechSynthesis" in window)) return;
+  try{
+    window.speechSynthesis.cancel();
+    var u = new SpeechSynthesisUtterance(text);
+    u.lang = "zh-CN"; u.rate = 0.8;
+    var voices = window.speechSynthesis.getVoices();
+    for(var i=0;i<voices.length;i++){
+      if(voices[i].lang && voices[i].lang.toLowerCase().indexOf("zh")===0){ u.voice = voices[i]; break; }
+    }
+    window.speechSynthesis.speak(u);
+  }catch(e){}
+}
+if("speechSynthesis" in window){
+  window.speechSynthesis.getVoices();
+  if(window.speechSynthesis.addEventListener){
+    window.speechSynthesis.addEventListener("voiceschanged", function(){});
+  }
+}else{
+  document.addEventListener("DOMContentLoaded", hideSpeakers);
+  hideSpeakers();
+}
+function hideSpeakers(){
+  document.querySelectorAll(".speak").forEach(function(b){ b.style.display = "none"; });
+}
+document.addEventListener("click", function(e){
+  var b = e.target.closest(".speak");
+  if(b && b.dataset.say) speak(b.dataset.say);
+});
+/* a11y + correct screen-reader voice/font for Chinese */
+document.querySelectorAll(".speak").forEach(function(b){ b.setAttribute("aria-label","Listen"); });
+document.querySelectorAll(".zh,.zh-line,.q-zh,.sick").forEach(function(el){ el.setAttribute("lang","zh-Hans"); });
+
+/* ---------------- toggles ---------------- */
+function wireToggle(btnId, bodyClass, label){
+  var btn = document.getElementById(btnId);
+  btn.addEventListener("click", function(){
+    var off = document.body.classList.toggle(bodyClass);
+    btn.classList.toggle("on", !off);
+    btn.setAttribute("aria-pressed", String(!off));
+    btn.textContent = label + ": " + (off ? "OFF" : "ON");
+  });
+}
+wireToggle("togglePy","hide-py","Pīnyīn");
+wireToggle("toggleEn","hide-en","English");
+
+/* ---------------- nav highlight ---------------- */
+var navLinks = document.querySelectorAll("nav a");
+var sections = document.querySelectorAll("main section");
+if("IntersectionObserver" in window){
+  var io = new IntersectionObserver(function(entries){
+    entries.forEach(function(en){
+      if(en.isIntersecting){
+        navLinks.forEach(function(a){ a.classList.toggle("active", a.getAttribute("href")==="#"+en.target.id); });
+      }
+    });
+  },{rootMargin:"-25% 0px -65% 0px"});
+  sections.forEach(function(s){ io.observe(s); });
+}
+
+/* ---------------- transform animation (FLIP) ---------------- */
+var stageRow = document.getElementById("stageRow");
+var stageCap = document.getElementById("stageCap");
+var tBtn = document.getElementById("transformBtn");
+var INITIAL = [
+  {t:"我", c:"c-subj", l:"subject"},
+  {t:"喝完", c:"c-verb", l:"verb+result"},
+  {t:"茶", c:"c-obj", l:"object"},
+  {t:"了", c:"c-plain", l:"done"}
+];
+function chipEl(d){
+  var s = document.createElement("span");
+  s.className = "chip zh "+d.c;
+  s.innerHTML = d.t + "<small>"+d.l+"</small>";
+  s.dataset.t = d.t;
+  s.setAttribute("lang","zh-Hans");
+  return s;
+}
+function renderInitial(){
+  stageRow.innerHTML = "";
+  INITIAL.forEach(function(d){ stageRow.appendChild(chipEl(d)); });
+  stageCap.textContent = "我喝完茶了 “I finished drinking the tea.” — normal Subject–Verb–Object order";
+  var sp = document.getElementById("stageSpeak");
+  if(sp) sp.dataset.say = "我喝完茶了";
+  tBtn.textContent = "Transform with 把 →";
+  tBtn.disabled = false;
+}
+function doTransform(){
+  tBtn.disabled = true;
+  var chips = Array.prototype.slice.call(stageRow.children);
+  var first = {};
+  chips.forEach(function(c){ first[c.dataset.t] = c.getBoundingClientRect(); });
+  // final order: 我 把 茶 喝完 了
+  var byT = {};
+  chips.forEach(function(c){ byT[c.dataset.t] = c; });
+  var ba = chipEl({t:"把", c:"c-ba", l:"grab!"});
+  ba.setAttribute("lang","zh-Hans");
+  ba.style.opacity = "0"; ba.style.transform = "scale(.4)";
+  stageRow.innerHTML = "";
+  [byT["我"], ba, byT["茶"], byT["喝完"], byT["了"]].forEach(function(c){ stageRow.appendChild(c); });
+  chips.forEach(function(c){
+    var last = c.getBoundingClientRect();
+    var f = first[c.dataset.t];
+    var dx = f.left - last.left, dy = f.top - last.top;
+    c.style.transition = "none";
+    c.style.transform = "translate("+dx+"px,"+dy+"px)";
+  });
+  // force reflow then release
+  void stageRow.offsetWidth;
+  chips.forEach(function(c){
+    c.style.transition = "";
+    c.style.transform = "";
+  });
+  setTimeout(function(){
+    ba.style.opacity = "1";
+    ba.style.transform = "scale(1)";
+    stageCap.innerHTML = "我把茶喝完了 — 把 grabs 茶 and pulls it before the verb. Spotlight: what happened <em>to the tea</em>.";
+    var sp = document.getElementById("stageSpeak");
+    if(sp) sp.dataset.say = "我把茶喝完了";
+    tBtn.textContent = "↺ Replay";
+    tBtn.disabled = false;
+    speak("我把茶喝完了");
+  }, 650);
+  tBtn.dataset.state = "done";
+}
+tBtn.addEventListener("click", function(){
+  if(tBtn.dataset.state === "done"){
+    tBtn.dataset.state = "";
+    renderInitial();
+    requestAnimationFrame(function(){ requestAnimationFrame(doTransform); });
+  }
+  else doTransform();
+});
+renderInitial();
+
+/* ---------------- formula machine ---------------- */
+var MACHINE = [
+  {s:["我","wǒ"], o:["门","mén"], v:["关","guān"], x:["上了","shàng le"], en:"“I closed the door.”", say:"我把门关上了"},
+  {s:["他","tā"], o:["作业","zuòyè"], v:["做","zuò"], x:["完了","wán le"], en:"“He finished the homework.”", say:"他把作业做完了"},
+  {s:["妈妈","māma"], o:["房间","fángjiān"], v:["打扫","dǎsǎo"], x:["干净了","gānjìng le"], en:"“Mom cleaned the room spotless.”", say:"妈妈把房间打扫干净了"},
+  {s:["我","wǒ"], o:["那本书","nà běn shū"], v:["放","fàng"], x:["在桌子上了","zài zhuōzi shàng le"], en:"“I put that book on the table.”", say:"我把那本书放在桌子上了"},
+  {s:["他们","tāmen"], o:["这些东西","zhèxiē dōngxi"], v:["搬","bān"], x:["到楼上去了","dào lóushàng qù le"], en:"“They moved these things upstairs.”", say:"他们把这些东西搬到楼上去了"},
+  {s:["你","nǐ"], o:["这杯牛奶","zhè bēi niúnǎi"], v:["喝","hē"], x:["完吧","wán ba"], en:"“Drink up this glass of milk!”", say:"你把这杯牛奶喝完吧"}
+];
+var mi = 0;
+function setMachine(i){
+  mi = (i + MACHINE.length) % MACHINE.length;
+  var d = MACHINE[mi];
+  document.getElementById("mSubj").textContent = d.s[0];
+  document.getElementById("mSubjPy").textContent = d.s[1];
+  document.getElementById("mObj").textContent = d.o[0];
+  document.getElementById("mObjPy").textContent = d.o[1];
+  document.getElementById("mVerb").textContent = d.v[0];
+  document.getElementById("mVerbPy").textContent = d.v[1];
+  document.getElementById("mExtra").textContent = d.x[0];
+  document.getElementById("mExtraPy").textContent = d.x[1];
+  document.getElementById("mFull").textContent = d.en;
+  document.getElementById("mCount").textContent = (mi+1) + " / " + MACHINE.length;
+  document.getElementById("mSpeak").dataset.say = d.say;
+}
+document.getElementById("mPrev").addEventListener("click", function(){ setMachine(mi-1); });
+document.getElementById("mNext").addEventListener("click", function(){ setMachine(mi+1); });
+setMachine(0);
+
+/* ---------------- try-it mini quizzes ---------------- */
+document.querySelectorAll(".tryit").forEach(function(box){
+  var ans = parseInt(box.dataset.answer, 10);
+  var opts = box.querySelectorAll(".opt");
+  opts.forEach(function(o, idx){
+    o.addEventListener("click", function(){
+      if(box.dataset.done) return;
+      if(idx === ans){
+        o.classList.add("right");
+        box.dataset.done = "1";
+        box.querySelector(".expl").classList.add("show");
+        opts.forEach(function(x){ x.disabled = true; });
+        speak(o.textContent.replace(/\s*\(.*\)\s*/,""));
+      }else{
+        o.classList.add("wrong");
+        setTimeout(function(){ o.classList.remove("wrong"); }, 600);
+      }
+    });
+  });
+});
+
+/* ---------------- error hospital ---------------- */
+var DIAGNOSES = [
+  "Rule 1: object not specific",
+  "Rule 2: bare verb — no ending",
+  "Rule 3: negation/modal in the wrong place",
+  "Rule 4: wrong type of verb",
+  "Missing 把 (must-use case)"
+];
+var PATIENTS = [
+  {sick:"我把作业做。", hint:"Trying to say: “I did my homework.”", a:1,
+   zh:"我把作业做完了。", py:"Wǒ bǎ zuòyè zuò wán le.", en:"I finished my homework.",
+   why:"把 promised a result, but 做 was left bare. Adding 完了 (finished) delivers the result."},
+  {sick:"他把一辆车买了。", hint:"Trying to say: “He bought a car.”", a:0,
+   zh:"他买了一辆车。", py:"Tā mǎi le yí liàng chē.", en:"He bought a car.",
+   why:"“A car” is brand-new information — you can’t grab something unidentified. Either use normal word order (as here), or make it specific: 他把那辆车买了。"},
+  {sick:"我把作业没做完。", hint:"Trying to say: “I didn’t finish the homework.”", a:2,
+   zh:"我没把作业做完。", py:"Wǒ méi bǎ zuòyè zuò wán.", en:"I didn’t finish the homework.",
+   why:"没 negates the whole grab-and-deal package, so it must stand before 把 — never inside."},
+  {sick:"她把那个人喜欢了。", hint:"Trying to say: “She likes that person.”", a:3,
+   zh:"她喜欢那个人。", py:"Tā xǐhuan nàge rén.", en:"She likes that person.",
+   why:"喜欢 is a feeling — it changes nothing about the person. Feelings, knowing and being (喜欢、知道、是、有…) never take 把."},
+  {sick:"他放衣服在椅子上了。", hint:"Trying to say: “He put the clothes on the chair.”", a:4,
+   zh:"他把衣服放在椅子上了。", py:"Tā bǎ yīfu fàng zài yǐzi shàng le.", en:"He put the clothes on the chair.",
+   why:"With 放在 + place, the object can’t stay behind the verb — this is a must-use-把 pattern."},
+  {sick:"我把这本书想看完。", hint:"Trying to say: “I want to finish reading this book.”", a:2,
+   zh:"我想把这本书看完。", py:"Wǒ xiǎng bǎ zhè běn shū kàn wán.", en:"I want to finish reading this book.",
+   why:"Modal verbs (想、要、能、应该…) behave like negation: always before 把."}
+];
+var hi = 0, hospDone = false;
+var hospSick = document.getElementById("hospSick");
+var hospHint = document.getElementById("hospHint");
+var hospDiag = document.getElementById("hospDiag");
+var hospCure = document.getElementById("hospCure");
+var hospNext = document.getElementById("hospNext");
+function renderPatient(){
+  var p = PATIENTS[hi];
+  hospDone = false;
+  document.getElementById("hospCount").textContent = "Patient " + (hi+1) + " of " + PATIENTS.length;
+  hospSick.textContent = p.sick;
+  hospHint.textContent = p.hint + " — What’s broken?";
+  hospCure.classList.remove("show");
+  hospNext.disabled = true;
+  hospNext.textContent = (hi === PATIENTS.length-1) ? "Done ✓" : "Next patient →";
+  hospDiag.innerHTML = "";
+  DIAGNOSES.forEach(function(d, idx){
+    var b = document.createElement("button");
+    b.className = "diag-btn"; b.textContent = d;
+    b.addEventListener("click", function(){
+      if(hospDone) return;
+      if(idx === p.a){
+        hospDone = true;
+        b.classList.add("right");
+        Array.prototype.forEach.call(hospDiag.children, function(x){ if(x!==b) x.disabled = true; });
+        var speakBtn = ("speechSynthesis" in window) ? ' <button class="speak" data-say="'+p.zh.replace(/。|？/g,"")+'" title="Listen" aria-label="Listen">🔊</button>' : '';
+        document.getElementById("cureZh").innerHTML = p.zh + speakBtn;
+        document.getElementById("curePy").textContent = p.py;
+        document.getElementById("cureEn").textContent = p.en;
+        document.getElementById("cureWhy").textContent = "💊 " + p.why;
+        hospCure.classList.add("show");
+        hospNext.disabled = false;
+      }else{
+        b.classList.add("wrong");
+        setTimeout(function(){ b.classList.remove("wrong"); }, 600);
+      }
+    });
+    hospDiag.appendChild(b);
+  });
+}
+hospNext.addEventListener("click", function(){
+  if(hi === PATIENTS.length-1){
+    hi = 0; renderPatient();
+    document.getElementById("hospCount").textContent = "All 6 cured 🎉 — round 2: Patient 1 of 6";
+  } else { hi++; renderPatient(); }
+});
+renderPatient();
+
+/* ---------------- sentence builder ---------------- */
+var BUILDS = [
+  {en:"Please close the door.", tiles:["请","把","门","关上"], punct:"。",
+   hint:"请 (please) starts the request, then grab the door."},
+  {en:"He put his phone on the table.", tiles:["他","把","手机","放在","桌子上了"], punct:"。",
+   hint:"Must-use 把: 放在 + place comes after the object."},
+  {en:"I didn’t finish my homework.", tiles:["我","没","把","作业","做完"], punct:"。",
+   hint:"Rule 3: 没 stands guard in front of 把."},
+  {en:"Mom moved the chair upstairs.", tiles:["妈妈","把","椅子","搬到","楼上","去了"], punct:"。",
+   hint:"Direction ending: 搬到 + place + 去了."},
+  {en:"Can you lend this book to me?", tiles:["你","能不能","把","这本书","借给","我"], punct:"？",
+   hint:"Modal question 能不能 before 把; 借给 + receiver."}
+];
+var bi = 0, answer = [];
+var tileTray = document.getElementById("tileTray");
+var answerLine = document.getElementById("answerLine");
+var buildFb = document.getElementById("buildFb");
+var buildNextBtn = document.getElementById("buildNext");
+function shuffle(arr){
+  var a = arr.slice();
+  for(var i=a.length-1;i>0;i--){ var j=Math.floor(Math.random()*(i+1)); var t=a[i]; a[i]=a[j]; a[j]=t; }
+  return a;
+}
+function renderBuild(){
+  var b = BUILDS[bi];
+  answer = [];
+  document.getElementById("buildCount").textContent = "Sentence " + (bi+1) + " of " + BUILDS.length;
+  document.getElementById("buildTarget").textContent = "✍️ " + b.en;
+  buildFb.textContent = ""; buildFb.className = "build-fb";
+  answerLine.className = "answer-line";
+  buildNextBtn.style.display = "none";
+  var tiles = shuffle(b.tiles);
+  // ensure not pre-solved
+  if(tiles.join("") === b.tiles.join("") && b.tiles.length > 1){ tiles.reverse(); }
+  tileTray.innerHTML = "";
+  tiles.forEach(function(t){
+    var el = document.createElement("button");
+    el.className = "tile zh"; el.textContent = t;
+    el.setAttribute("lang","zh-Hans");
+    el.addEventListener("click", function(){
+      if(el.classList.contains("used")) return;
+      el.classList.add("used");
+      answer.push({t:t, src:el});
+      renderAnswer();
+    });
+    tileTray.appendChild(el);
+  });
+  renderAnswer();
+}
+function renderAnswer(){
+  answerLine.innerHTML = "";
+  if(answer.length === 0){
+    var ph = document.createElement("span");
+    ph.style.cssText = "color:#b9ad99;font-size:14px;padding:6px";
+    ph.textContent = "Tap the tiles below to build the sentence…";
+    answerLine.appendChild(ph);
+    return;
+  }
+  answer.forEach(function(item, idx){
+    var el = document.createElement("button");
+    el.className = "tile zh in-answer"; el.textContent = item.t;
+    el.title = "Remove"; el.setAttribute("lang","zh-Hans");
+    el.addEventListener("click", function(){
+      answer.splice(idx,1);
+      item.src.classList.remove("used");
+      renderAnswer();
+      answerLine.className = "answer-line";
+      buildFb.textContent = ""; buildFb.className = "build-fb";
+    });
+    answerLine.appendChild(el);
+  });
+}
+document.getElementById("buildCheck").addEventListener("click", function(){
+  var b = BUILDS[bi];
+  var got = answer.map(function(x){return x.t;}).join("");
+  if(got === b.tiles.join("")){
+    answerLine.className = "answer-line correct";
+    buildFb.className = "build-fb ok";
+    buildFb.textContent = "✓ Perfect! " + b.tiles.join("") + b.punct;
+    speak(b.tiles.join(""));
+    answerLine.querySelectorAll(".tile").forEach(function(t){ t.disabled = true; });
+    buildNextBtn.style.display = "inline-block";
+    buildNextBtn.textContent = (bi < BUILDS.length-1) ? "Next →" : "↺ Start over";
+    if(bi === BUILDS.length-1){ buildFb.textContent += "  — All 5 built. You’re exam-ready on 题 71–75!"; }
+  }else if(answer.length < b.tiles.length){
+    buildFb.className = "build-fb no";
+    buildFb.textContent = "Use all the tiles first — " + (b.tiles.length - answer.length) + " left.";
+  }else{
+    answerLine.className = "answer-line incorrect";
+    buildFb.className = "build-fb no";
+    buildFb.textContent = "Not yet. Hint: " + b.hint;
+    setTimeout(function(){ answerLine.classList.remove("incorrect"); }, 500);
+  }
+});
+document.getElementById("buildReset").addEventListener("click", function(){ renderBuild(); });
+buildNextBtn.addEventListener("click", function(){
+  bi = (bi < BUILDS.length-1) ? bi+1 : 0;
+  renderBuild();
+});
+renderBuild();
+
+/* ---------------- quiz ---------------- */
+var QUIZ = [
+  {q:"Which sentence is correct?", rule:0,
+   opts:["我把作业做完了。","我把作业做。","我作业把做完了。","我把做完了作业。"],
+   a:0, why:"Pattern: Subject + 把 + Object + Verb + Extra. The verb can’t be bare (我把作业做), 把 must come before the object, and the object must come before the verb.", say:"我把作业做完了"},
+  {q:"Where does 没 go?  我 ① 把 ② 作业 ③ 做完。", rule:3, fixed:true,
+   opts:["Position ①","Position ②","Position ③","It can go anywhere"],
+   a:0, why:"Rule 3: negation always stands in front of 把 — 我没把作业做完。", say:"我没把作业做完"},
+  {q:"Which verb can NEVER be the main verb of a 把 sentence?", rule:4,
+   opts:["喜欢 (to like)","放 (to put)","搬 (to move/carry)","关 (to close)"],
+   a:0, why:"Rule 4: feelings don’t change the object. 放, 搬 and 关 are all hands-on action verbs — perfect for 把.", say:""},
+  {q:"Complete the request:  请把电视关____。", rule:2,
+   opts:["上","在","个","吗"],
+   a:0, why:"关上 = switch it right off — a result complement that satisfies Rule 2. 请把电视关上。", say:"请把电视关上"},
+  {q:"“I left my passport at home.” — which is correct?", rule:5,
+   opts:["我把护照忘在家里了。","我忘护照在家里了。","我把护照在家里忘了。","护照把我忘在家里了。"],
+   a:0, why:"忘在 + place is a must-use-把 pattern: Subject + 把 + object + 忘在 + place + 了.", say:"我把护照忘在家里了"},
+  {q:"Which idea is IMPOSSIBLE to express without 把?", rule:5,
+   opts:["Put the book on the table.","I ate dinner.","I watched that movie.","I bought three books."],
+   a:0, why:"“Put X on Y” needs verb + 在 + place, so the object must be grabbed forward: 把书放在桌子上。 The others work fine as normal SVO sentences.", say:"把书放在桌子上"},
+  {q:"Complete:  你把那杯茶喝____吧。", rule:2,
+   opts:["完","在","不","没"],
+   a:0, why:"喝完 = drink up. A result complement after the verb keeps Rule 2 happy: 你把那杯茶喝完吧。", say:"你把那杯茶喝完吧"},
+  {q:"Find the WRONG sentence:", rule:1,
+   opts:["他把一个面包吃了。","他把那个面包吃了。","他把面包吃完了。","他没把面包吃完。"],
+   a:0, why:"Rule 1: 一个面包 “a bread roll” is indefinite — 把 can’t grab it. The other three all use a specific/known object correctly.", say:"他把那个面包吃了"},
+  {q:"“Can you give the money back to him?” — which is correct?", rule:3,
+   opts:["你能把钱还给他吗？","你把能钱还给他吗？","你能还钱把他吗？","你能把钱给还他吗？"],
+   a:0, why:"Modal 能 before 把 (Rule 3), then 还给 + receiver: 能 + 把 + 钱 + 还给 + 他.", say:"你能把钱还给他吗"},
+  {q:"HSK writing task! Arrange:  把 │ 打扫干净 │ 请 │ 你的房间", rule:0,
+   opts:["请把你的房间打扫干净。","请你的房间把打扫干净。","把请你的房间打扫干净。","请把打扫干净你的房间。"],
+   a:0, why:"请 opens the request, then 把 + object + verb + result. Spotting the 把-chunk first is the fastest way to solve 题 71–75.", say:"请把你的房间打扫干净"}
+];
+var RULE_INFO = {
+  0:{label:"Word order & the formula", href:"#formula"},
+  1:{label:"Rule 1 — object must be specific", href:"#rules"},
+  2:{label:"Rule 2 — verb can’t be bare", href:"#rules"},
+  3:{label:"Rule 3 — negation/modals before 把", href:"#rules"},
+  4:{label:"Rule 4 — action verbs only", href:"#rules"},
+  5:{label:"Must-use 把 patterns", href:"#must"}
+};
+var missedRules = [];
+var qi = 0, score = 0;
+var quizBody = document.getElementById("quizBody");
+var quizBar = document.getElementById("quizBar");
+function renderQuiz(){
+  if(qi >= QUIZ.length){ return renderResult(); }
+  var q = QUIZ[qi];
+  quizBar.style.width = (qi / QUIZ.length * 100) + "%";
+  quizBody.innerHTML = "";
+  var head = document.createElement("div");
+  head.innerHTML = '<div style="font-size:13px;color:var(--muted);font-weight:700">Question ' + (qi+1) + " / " + QUIZ.length + '</div><div class="q-text zh" lang="zh-Hans" style="margin-top:6px">' + q.q + "</div>";
+  quizBody.appendChild(head);
+  var optsWrap = document.createElement("div");
+  optsWrap.className = "q-opts";
+  var answered = false;
+  /* randomize option order (except position-style questions) */
+  var order = q.opts.map(function(_, i){ return i; });
+  if(!q.fixed) order = shuffle(order);
+  var correctBtn = null;
+  order.forEach(function(srcIdx, pos){
+    var b = document.createElement("button");
+    b.className = "q-opt"; b.setAttribute("lang","zh-Hans");
+    b.textContent = String.fromCharCode(65+pos) + ".  " + q.opts[srcIdx];
+    if(srcIdx === q.a) correctBtn = b;
+    b.addEventListener("click", function(){
+      if(answered) return;
+      answered = true;
+      if(srcIdx === q.a){ score++; b.classList.add("right"); }
+      else{
+        b.classList.add("wrong");
+        correctBtn.classList.add("right");
+        missedRules.push(q.rule);
+      }
+      Array.prototype.forEach.call(optsWrap.children, function(c){ c.disabled = true; });
+      scoreSpan.textContent = "Score: " + score;
+      quizBar.style.width = ((qi+1) / QUIZ.length * 100) + "%";
+      expl.classList.add("show");
+      if(q.say) speak(q.say);
+      nextB.style.display = "inline-block";
+    });
+    optsWrap.appendChild(b);
+  });
+  quizBody.appendChild(optsWrap);
+  var expl = document.createElement("div");
+  expl.className = "q-expl";
+  expl.setAttribute("role","status");
+  expl.innerHTML = "💡 " + q.why;
+  quizBody.appendChild(expl);
+  var foot = document.createElement("div");
+  foot.className = "q-foot";
+  var scoreSpan = document.createElement("span");
+  scoreSpan.style.cssText = "color:var(--muted);font-size:13.5px";
+  scoreSpan.textContent = "Score: " + score;
+  var nextB = document.createElement("button");
+  nextB.className = "btn"; nextB.style.display = "none";
+  nextB.textContent = (qi === QUIZ.length-1) ? "See result →" : "Next →";
+  nextB.addEventListener("click", function(){
+    qi++; renderQuiz();
+    var card = document.getElementById("quizCard");
+    if(card.getBoundingClientRect().top < 0 && card.scrollIntoView){
+      try{ card.scrollIntoView({behavior:"smooth", block:"start"}); }catch(e){}
+    }
+  });
+  foot.appendChild(scoreSpan); foot.appendChild(nextB);
+  quizBody.appendChild(foot);
+}
+function renderResult(){
+  quizBar.style.width = "100%";
+  var msg, emoji;
+  if(score >= 9){ msg = "把-master! That’s exam-day form."; emoji = "🏆"; }
+  else if(score >= 7){ msg = "Solid — one quick review of the rules you missed and you’re there."; emoji = "💪"; }
+  else if(score >= 5){ msg = "Good base. Re-run the Error Hospital, then try again."; emoji = "📖"; }
+  else{ msg = "No stress — scroll back to the four golden rules and rebuild from there."; emoji = "🌱"; }
+  /* per-rule study plan from misses */
+  var counts = {};
+  missedRules.forEach(function(r){ counts[r] = (counts[r]||0) + 1; });
+  var planRows = Object.keys(counts).map(function(r){
+    var info = RULE_INFO[r];
+    return '<li style="padding:6px 0;border-top:1px dashed var(--line);font-size:14.5px">' +
+      '<a href="' + info.href + '" style="color:var(--red);font-weight:600">' + info.label + '</a>' +
+      (counts[r] > 1 ? ' <span style="color:var(--muted)">× ' + counts[r] + '</span>' : '') + '</li>';
+  }).join("");
+  var plan = planRows
+    ? '<div style="max-width:420px;margin:16px auto 0;text-align:left;background:var(--gold-soft);border:1px solid #ecd9b4;border-radius:10px;padding:12px 16px">' +
+      '<div style="font-size:13px;font-weight:700;color:#7c5a1d;text-transform:uppercase;letter-spacing:1px">Your study plan — review these:</div>' +
+      '<ul style="list-style:none;margin-top:4px">' + planRows + '</ul></div>'
+    : '<p style="color:var(--green);font-weight:600;margin-top:12px">No weak spots found — every rule held. 🎯</p>';
+  quizBody.innerHTML =
+    '<div style="text-align:center;padding:14px 0">' +
+    '<div style="font-size:40px">' + emoji + '</div>' +
+    '<div class="score-big">' + score + ' / ' + QUIZ.length + '</div>' +
+    '<p style="color:#4c463c;max-width:420px;margin:8px auto 0;font-size:15px">' + msg + '</p>' +
+    plan +
+    '<button class="btn" id="quizRetry" style="margin-top:18px">↺ Try again</button>' +
+    '</div>';
+  document.getElementById("quizRetry").addEventListener("click", function(){
+    qi = 0; score = 0; missedRules = []; renderQuiz();
+  });
+}
+renderQuiz();
+
+})();
+</script>
+</body>
+</html>
