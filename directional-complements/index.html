@@ -268,6 +268,11 @@
   .cure.show{display:block;animation:fade .4s}
   .cure .good{font-family:var(--hanzi);font-size:21px;font-weight:700;color:var(--green)}
 
+  /* ---- textbook drill ---- */
+  .drill-sent{font-family:var(--hanzi);font-size:23px;font-weight:700;background:#fbfdfc;border:1.5px solid var(--line);border-radius:10px;padding:13px 17px;display:inline-block;max-width:100%;line-height:1.7}
+  .drill-sent .blank{color:var(--amber);border-bottom:2px dashed var(--amber);padding:0 10px;margin:0 2px}
+  .drill-sent .blank.filled{border-bottom-style:solid;background:var(--amber-soft);border-radius:5px}
+
   /* ---- builder ---- */
   .answer-line{
     min-height:60px;border:2px dashed #cdd6cd;border-radius:12px;margin-top:14px;padding:9px;
@@ -346,7 +351,8 @@
     <a href="#potential">6 · Can / can't</a>
     <a href="#hospital">7 · Error ER</a>
     <a href="#builder">8 · Builder</a>
-    <a href="#quiz">9 · Quiz</a>
+    <a href="#drill">9 · Textbook drill</a>
+    <a href="#quiz">10 · Quiz</a>
   </div>
 </nav>
 
@@ -494,11 +500,30 @@
   </div>
 </section>
 
-<!-- ===== 9 · QUIZ ===== -->
-<section id="quiz">
+<!-- ===== 9 · TEXTBOOK DRILL ===== -->
+<section id="drill">
   <span class="kicker">Part 9</span>
+  <h2>Textbook drill — fill the complement 📕</h2>
+  <p class="lede">Straight from the 练一练 “complete the sentence” task you struggled with — plus more in the same style. Read the sentence, tap the complement that fits the blank, and each one names the exact sense being tested (fade, distinguish, recall, seem…).</p>
+  <div class="card">
+    <div class="er-count" id="drillCount"></div>
+    <div style="margin-top:10px"><span class="drill-sent zh" id="drillSent"></span></div>
+    <div class="diagnosis" id="drillOpts" aria-label="Choose the complement"></div>
+    <div class="cure" id="drillFb">
+      <div class="ex"><div class="good zh" id="drillGood"></div><div class="py" id="drillPy"></div><div class="en" id="drillEn"></div></div>
+      <div style="font-size:14.5px;color:#414b41" id="drillWhy" role="status"></div>
+    </div>
+    <div style="display:flex;justify-content:flex-end;margin-top:16px">
+      <button class="btn" id="drillNext" disabled>Next →</button>
+    </div>
+  </div>
+</section>
+
+<!-- ===== 10 · QUIZ ===== -->
+<section id="quiz">
+  <span class="kicker">Part 10</span>
   <h2>Final exam drill 📝</h2>
-  <p class="lede">Twelve HSK-style questions across all six complements, the tricky pairs, word order and potential forms. Aim for 10+ before test day — you’ll get a personalized study plan at the end.</p>
+  <p class="lede">Thirteen HSK-style questions across all six complements, the tricky pairs, the fade sense, word order and potential forms. Aim for 11+ before test day — you’ll get a personalized study plan at the end.</p>
   <div class="card" id="quizCard">
     <div class="quiz-progress"><div id="quizBar"></div></div>
     <div id="quizBody"></div>
@@ -507,8 +532,8 @@
   <div class="card cheat">
     <h3>📋 Pocket cheat sheet — screenshot me</h3>
     <table>
-      <tr><td>起来</td><td><strong>up → begin / gather / surface.</strong> Start: 笑起来, 下起雨来 · Gather: 收起来, 存起来 · Seem / in the doing: 看起来, 听起来, 做起来 · Recall: 想起来</td></tr>
-      <tr><td>下来</td><td><strong>down → settle here/now.</strong> Stop &amp; calm: 停下来, 安静下来 · Record/fix: 记下来, 写下来 · Detach: 脱下来, 摘下来 · Last until now: 坚持下来了</td></tr>
+      <tr><td>起来</td><td><strong>up → begin / gather / surface.</strong> Start: 笑起来, 下起雨来 · Gather: 收起来, 存起来 · Seem / in the doing (= 看上去): 看起来, 听起来, 做起来 · Recall: 想起来</td></tr>
+      <tr><td>下来</td><td><strong>down → settle / fade.</strong> Stop &amp; calm: 停下来, 安静下来 · <strong>Fade (强→弱, 快→慢, 亮→暗):</strong> 天黑下来, 雨小下来, 声音低下来, 慢下来 · Record/fix: 记下来, 写下来 · Detach: 脱下来, 摘下来 · Last until now: 坚持下来了</td></tr>
       <tr><td>下去</td><td><strong>onward → keep going (into the future).</strong> 说下去, 学下去, 坚持下去, 再这样下去…</td></tr>
       <tr><td>出来</td><td><strong>out → into view.</strong> Produce from nothing: 想出来, 写出来, 做出来 · Detect the hidden: 看出来, 听出来, 认出来</td></tr>
       <tr><td>过来</td><td><strong>back → normal again.</strong> 醒过来, 反应过来, 缓过来</td></tr>
@@ -583,7 +608,7 @@ function shuffle(a){ a=a.slice(); for(var i=a.length-1;i>0;i--){ var j=Math.floo
 /* ============ 1 · METAPHOR ============ */
 var META=[
   {k:"起来",py:"qǐlái",phys:"站起来",pa:"stand up",abs:"笑起来",cap:"起来 = rise <strong>up</strong>. A feeling can “rise up” into being too — 笑起来 = <em>burst out laughing</em> (the laughter starts).",say:"笑起来"},
-  {k:"下来",py:"xiàlái",phys:"坐下来",pa:"sit down",abs:"安静下来",cap:"下来 = come <strong>down</strong> and settle. A noisy room can “settle down” too — 安静下来 = <em>quiet down</em>.",say:"安静下来"},
+  {k:"下来",py:"xiàlái",phys:"坐下来",pa:"sit down",abs:"安静下来",cap:"下来 = come <strong>down</strong> and settle. Noise, light, or speed can “come down” too — 安静下来 = <em>quiet down</em>, 天黑下来 = <em>get dark</em>, 慢下来 = <em>slow down</em> (强→弱, 快→慢).",say:"安静下来"},
   {k:"下去",py:"xiàqù",phys:"走下去",pa:"walk on down",abs:"说下去",cap:"下去 = keep heading <strong>down / onward</strong>, away from you. An action can keep going onward too — 说下去 = <em>keep talking</em>.",say:"说下去"},
   {k:"出来",py:"chūlái",phys:"走出来",pa:"walk out",abs:"想出来",cap:"出来 = come <strong>out</strong> into view. An idea can come out of your head too — 想出来 = <em>figure out / come up with</em>.",say:"想出来"},
   {k:"过来",py:"guòlái",phys:"走过来",pa:"come over",abs:"醒过来",cap:"过来 = turn <strong>back over</strong> toward you / normal. Consciousness can turn back too — 醒过来 = <em>wake up / come to</em>.",say:"醒过来"},
@@ -609,7 +634,7 @@ setMeta(0);
 /* ============ 2 · MAP ============ */
 var MAP=[
   {cls:"mc-rise",zh:"起来",py:"qǐlái",arrow:"↑",gloss:"begin · gather · surface",detail:"<strong>Spatial:</strong> rise up (站起来). <strong>Extended:</strong> an action <em>begins</em> (笑起来, 下起雨来), scattered things <em>gather up</em> (收起来, 存起来), a judgment <em>surfaces</em> when you engage a sense (看起来, 听起来), or a memory <em>comes up</em> (想起来)."},
-  {cls:"mc-settle",zh:"下来",py:"xiàlái",arrow:"↓",gloss:"stop · fix · last till now",detail:"<strong>Spatial:</strong> come down (坐下来). <strong>Extended:</strong> motion <em>settles to a stop</em> (停下来, 安静下来), something is <em>fixed in place / recorded</em> (记下来, 写下来), detaches downward (脱下来), or an effort <em>lasts from the past until now</em> (坚持下来了)."},
+  {cls:"mc-settle",zh:"下来",py:"xiàlái",arrow:"↓",gloss:"stop · fade · fix · last",detail:"<strong>Spatial:</strong> come down (坐下来). <strong>Extended:</strong> motion <em>settles to a stop</em> (停下来, 安静下来), a state <em>fades / weakens</em> — strong→weak, fast→slow, light→dark (天黑下来, 雨小下来, 声音低下来), something is <em>fixed / recorded</em> (记下来, 写下来), detaches (脱下来), or an effort <em>lasts from the past until now</em> (坚持下来了)."},
   {cls:"mc-flow",zh:"下去",py:"xiàqù",arrow:"⤓",gloss:"keep going onward",detail:"<strong>Spatial:</strong> go down & away (走下去). <strong>Extended:</strong> an already-started action <em>continues into the future</em> — 说下去 (keep talking), 学下去 (keep studying), 坚持下去 (keep at it), 再这样下去… (if this keeps up…)."},
   {cls:"mc-emerge",zh:"出来",py:"chūlái",arrow:"→",gloss:"produce · detect",detail:"<strong>Spatial:</strong> come out (走出来). <strong>Extended:</strong> something is <em>produced out of nothing</em> (想出来, 写出来, 做出来) or a hidden thing becomes <em>recognizable</em> (看出来, 听出来, 认出来)."},
   {cls:"mc-back",zh:"过来",py:"guòlái",arrow:"↩",gloss:"back to normal",detail:"<strong>Spatial:</strong> come over to you (走过来). <strong>Extended:</strong> return to a <em>normal / correct</em> state — 醒过来 (wake up), 反应过来 (it clicks), 恢复过来 (recover)."},
@@ -646,8 +671,8 @@ var DEEP=[
       E("请把玩具都收<span class='hl' style='background:var(--rise-soft);color:var(--rise)'>起来</span>。","Qǐng bǎ wánjù dōu shōu qǐlái.","Please put all the toys away.","请把玩具都收起来"),
       E("他把钱存<span class='hl' style='background:var(--rise-soft);color:var(--rise)'>起来</span>了。","Tā bǎ qián cún qǐlái le.","He saved up the money.","他把钱存起来了")
     ]},
-    {b:"C",t:"Seem / when you do it",g:"a judgment surfaces once you engage a sense or try the action",ex:[
-      E("这个菜看<span class='hl' style='background:var(--rise-soft);color:var(--rise)'>起来</span>很好吃。","Zhège cài kàn qǐlái hěn hǎochī.","This dish looks delicious.","这个菜看起来很好吃"),
+    {b:"C",t:"Seem / when you do it  (= 看上去)",g:"a judgment surfaces once you engage a sense or try the action. Note: 看起来 = 看上去, the same “seem by looking” — NOT recall",ex:[
+      E("这是你做的饭吗？看<span class='hl' style='background:var(--rise-soft);color:var(--rise)'>起来</span>很好吃 — 看<span class='hl' style='background:var(--rise-soft);color:var(--rise)'>上去</span>也很好吃。","Zhè shì nǐ zuò de fàn ma? Kàn qǐlái hěn hǎochī — kàn shàngqù yě hěn hǎochī.","Did you cook this? It looks delicious — 看起来 and 看上去 mean the same.","这是你做的饭吗看起来很好吃"),
       E("这个名字听<span class='hl' style='background:var(--rise-soft);color:var(--rise)'>起来</span>很熟悉。","Zhège míngzi tīng qǐlái hěn shúxī.","This name sounds familiar.","这个名字听起来很熟悉"),
       E("这件事说<span class='hl' style='background:var(--rise-soft);color:var(--rise)'>起来</span>容易，做<span class='hl' style='background:var(--rise-soft);color:var(--rise)'>起来</span>难。","Zhè jiàn shì shuō qǐlái róngyì, zuò qǐlái nán.","This is easy to say but hard to do.","这件事说起来容易做起来难")
     ]},
@@ -660,14 +685,19 @@ var DEEP=[
       E("车慢慢停<span class='hl' style='background:var(--settle-soft);color:var(--settle)'>下来</span>了。","Chē mànmàn tíng xiàlái le.","The car slowly came to a stop.","车慢慢停下来了"),
       E("请大家安静<span class='hl' style='background:var(--settle-soft);color:var(--settle)'>下来</span>。","Qǐng dàjiā ānjìng xiàlái.","Everyone please quiet down.","请大家安静下来")
     ]},
-    {b:"B",t:"Record / fix in place",g:"something is set down and kept",ex:[
+    {b:"B",t:"Fade / weaken — 强→弱, 快→慢, 亮→暗",g:"a state gradually dies down: getting quieter, darker, slower, lighter (your textbook’s key sense!). Mirror image: a quality that <em>grows</em> takes 起来 instead — 冷起来 getting cold, 热起来 heating up.",ex:[
+      E("雨下了三个小时，终于小<span class='hl' style='background:var(--settle-soft);color:var(--settle)'>下来</span>了。","Yǔ xià le sān ge xiǎoshí, zhōngyú xiǎo xiàlái le.","It rained for three hours, then finally eased off.","雨下了三个小时终于小下来了"),
+      E("天慢慢黑<span class='hl' style='background:var(--settle-soft);color:var(--settle)'>下来</span>了。","Tiān mànmàn hēi xiàlái le.","The sky gradually grew dark.","天慢慢黑下来了"),
+      E("听到老师的话，他的声音低<span class='hl' style='background:var(--settle-soft);color:var(--settle)'>下来</span>了。","Tīngdào lǎoshī de huà, tā de shēngyīn dī xiàlái le.","Hearing the teacher, his voice dropped (got quieter).","他的声音低下来了")
+    ]},
+    {b:"C",t:"Record / fix in place",g:"something is set down and kept",ex:[
       E("请把这个生词记<span class='hl' style='background:var(--settle-soft);color:var(--settle)'>下来</span>。","Qǐng bǎ zhège shēngcí jì xiàlái.","Please write down this new word.","请把这个生词记下来"),
       E("这么美的景色，我想拍<span class='hl' style='background:var(--settle-soft);color:var(--settle)'>下来</span>。","Zhème měi de jǐngsè, wǒ xiǎng pāi xiàlái.","Such beautiful scenery — I want to capture it (in a photo).","这么美的景色我想拍下来")
     ]},
-    {b:"C",t:"Detach (down off)",g:"taking something off, downward",ex:[
+    {b:"D",t:"Detach (down off)",g:"taking something off, downward",ex:[
       E("太热了，他把外套脱<span class='hl' style='background:var(--settle-soft);color:var(--settle)'>下来</span>了。","Tài rè le, tā bǎ wàitào tuō xiàlái le.","It's too hot, so he took off his coat.","太热了他把外套脱下来了")
     ]},
-    {b:"D",t:"Last until now",g:"an effort holds all the way from the past to the present (often + 了)",ex:[
+    {b:"E",t:"Last until now",g:"an effort holds all the way from the past to the present (often + 了)",ex:[
       E("这么难的工作，他真的坚持<span class='hl' style='background:var(--settle-soft);color:var(--settle)'>下来</span>了。","Zhème nán de gōngzuò, tā zhēnde jiānchí xiàlái le.","Such hard work, yet he really did stick it out (to the end).","这么难的工作他真的坚持下来了")
     ]}
   ]},
@@ -685,7 +715,8 @@ var DEEP=[
     ]},
     {b:"B",t:"Detect the hidden",g:"something unclear becomes recognizable",ex:[
       E("一听声音，我就听<span class='hl' style='background:var(--emerge-soft);color:var(--emerge)'>出来</span>是你了。","Yì tīng shēngyīn, wǒ jiù tīng chūlái shì nǐ le.","The moment I heard the voice, I could tell it was you.","一听声音我就听出来是你了"),
-      E("你能看<span class='hl' style='background:var(--emerge-soft);color:var(--emerge)'>出来</span>他多大吗？","Nǐ néng kàn chūlái tā duō dà ma?","Can you tell how old he is?","你能看出来他多大吗")
+      E("你能看<span class='hl' style='background:var(--emerge-soft);color:var(--emerge)'>出来</span>他多大吗？","Nǐ néng kàn chūlái tā duō dà ma?","Can you tell how old he is?","你能看出来他多大吗"),
+      E("这两种茶，我喝不<span class='hl' style='background:var(--emerge-soft);color:var(--emerge)'>出来</span>有什么不一样。","Zhè liǎng zhǒng chá, wǒ hē bu chūlái yǒu shénme bù yíyàng.","These two teas — I can't taste any difference.","这两种茶我喝不出来有什么不一样")
     ]}
   ]},
   {k:"过来",py:"guòlái",color:"var(--back)",lit:"literal: come over (toward you) — 走过来 come over, 拿过来 bring over",senses:[
@@ -915,6 +946,7 @@ function renderER(){
         document.getElementById("erGoodEn").textContent=p.en;
         document.getElementById("erWhy").textContent="💡 "+p.why;
         erCure.classList.add("show"); erNext.disabled=false; tagZh(erCure);
+        var ew=document.getElementById("erWhy"); setTimeout(function(){ ew.textContent="💡 "+p.why; },60);
       } else { erWrongThis=true; b.classList.add("wrong"); b.disabled=true; }
     });
     erDiag.appendChild(b);
@@ -985,7 +1017,79 @@ document.getElementById("buildReset").addEventListener("click",renderBuild);
 buildNextBtn.addEventListener("click",function(){ bi=(bi<BUILDS.length-1)?bi+1:0; renderBuild(); });
 renderBuild();
 
-/* ============ 9 · QUIZ ============ */
+/* ============ 9 · TEXTBOOK DRILL ============ */
+var DRILL=[
+  {pre:"雨下了三个小时，现在终于小",post:"了。",a:"下来",opts:["下来","起来","出来","下去"],
+   good:"雨下了三个小时，现在终于小下来了。",py:"Yǔ xià le sān ge xiǎoshí, xiànzài zhōngyú xiǎo xiàlái le.",en:"It rained for three hours; now it has finally eased off.",
+   why:"由强到弱 (strong→weak): the rain weakens, so 下来 (fade)."},
+  {pre:"你能看",post:"谁是哥哥、谁是弟弟吗？",a:"出来",opts:["出来","起来","下来","过来"],
+   good:"你能看出来谁是哥哥、谁是弟弟吗？",py:"Nǐ néng kàn chūlái shéi shì gēge, shéi shì dìdi ma?",en:"Can you tell which one is the older and which the younger brother?",
+   why:"从隐到显 — distinguishing something not obvious → 出来."},
+  {pre:"穿了这条裙子，你看",post:"只有十八岁。",a:"起来",opts:["起来","出来","下来","下去"],
+   good:"穿了这条裙子，你看起来只有十八岁。",py:"Chuān le zhè tiáo qúnzi, nǐ kàn qǐlái zhǐyǒu shíbā suì.",en:"In this skirt you look only eighteen.",
+   why:"看起来 = seem / look (= 看上去). Surface impression, not detection."},
+  {pre:"天慢慢黑",post:"了，我们快回家吧。",a:"下来",opts:["下来","出来","起来","过来"],
+   good:"天慢慢黑下来了，我们快回家吧。",py:"Tiān mànmàn hēi xiàlái le, wǒmen kuài huí jiā ba.",en:"The sky is gradually darkening — let's hurry home.",
+   why:"亮→暗 (light fading) is the same weakening idea → 下来."},
+  {pre:"我一听就听",post:"了，这是你的声音。",a:"出来",opts:["出来","起来","下来","下去"],
+   good:"我一听就听出来了，这是你的声音。",py:"Wǒ yì tīng jiù tīng chūlái le, zhè shì nǐ de shēngyīn.",en:"I could tell at once — it's your voice.",
+   why:"Recognizing the hidden by ear (从隐到显) → 出来."},
+  {pre:"对不起，我想不",post:"你的名字了。",a:"起来",opts:["起来","出来","下来","过来"],
+   good:"对不起，我想不起来你的名字了。",py:"Duìbuqǐ, wǒ xiǎng bu qǐlái nǐ de míngzi le.",en:"Sorry, I can't recall your name.",
+   why:"想不起来 = can't recall a known name (回忆). Potential negative of 想起来."},
+  {pre:"这两种茶，我喝不",post:"有什么不一样。",a:"出来",opts:["出来","起来","下来","下去"],
+   good:"这两种茶，我喝不出来有什么不一样。",py:"Zhè liǎng zhǒng chá, wǒ hē bu chūlái yǒu shénme bù yíyàng.",en:"I can't taste any difference between these two teas.",
+   why:"Distinguishing by taste (分辨/识别) → 出来. Even tasting counts as 'detecting the hidden'."},
+  {pre:"跑了这么久，他的速度终于慢",post:"了。",a:"下来",opts:["下来","下去","出来","起来"],
+   good:"跑了这么久，他的速度终于慢下来了。",py:"Pǎo le zhème jiǔ, tā de sùdù zhōngyú màn xiàlái le.",en:"After running so long, his pace finally slowed.",
+   why:"由快到慢 (fast→slow) → 下来. (Not 下去, which would mean 'keep getting slower and slower'.)"},
+  {pre:"他今天一句话也没说，看",post:"有点儿不高兴。",a:"起来",opts:["起来","出来","下来","过来"],
+   good:"他今天一句话也没说，看起来有点儿不高兴。",py:"Tā jīntiān yí jù huà yě méi shuō, kàn qǐlái yǒudiǎnr bù gāoxìng.",en:"He didn't say a word today; he seems a bit unhappy.",
+   why:"看起来 = evaluate by looking (= 看上去), not recall and not detection."}
+];
+var di=0, drillDone=false, drillWrongThis=false, drillScore=0;
+var drillSent=document.getElementById("drillSent"), drillOpts=document.getElementById("drillOpts"),
+    drillFb=document.getElementById("drillFb"), drillNext=document.getElementById("drillNext");
+function renderDrill(){
+  var d=DRILL[di]; drillDone=false; drillWrongThis=false;
+  document.getElementById("drillCount").textContent="Sentence "+(di+1)+" of "+DRILL.length+"   ·   first-try "+drillScore+"/"+DRILL.length;
+  drillSent.innerHTML=d.pre+'<span class="blank" id="drillBlank" aria-label="blank to fill">＿＿</span>'+d.post;
+  drillFb.classList.remove("show"); drillNext.disabled=true;
+  drillNext.textContent=(di===DRILL.length-1)?"Done ✓":"Next →";
+  drillOpts.innerHTML="";
+  shuffle(d.opts.map(function(_,k){return k;})).forEach(function(k){
+    var o=d.opts[k];
+    var b=document.createElement("button"); b.className="diag-btn zh"; b.textContent=o; b.setAttribute("lang","zh-Hans");
+    b.style.fontSize="17px";
+    b.addEventListener("click",function(){
+      if(drillDone) return;
+      if(o===d.a){
+        drillDone=true; b.classList.add("right");
+        if(!drillWrongThis) drillScore++;
+        document.getElementById("drillCount").textContent="Sentence "+(di+1)+" of "+DRILL.length+"   ·   first-try "+drillScore+"/"+DRILL.length;
+        var bl=document.getElementById("drillBlank"); bl.textContent=d.a; bl.classList.add("filled"); bl.setAttribute("aria-label",d.a);
+        Array.prototype.forEach.call(drillOpts.children,function(x){ if(x!==b) x.disabled=true; });
+        document.getElementById("drillGood").innerHTML=d.good+spk(d.good.replace(/，|。|？|！|、/g,""));
+        document.getElementById("drillPy").textContent=d.py;
+        document.getElementById("drillEn").textContent=d.en;
+        document.getElementById("drillWhy").textContent="💡 "+d.why;
+        drillFb.classList.add("show"); drillNext.disabled=false; tagZh(drillFb); speak(d.good.replace(/，|。|？|！|、/g,""));
+        var dw=document.getElementById("drillWhy"); setTimeout(function(){ dw.textContent="💡 "+d.why; },60);
+      } else { drillWrongThis=true; b.classList.add("wrong"); b.disabled=true; }
+    });
+    drillOpts.appendChild(b);
+  });
+  tagZh(drillSent);
+}
+drillNext.addEventListener("click",function(){
+  if(di===DRILL.length-1){
+    var fin=drillScore; di=0; drillScore=0; renderDrill();
+    document.getElementById("drillCount").textContent="All "+DRILL.length+" done 🎉 — first-try "+fin+"/"+DRILL.length+". Round 2: Sentence 1 of "+DRILL.length;
+  } else { di++; renderDrill(); }
+});
+renderDrill();
+
+/* ============ 10 · QUIZ ============ */
 var QUIZ=[
   {q:"听到这个好消息，大家都笑____了。",r:"qilai",opts:["起来","下来","出来","过去"],a:0,why:"起来 marks the start of an action — the laughter begins. (inchoative)",say:"大家都笑起来了"},
   {q:"老师说的话，请你们都记____。",r:"xialai",opts:["下来","下去","起来","出来"],a:0,why:"记下来 = write down / fix in place. 下来 settles information so it stays.",say:"请你们都记下来"},
@@ -998,7 +1102,8 @@ var QUIZ=[
   {q:"听到那个坏消息，她难过得晕____了。",r:"guo",opts:["过去","过来","下来","起来"],a:0,why:"晕过去 = pass out, leaving the normal state — the opposite of 过来.",say:"她难过得晕过去了"},
   {q:"“pick up the book” — which word order is correct?",r:"order",opts:["拿起书来","拿书起来","起拿书来","拿起来书吗"],a:0,why:"A short concrete object splits 起…来: 拿 + 起 + 书 + 来. (For abstract “recall”, keep it whole: 想起来这件事 / 把这件事想起来。)",say:"拿起书来"},
   {q:"这个字太难，我怎么也想____他怎么写。",r:"order",opts:["不起来","不出来","不下去","不过来"],a:0,why:"Potential negative 想不起来 = can’t recall. 得/不 go inside the complement.",say:"我怎么也想不起来"},
-  {q:"这么难的工作，他真的坚持____了。",r:"xialai",opts:["下来","下去","起来","出来"],a:0,why:"坚持下来了 = held on all the way until now and made it (past→present, completed).",say:"他真的坚持下来了"}
+  {q:"这么难的工作，他真的坚持____了。",r:"xialai",opts:["下来","下去","起来","出来"],a:0,why:"坚持下来了 = held on all the way until now and made it (past→present, completed).",say:"他真的坚持下来了"},
+  {q:"外面的声音慢慢小____了，孩子睡着了。",r:"xialai",opts:["下来","下去","起来","出来"],a:0,why:"由强到弱 (strong→weak): the noise fades, so 下来. This is the “fade/weaken” sense — 天黑下来, 声音低下来, 慢下来.",say:"外面的声音慢慢小下来了"}
 ];
 var RULE_INFO={
   qilai:{label:"起来 — begin / gather / seem / recall",href:"#deep"},
@@ -1052,9 +1157,9 @@ function renderQuiz(){
 function renderResult(){
   quizBar.style.width="100%";
   var msg,emoji;
-  if(score>=11){ msg="补语 master! Exam-day form."; emoji="🏆"; }
-  else if(score>=9){ msg="Strong — a quick look at the senses you missed and you're set."; emoji="💪"; }
-  else if(score>=6){ msg="Good base. Re-run the deep dive and the tricky pairs, then retry."; emoji="📖"; }
+  if(score>=12){ msg="补语 master! Exam-day form."; emoji="🏆"; }
+  else if(score>=10){ msg="Strong — a quick look at the senses you missed and you're set."; emoji="💪"; }
+  else if(score>=7){ msg="Good base. Re-run the deep dive and the tricky pairs, then retry."; emoji="📖"; }
   else { msg="No stress — start from the map and the metaphor, then build back up."; emoji="🌱"; }
   var counts={}; missed.forEach(function(r){ counts[r]=(counts[r]||0)+1; });
   var rows=Object.keys(counts).map(function(r){
