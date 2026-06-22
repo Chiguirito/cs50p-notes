@@ -1,0 +1,1073 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>趋向补语的引申义 — Extended Directional Complements · HSK 3</title>
+<style>
+  :root{
+    --paper:#f5f7f4; --card:#ffffff; --ink:#1f2620; --muted:#5f6b60;
+    --teal:#1f7a6b; --teal-soft:#e2f1ee; --teal-deep:#155a4f;
+    --amber:#8a5600; --amber-soft:#fcf1dd;
+    --rise:#2563b4; --rise-soft:#e6eefb;        /* 起来 up */
+    --settle:#1b6b5e; --settle-soft:#e2f1ee;    /* 下来 settle */
+    --flow:#6d4ec4; --flow-soft:#efeafb;        /* 下去 continue */
+    --emerge:#b03d30; --emerge-soft:#fbe9e6;    /* 出来 out */
+    --back:#0a6b73; --back-soft:#dcf1f2;        /* 过来 regain */
+    --away:#6f5616; --away-soft:#f7efd6;        /* 过去 lose */
+    --green:#247a52; --green-soft:#e4f4ec;
+    --red:#c2342c; --red-soft:#fbe9e7;
+    --line:#e2e6df; --shadow:0 2px 12px rgba(30,45,30,.08);
+    --radius:14px;
+    --hanzi:"PingFang SC","Hiragino Sans GB","Noto Sans SC","Microsoft YaHei",sans-serif;
+  }
+  *{box-sizing:border-box;margin:0;padding:0}
+  html{scroll-behavior:smooth}
+  body{
+    background:var(--paper); color:var(--ink);
+    font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,"Helvetica Neue",Arial,var(--hanzi);
+    line-height:1.6;
+  }
+  .zh{font-family:var(--hanzi)}
+  main{max-width:900px;margin:0 auto;padding:0 18px 90px}
+
+  /* header */
+  header{text-align:center;padding:46px 18px 14px;max-width:900px;margin:0 auto}
+  .seal{
+    display:inline-flex;align-items:center;justify-content:center;gap:2px;
+    padding:10px 18px;border-radius:18px;
+    background:linear-gradient(135deg,#2a8c7a,#155a4f);
+    color:#fff;font-size:40px;font-family:var(--hanzi);font-weight:700;
+    box-shadow:0 6px 18px rgba(21,90,79,.32), inset 0 0 0 3px rgba(255,255,255,.22);
+    margin-bottom:14px;user-select:none;letter-spacing:2px;
+  }
+  header h1{font-size:28px;letter-spacing:.2px}
+  header h1 .zh{color:var(--teal)}
+  header .sub{color:var(--muted);font-size:16.5px;max-width:600px;margin:8px auto 0}
+  .toggles{display:flex;gap:10px;justify-content:center;margin-top:18px;flex-wrap:wrap}
+  .toggle{
+    border:1.5px solid var(--line);background:var(--card);color:var(--muted);
+    border-radius:999px;padding:7px 16px;font-size:14px;cursor:pointer;transition:all .2s;font-weight:600;
+  }
+  .toggle.on{border-color:var(--teal);color:var(--teal);background:var(--teal-soft)}
+  .toggle:focus-visible{outline:2px solid var(--teal);outline-offset:2px}
+
+  /* nav */
+  nav{
+    position:sticky;top:0;z-index:50;background:rgba(245,247,244,.93);
+    -webkit-backdrop-filter:blur(8px);backdrop-filter:blur(8px);border-bottom:1px solid var(--line);
+    padding:10px 12px;margin-bottom:8px;
+  }
+  .nav-inner{max-width:900px;margin:0 auto;display:flex;gap:8px;overflow-x:auto;scrollbar-width:none}
+  .nav-inner::-webkit-scrollbar{display:none}
+  nav a{
+    flex:0 0 auto;text-decoration:none;color:var(--muted);font-size:13.5px;font-weight:600;
+    padding:6px 13px;border-radius:999px;border:1px solid transparent;white-space:nowrap;
+  }
+  nav a.active{color:var(--teal);background:var(--teal-soft);border-color:#bfe0d8}
+  nav a:focus-visible{outline:2px solid var(--teal);outline-offset:2px}
+
+  /* sections / cards */
+  section{padding-top:36px;scroll-margin-top:64px}
+  .kicker{color:var(--teal);font-weight:700;font-size:13px;text-transform:uppercase;letter-spacing:1.5px}
+  section>h2{font-size:25px;margin:4px 0 6px}
+  .lede{color:var(--muted);max-width:680px;margin-bottom:18px;font-size:16px}
+  .card{
+    background:var(--card);border:1px solid var(--line);border-radius:var(--radius);
+    box-shadow:var(--shadow);padding:22px;margin-bottom:16px;
+  }
+  .pill-note{
+    display:block;background:var(--amber-soft);border:1px solid #ecdab4;color:#7c5a1d;
+    border-radius:10px;padding:11px 15px;font-size:14.5px;margin-top:12px;
+  }
+
+  /* example rows */
+  .ex{padding:12px 0;border-top:1px dashed var(--line)}
+  .ex:first-child{border-top:none}
+  .ex .zh-line{font-family:var(--hanzi);font-size:21px;font-weight:600}
+  .ex .py{color:var(--muted);font-size:14.5px;margin-top:1px}
+  .ex .en{color:#414b41;font-size:14.5px;margin-top:1px}
+  body.hide-py .py{display:none}
+  body.hide-en .en{display:none}
+  .hl{border-radius:5px;padding:0 3px;font-weight:800}
+  .speak{
+    border:none;background:var(--teal-soft);color:var(--teal);cursor:pointer;
+    width:36px;height:36px;border-radius:50%;font-size:15px;vertical-align:middle;
+    margin-left:8px;transition:transform .15s;
+  }
+  .speak:hover{transform:scale(1.12)}
+  .speak:focus-visible{outline:2px solid var(--teal);outline-offset:2px}
+
+  .btn{
+    display:inline-block;border:none;background:var(--teal);color:#fff;font-weight:700;
+    font-size:15px;padding:11px 22px;border-radius:999px;cursor:pointer;margin-top:14px;
+    box-shadow:0 3px 10px rgba(31,122,107,.3);transition:all .2s;
+  }
+  .btn:hover{background:var(--teal-deep);transform:translateY(-1px)}
+  .btn:focus-visible{outline:2px solid var(--teal-deep);outline-offset:2px}
+  .btn.secondary{background:var(--card);color:var(--teal);border:1.5px solid var(--teal);box-shadow:none}
+  .btn:disabled{opacity:.45;cursor:default;transform:none}
+
+  footer{text-align:center;color:var(--muted);font-size:13px;padding:30px 18px 50px;max-width:900px;margin:0 auto}
+
+  /* ---- metaphor stage (section 1) ---- */
+  .stage{background:#fbfdfc;border:1px solid var(--line);border-radius:12px;padding:20px;margin-top:6px}
+  .metaphor-row{display:flex;align-items:center;gap:14px;flex-wrap:wrap;justify-content:center;text-align:center}
+  @media(max-width:430px){
+    .metaphor-row{flex-direction:column}
+    .marrow{transform:rotate(90deg)}
+    .mphys,.mabstract{width:100%;min-width:0}
+  }
+  .mphys,.mabstract{flex:1 1 180px;min-width:160px;border-radius:12px;padding:16px}
+  .mphys{background:var(--teal-soft)}
+  .mabstract{background:var(--rise-soft)}
+  .mphys .big,.mabstract .big{font-family:var(--hanzi);font-size:30px;font-weight:700}
+  .marrow{font-size:30px;color:var(--amber);flex:0 0 auto}
+  .mlabel{font-size:12px;font-weight:700;text-transform:uppercase;letter-spacing:1px;color:var(--muted);margin-bottom:4px}
+  .mphys .big{color:var(--teal)} .mabstract .big{color:var(--rise)}
+  .mcap{color:var(--muted);font-size:14px;margin-top:12px;text-align:center;min-height:20px}
+  .metaphor-tabs{display:flex;gap:6px;flex-wrap:wrap;justify-content:center;margin-bottom:14px}
+  .mtab{
+    border:1.5px solid var(--line);background:var(--card);border-radius:999px;
+    padding:7px 14px;font-family:var(--hanzi);font-size:17px;font-weight:700;cursor:pointer;color:var(--ink);transition:all .15s;
+  }
+  .mtab:hover{border-color:var(--teal)}
+  .mtab.on{border-color:var(--teal);background:var(--teal-soft);color:var(--teal-deep)}
+  .mtab:focus-visible{outline:2px solid var(--teal);outline-offset:2px}
+
+  /* ---- compass map (section 2) ---- */
+  .map-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:12px}
+  @media(max-width:640px){.map-grid{grid-template-columns:1fr 1fr}}
+  .map-cell{
+    border:1.5px solid var(--line);border-radius:12px;padding:14px;cursor:pointer;background:var(--card);
+    text-align:left;transition:all .18s;position:relative;
+  }
+  .map-cell:hover{transform:translateY(-2px);box-shadow:var(--shadow)}
+  .map-cell:focus-visible{outline:2px solid var(--teal);outline-offset:2px}
+  .map-cell .mc-zh{font-family:var(--hanzi);font-size:24px;font-weight:700;padding-right:26px}
+  .map-cell .mc-py{font-size:12.5px;color:var(--muted)}
+  .map-cell .mc-arrow{position:absolute;top:12px;right:12px;font-size:20px}
+  .map-cell .mc-gloss{font-size:13px;color:#414b41;margin-top:6px;font-weight:600}
+  .mc-rise{border-left:5px solid var(--rise)} .mc-rise .mc-zh{color:var(--rise)}
+  .mc-settle{border-left:5px solid var(--settle)} .mc-settle .mc-zh{color:var(--settle)}
+  .mc-flow{border-left:5px solid var(--flow)} .mc-flow .mc-zh{color:var(--flow)}
+  .mc-emerge{border-left:5px solid var(--emerge)} .mc-emerge .mc-zh{color:var(--emerge)}
+  .mc-back{border-left:5px solid var(--back)} .mc-back .mc-zh{color:var(--back)}
+  .mc-away{border-left:5px solid var(--away)} .mc-away .mc-zh{color:var(--away)}
+  .map-detail{margin-top:14px;border:1px solid var(--line);border-radius:12px;padding:16px;background:#fbfdfc;display:none}
+  .map-detail.show{display:block;animation:fade .35s}
+  @keyframes fade{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:none}}
+
+  /* ---- deep dive sense chips ---- */
+  .sense{display:flex;gap:12px;align-items:flex-start;padding:14px 0;border-top:1px dashed var(--line)}
+  .sense:first-of-type{border-top:none}
+  .sense .badge{
+    flex:0 0 auto;width:34px;height:34px;border-radius:9px;display:flex;align-items:center;justify-content:center;
+    font-weight:800;font-size:15px;color:#fff;margin-top:2px;
+  }
+  .sense .s-body{flex:1 1 auto}
+  .sense .s-title{font-weight:700;font-size:15.5px}
+  .sense .s-gloss{color:var(--muted);font-size:13.5px;margin-bottom:4px}
+  .acc-head{
+    width:100%;text-align:left;border:1px solid var(--line);background:var(--card);border-radius:12px;
+    padding:14px 16px;cursor:pointer;display:flex;align-items:center;gap:12px;transition:all .15s;margin-top:10px;
+  }
+  .acc-head:hover{border-color:var(--teal)}
+  .acc-head:focus-visible{outline:2px solid var(--teal);outline-offset:2px}
+  .acc-head .ah-zh{font-family:var(--hanzi);font-size:26px;font-weight:700}
+  .acc-head .ah-py{font-size:13px;color:var(--muted)}
+  .acc-head .ah-lit{font-size:13px;color:#414b41;margin-left:auto;text-align:right}
+  .acc-head .chev{flex:0 0 auto;transition:transform .25s;color:var(--muted);font-size:18px;margin-left:8px}
+  .acc-head[aria-expanded="true"] .chev{transform:rotate(90deg)}
+  .acc-body{display:none;padding:6px 4px 4px;border-left:3px solid var(--line);margin:8px 0 6px 14px;padding-left:16px}
+  .acc-body.show{display:block;animation:fade .3s}
+
+  /* ---- contrast flip cards ---- */
+  .flip-wrap{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+  @media(max-width:640px){.flip-wrap{grid-template-columns:1fr}}
+  .vs-card{border:1.5px solid var(--line);border-radius:12px;padding:16px;background:var(--card)}
+  .vs-card.left{border-top:4px solid var(--emerge)}
+  .vs-card.right{border-top:4px solid var(--rise)}
+  .vs-zh{font-family:var(--hanzi);font-size:26px;font-weight:800}
+  .vs-tag{font-size:12px;font-weight:700;text-transform:uppercase;letter-spacing:.8px;margin-top:2px}
+  .vs-card.left .vs-zh{color:var(--emerge)} .vs-card.left .vs-tag{color:var(--emerge)}
+  .vs-card.right .vs-zh{color:var(--rise)} .vs-card.right .vs-tag{color:var(--rise)}
+  .vs-mean{font-size:14.5px;margin-top:8px;color:#414b41}
+  .vs-ex{margin-top:10px;font-family:var(--hanzi);font-size:18px;font-weight:600}
+  .vs-py{font-size:13px;color:var(--muted)}
+  .vs-en{font-size:13px;color:#414b41}
+  .contrast-tabs{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:14px}
+  .ctab{
+    border:1.5px solid var(--line);background:var(--card);border-radius:999px;padding:8px 15px;
+    font-size:14px;font-weight:700;cursor:pointer;color:var(--ink);transition:all .15s;
+  }
+  .ctab:hover{border-color:var(--teal)}
+  .ctab.on{border-color:var(--teal);background:var(--teal-soft);color:var(--teal-deep)}
+  .ctab:focus-visible{outline:2px solid var(--teal);outline-offset:2px}
+  .mini-q{margin-top:14px;background:#fbfdfc;border:1px dashed #cfe0db;border-radius:10px;padding:14px}
+  .mini-q .q{font-size:14px;font-weight:700;color:var(--teal-deep);margin-bottom:8px}
+  .mini-q .opt{
+    display:inline-block;margin:5px 6px 0 0;padding:9px 16px;border-radius:999px;border:1.5px solid var(--line);
+    background:var(--card);cursor:pointer;font-family:var(--hanzi);font-size:17px;font-weight:700;color:var(--ink);transition:all .15s;
+  }
+  .mini-q .opt:hover{border-color:var(--teal)}
+  .mini-q .opt.right{border-color:var(--green);background:var(--green-soft);color:var(--green)}
+  .mini-q .opt.wrong{border-color:var(--red);background:var(--red-soft);color:var(--red);animation:shake .35s}
+  .mini-q .fb{display:none;margin-top:10px;font-size:14px;color:#414b41}
+  .mini-q .fb.show{display:block}
+  @keyframes shake{0%,100%{transform:translateX(0)}25%{transform:translateX(-5px)}75%{transform:translateX(5px)}}
+
+  /* ---- split / word-order workshop ---- */
+  .slotline{display:flex;flex-wrap:wrap;gap:6px;align-items:center;justify-content:center;font-family:var(--hanzi);font-size:24px;font-weight:700;margin:10px 0}
+  .tok{padding:6px 12px;border-radius:9px;border:1.5px solid transparent}
+  .t-v{background:var(--teal-soft);color:var(--teal)}
+  .t-d{background:var(--rise-soft);color:var(--rise)}
+  .t-o{background:var(--amber-soft);color:var(--amber)}
+  .drop{min-width:70px;min-height:46px;border:2px dashed #cdd6cd;border-radius:9px;display:inline-flex;align-items:center;justify-content:center;background:#fbfdfc;color:#6a746a;font-size:14px;font-weight:600;padding:0 8px}
+  .drop.filled{border-style:solid;border-color:var(--amber);background:var(--amber-soft);color:var(--amber);font-family:var(--hanzi);font-size:24px;font-weight:700}
+  .drop:focus-visible{outline:2px solid var(--teal);outline-offset:2px}
+  .drop.incorrect{border-color:var(--red);background:var(--red-soft);animation:shake .35s}
+  .split-controls{display:flex;gap:10px;justify-content:center;flex-wrap:wrap;margin-top:6px}
+  .tile.armed{border-color:var(--amber);background:var(--amber-soft);color:var(--amber);box-shadow:0 0 0 3px rgba(138,86,0,.22);opacity:1}
+
+  /* ---- potential lab ---- */
+  .pot-stage{text-align:center;background:#fbfdfc;border:1px solid var(--line);border-radius:12px;padding:20px}
+  .pot-line{font-family:var(--hanzi);font-size:30px;font-weight:800;margin:6px 0}
+  .pot-seg{padding:2px 4px;border-radius:6px}
+  .pot-infix{background:var(--amber-soft);color:var(--amber);cursor:pointer;border-bottom:2px dashed var(--amber)}
+  .pot-switch{display:inline-flex;border:1.5px solid var(--line);border-radius:999px;overflow:hidden;margin-top:10px}
+  .pot-switch button{border:none;background:var(--card);padding:9px 20px;font-family:var(--hanzi);font-size:18px;font-weight:700;cursor:pointer;color:var(--muted)}
+  .pot-switch button.on{background:var(--teal);color:#fff}
+  .pot-switch button:focus-visible{outline:2px solid var(--teal);outline-offset:-2px}
+  .pot-infix:focus-visible{outline:2px solid var(--amber);outline-offset:2px}
+  .pot-mean{margin-top:12px;font-size:15px;color:#414b41;min-height:24px}
+  .pot-pick{display:flex;gap:8px;justify-content:center;flex-wrap:wrap;margin-top:14px}
+  .pot-pick button{
+    border:1.5px solid var(--line);background:var(--card);border-radius:999px;padding:7px 14px;
+    font-family:var(--hanzi);font-size:16px;font-weight:700;cursor:pointer;color:var(--ink);transition:all .15s;
+  }
+  .pot-pick button.on{border-color:var(--teal);background:var(--teal-soft);color:var(--teal-deep)}
+  .pot-pick button:focus-visible{outline:2px solid var(--teal);outline-offset:2px}
+
+  /* ---- error ER ---- */
+  .patient .sick{
+    font-family:var(--hanzi);font-size:23px;font-weight:700;background:var(--red-soft);
+    border:1.5px dashed #eaa49d;border-radius:10px;padding:13px 17px;display:inline-block;max-width:100%;
+  }
+  .er-count{color:var(--muted);font-size:13.5px}
+  .diagnosis{margin-top:14px;display:flex;flex-wrap:wrap;gap:8px}
+  .diag-btn{
+    border:1.5px solid var(--line);background:var(--card);border-radius:999px;padding:8px 15px;
+    font-size:13.5px;font-weight:600;cursor:pointer;color:var(--ink);transition:all .15s;
+  }
+  .diag-btn:hover{border-color:var(--amber)}
+  .diag-btn.right{border-color:var(--green);background:var(--green-soft);color:var(--green)}
+  .diag-btn.wrong{border-color:var(--red);background:var(--red-soft);color:var(--red);animation:shake .35s}
+  .diag-btn:focus-visible{outline:2px solid var(--teal);outline-offset:2px}
+  .cure{display:none;margin-top:14px;border-top:1px dashed var(--line);padding-top:12px}
+  .cure.show{display:block;animation:fade .4s}
+  .cure .good{font-family:var(--hanzi);font-size:21px;font-weight:700;color:var(--green)}
+
+  /* ---- builder ---- */
+  .answer-line{
+    min-height:60px;border:2px dashed #cdd6cd;border-radius:12px;margin-top:14px;padding:9px;
+    display:flex;flex-wrap:wrap;align-items:center;gap:6px;background:#fbfdfc;
+  }
+  .answer-line.correct{border-color:var(--green);background:var(--green-soft)}
+  .answer-line.incorrect{border-color:var(--red);animation:shake .35s}
+  .tile{
+    border:1.5px solid var(--line);background:var(--card);border-radius:10px;font-family:var(--hanzi);
+    font-size:21px;font-weight:600;padding:8px 14px;cursor:pointer;transition:all .15s;color:var(--ink);
+  }
+  .tile:hover{border-color:var(--amber);transform:translateY(-2px)}
+  .tile:focus-visible{outline:2px solid var(--teal);outline-offset:2px}
+  .tile.used{opacity:.25;pointer-events:none}
+  .tile.in-answer:hover{border-color:var(--red);background:var(--red-soft)}
+  .tile-tray{margin-top:14px;display:flex;flex-wrap:wrap;gap:8px}
+  .build-controls{margin-top:14px;display:flex;gap:10px;flex-wrap:wrap;align-items:center}
+  .build-fb{font-size:14.5px;min-height:22px;margin-top:10px;font-weight:600}
+  .build-fb.ok{color:var(--green)} .build-fb.no{color:var(--red)}
+  .build-target{font-size:15px;color:#414b41;background:var(--amber-soft);border:1px solid #ecdab4;border-radius:10px;padding:10px 14px;display:inline-block}
+
+  /* ---- quiz ---- */
+  .quiz-progress{height:8px;background:#e6ebe5;border-radius:99px;overflow:hidden;margin-bottom:18px}
+  .quiz-progress>div{height:100%;width:0;background:linear-gradient(90deg,var(--teal),var(--amber));transition:width .4s}
+  .q-text{font-size:16.5px;font-weight:700}
+  .q-opts{margin-top:14px}
+  .q-opt{
+    display:block;width:100%;text-align:left;margin-top:8px;padding:12px 16px;border-radius:11px;
+    border:1.5px solid var(--line);background:var(--card);cursor:pointer;font-size:16px;font-family:var(--hanzi);
+    font-weight:600;color:var(--ink);transition:all .15s;line-height:1.5;
+  }
+  .q-opt:hover{border-color:var(--amber)}
+  .q-opt.right{border-color:var(--green);background:var(--green-soft)}
+  .q-opt.wrong{border-color:var(--red);background:var(--red-soft)}
+  .q-opt:disabled{cursor:default}
+  .q-opt:focus-visible{outline:2px solid var(--teal);outline-offset:2px}
+  .q-expl{display:none;margin-top:12px;background:var(--amber-soft);border:1px solid #ecdab4;border-radius:10px;padding:12px 15px;font-size:14.5px}
+  .q-expl.show{display:block;animation:fade .4s}
+  .q-foot{display:flex;justify-content:space-between;align-items:center;margin-top:16px}
+  .score-big{font-size:42px;font-weight:800;color:var(--teal)}
+
+  /* cheat sheet */
+  .cheat{background:linear-gradient(160deg,#fbfdfc,#f0f6f3);border:1.5px solid #cfe0db}
+  .cheat h3{font-size:17px;color:var(--teal-deep);margin-bottom:8px}
+  .cheat table{width:100%;border-collapse:collapse;font-size:14.5px}
+  .cheat td{padding:8px 6px;border-top:1px dashed #cfe0db;vertical-align:top}
+  .cheat td:first-child{font-family:var(--hanzi);font-weight:700;color:var(--teal-deep);white-space:nowrap;width:84px;font-size:18px}
+  .cheat tr:first-child td{border-top:none}
+
+  /* reduced motion */
+  @media (prefers-reduced-motion:reduce){
+    html{scroll-behavior:auto}
+    *{animation:none !important;transition:none !important}
+  }
+</style>
+</head>
+<body>
+
+<header>
+  <div class="seal zh" aria-hidden="true">起来</div>
+  <h1>Extended <span class="zh">趋向补语</span> — when direction becomes <em>idea</em></h1>
+  <p class="sub">起来 · 下来 · 下去 · 出来 · 过来 · 过去 — how the <strong>spatial</strong> meaning stretches into <strong>start, continue, produce, recall, recover</strong>… Built interactive for <strong>HSK 3</strong>.</p>
+  <div class="toggles">
+    <button class="toggle on" id="togglePy" aria-pressed="true">Pīnyīn: ON</button>
+    <button class="toggle on" id="toggleEn" aria-pressed="true">English: ON</button>
+  </div>
+</header>
+
+<nav aria-label="Sections">
+  <div class="nav-inner">
+    <a href="#idea" class="active">1 · The big idea</a>
+    <a href="#map">2 · The map</a>
+    <a href="#deep">3 · Deep dive</a>
+    <a href="#contrasts">4 · Tricky pairs</a>
+    <a href="#split">5 · Word order</a>
+    <a href="#potential">6 · Can / can't</a>
+    <a href="#hospital">7 · Error ER</a>
+    <a href="#builder">8 · Builder</a>
+    <a href="#quiz">9 · Quiz</a>
+  </div>
+</nav>
+
+<main>
+<!-- ===== 1 · BIG IDEA ===== -->
+<section id="idea">
+  <span class="kicker">Part 1</span>
+  <h2>The big idea: a direction becomes an idea</h2>
+  <p class="lede">You already know these as <em>movement</em> words: 起来 = rise up, 下来 = come down, 出来 = come out. The HSK 3 leap is that Chinese reuses that same physical picture for <strong>abstract</strong> meanings. The trick to remembering them all is to <em>see the metaphor</em> — pick a complement below and watch its spatial meaning stretch.</p>
+
+  <div class="card">
+    <div class="metaphor-tabs" id="mTabs" role="group" aria-label="Choose a complement"></div>
+    <div class="stage">
+      <div class="metaphor-row">
+        <div class="mphys"><div class="mlabel">Physical</div><div class="big zh" id="mPhys">站起来</div></div>
+        <div class="marrow" aria-hidden="true">→</div>
+        <div class="mabstract"><div class="mlabel">Abstract</div><div class="big zh" id="mAbs">笑起来</div></div>
+      </div>
+      <div class="mcap" id="mCap" role="status">起来 = rise <strong>up</strong>. A feeling or action can “rise up” into being too — that’s how 笑起来 means <em>burst out laughing</em>.</div>
+    </div>
+    <p class="pill-note">🧭 One mental rule for the whole page: <strong>keep the arrow in your head.</strong> 起来 points <em>up</em> (things begin / gather / surface), 下来 comes <em>down and settles</em> (stop, fix in place, last until now), 下去 keeps going <em>onward</em>, 出来 comes <em>out</em> into view (produce / detect), 过来 turns <em>back</em> to normal, 过去 passes <em>away</em> from normal.</p>
+  </div>
+</section>
+
+<!-- ===== 2 · THE MAP ===== -->
+<section id="map">
+  <span class="kicker">Part 2</span>
+  <h2>The map of six complements</h2>
+  <p class="lede">Here is the whole territory on one screen. Each tile shows the spatial arrow and the headline abstract meaning. Tap one for a 10-second summary; Part 3 then drills each in depth.</p>
+  <div class="card">
+    <div class="map-grid" id="mapGrid"></div>
+    <div class="map-detail" id="mapDetail" role="status"></div>
+  </div>
+</section>
+
+<!-- ===== 3 · DEEP DIVE ===== -->
+<section id="deep">
+  <span class="kicker">Part 3</span>
+  <h2>Deep dive — every sense, with examples</h2>
+  <p class="lede">Tap a complement to open it. Inside you’ll find the literal anchor, then each extended sense with model sentences (tap 🔊 to hear them). These are the senses that actually show up on HSK 3–4.</p>
+  <div class="card" id="deepWrap"></div>
+</section>
+
+<!-- ===== 4 · TRICKY PAIRS ===== -->
+<section id="contrasts">
+  <span class="kicker">Part 4</span>
+  <h2>The four tricky pairs 🥊</h2>
+  <p class="lede">These minimal pairs are where points are won and lost. Same verb, one syllable different, whole new meaning. Pick a pair, study the split, then take the 5-second check.</p>
+  <div class="card">
+    <div class="contrast-tabs" id="cTabs" role="group" aria-label="Choose a contrast"></div>
+    <div class="flip-wrap">
+      <div class="vs-card left">
+        <div class="vs-zh zh" id="vsLZh"></div>
+        <div class="vs-tag" id="vsLTag"></div>
+        <div class="vs-mean" id="vsLMean"></div>
+        <div class="ex"><div class="vs-ex zh" id="vsLEx"></div><div class="vs-py" id="vsLPy"></div><div class="vs-en" id="vsLEn"></div></div>
+      </div>
+      <div class="vs-card right">
+        <div class="vs-zh zh" id="vsRZh"></div>
+        <div class="vs-tag" id="vsRTag"></div>
+        <div class="vs-mean" id="vsRMean"></div>
+        <div class="ex"><div class="vs-ex zh" id="vsREx"></div><div class="vs-py" id="vsRPy"></div><div class="vs-en" id="vsREn"></div></div>
+      </div>
+    </div>
+    <div class="mini-q" id="cQ">
+      <div class="q" id="cQText"></div>
+      <div id="cQOpts"></div>
+      <div class="fb" id="cQFb"></div>
+    </div>
+  </div>
+</section>
+
+<!-- ===== 5 · WORD ORDER ===== -->
+<section id="split">
+  <span class="kicker">Part 5</span>
+  <h2>Where does the object go? The 起…来 split</h2>
+  <p class="lede">When a verb + 起来 takes a <strong>concrete object</strong>, the object often <strong>splits the complement</strong>, sliding in between the two halves. No dragging — tap the object, then tap a gap.</p>
+  <div class="card">
+    <p style="font-size:15px;margin-bottom:6px">Build: <strong style="color:var(--teal)">拿</strong> (pick up) + <strong style="color:var(--rise)">起…来</strong> + object <strong style="color:var(--amber)">书</strong> (book) = “pick up the book”.</p>
+    <div class="slotline" id="splitLine"></div>
+    <div class="mcap" id="splitCap" role="status">Tap the object tile below, then tap a gap.</div>
+    <div style="text-align:center;margin-top:8px"><button class="tile zh" id="splitObj" style="display:inline-block">书</button></div>
+    <div class="split-controls"><button class="btn secondary" id="splitReset">Reset</button></div>
+    <p class="pill-note">📌 With a short <strong>concrete object</strong> the split is the natural order: <span class="zh">拿起书来</span>, <span class="zh">唱起歌来</span>, <span class="zh">端起碗来</span>. But for an <strong>abstract “recall”</strong> object, native speakers usually keep the complement whole and put the object after it — <span class="zh">想起来这件事</span> — or move it up front with 把: <span class="zh">把这件事想起来</span>. A <em>place</em> word with 来/去 also comes before 来/去: <span class="zh">走下楼来</span>.</p>
+  </div>
+</section>
+
+<!-- ===== 6 · POTENTIAL ===== -->
+<section id="potential">
+  <span class="kicker">Part 6</span>
+  <h2>“Can” &amp; “can’t”: the 得 / 不 infix</h2>
+  <p class="lede">Slot 得 (can) or 不 (can’t) <em>inside</em> the complement and you get the super-common potential forms. <span class="zh">想起来</span> → <span class="zh">想<u>得</u>起来</span> (can recall) / <span class="zh">想<u>不</u>起来</span> (can’t recall). Flip the switch:</p>
+  <div class="card">
+    <div class="pot-pick" id="potPick"></div>
+    <div class="pot-stage" style="margin-top:14px">
+      <div class="pot-line zh" id="potLine"></div>
+      <div class="pot-switch" role="group" aria-label="can or cannot">
+        <button id="potCan" class="zh">得 can</button>
+        <button id="potCant" class="zh on">不 can’t</button>
+      </div>
+      <div class="pot-mean" id="potMean" role="status"></div>
+      <button class="speak" id="potSpeak" title="Listen" aria-label="Listen">🔊</button>
+    </div>
+    <p class="pill-note">⚠️ The potential form only takes 得/不 <em>in the middle</em> — there is no 没-version. To say it <em>didn’t</em> happen, you negate the plain action instead (<span class="zh">没想起来</span> = didn’t recall). And 得/不 go between the verb and the complement: <span class="zh">看得出来 / 看不出来</span>, never <span class="zh">×不看出来</span>.</p>
+  </div>
+</section>
+
+<!-- ===== 7 · ERROR ER ===== -->
+<section id="hospital">
+  <span class="kicker">Part 7</span>
+  <h2>The error ER 🚑</h2>
+  <p class="lede">Six real learner sentences, each with one wrong complement. Diagnose what’s broken, then see the fix. These mirror the exact distractors HSK uses.</p>
+  <div class="card patient" id="erCard">
+    <div class="er-count" id="erCount"></div>
+    <div style="margin-top:10px"><span class="sick zh" id="erSick"></span></div>
+    <div style="font-size:14px;color:var(--muted);margin-top:8px" id="erHint"></div>
+    <div class="diagnosis" id="erDiag"></div>
+    <div class="cure" id="erCure">
+      <div style="font-size:13px;font-weight:700;color:var(--green);text-transform:uppercase;letter-spacing:1px">The fix</div>
+      <div class="ex"><div class="good zh" id="erGoodZh"></div><div class="py" id="erGoodPy"></div><div class="en" id="erGoodEn"></div></div>
+      <div style="font-size:14.5px;color:#414b41" id="erWhy" role="status"></div>
+    </div>
+    <div style="display:flex;justify-content:flex-end;margin-top:16px">
+      <button class="btn" id="erNext" disabled>Next patient →</button>
+    </div>
+  </div>
+</section>
+
+<!-- ===== 8 · BUILDER ===== -->
+<section id="builder">
+  <span class="kicker">Part 8</span>
+  <h2>Sentence builder 🧱</h2>
+  <p class="lede">Word-ordering practice, HSK-writing style. Tap tiles to build the sentence; tap a tile in your answer to send it back. Watch the complement word order!</p>
+  <div class="card">
+    <div class="er-count" id="buildCount"></div>
+    <div style="margin-top:10px"><span class="build-target" id="buildTarget"></span></div>
+    <div class="answer-line" id="answerLine"></div>
+    <div class="tile-tray" id="tileTray"></div>
+    <div class="build-fb" id="buildFb" role="status"></div>
+    <div class="build-controls">
+      <button class="btn" id="buildCheck">Check ✓</button>
+      <button class="btn secondary" id="buildReset">Reset</button>
+      <button class="btn secondary" id="buildNext" style="display:none">Next →</button>
+    </div>
+  </div>
+</section>
+
+<!-- ===== 9 · QUIZ ===== -->
+<section id="quiz">
+  <span class="kicker">Part 9</span>
+  <h2>Final exam drill 📝</h2>
+  <p class="lede">Twelve HSK-style questions across all six complements, the tricky pairs, word order and potential forms. Aim for 10+ before test day — you’ll get a personalized study plan at the end.</p>
+  <div class="card" id="quizCard">
+    <div class="quiz-progress"><div id="quizBar"></div></div>
+    <div id="quizBody"></div>
+  </div>
+
+  <div class="card cheat">
+    <h3>📋 Pocket cheat sheet — screenshot me</h3>
+    <table>
+      <tr><td>起来</td><td><strong>up → begin / gather / surface.</strong> Start: 笑起来, 下起雨来 · Gather: 收起来, 存起来 · Seem / in the doing: 看起来, 听起来, 做起来 · Recall: 想起来</td></tr>
+      <tr><td>下来</td><td><strong>down → settle here/now.</strong> Stop &amp; calm: 停下来, 安静下来 · Record/fix: 记下来, 写下来 · Detach: 脱下来, 摘下来 · Last until now: 坚持下来了</td></tr>
+      <tr><td>下去</td><td><strong>onward → keep going (into the future).</strong> 说下去, 学下去, 坚持下去, 再这样下去…</td></tr>
+      <tr><td>出来</td><td><strong>out → into view.</strong> Produce from nothing: 想出来, 写出来, 做出来 · Detect the hidden: 看出来, 听出来, 认出来</td></tr>
+      <tr><td>过来</td><td><strong>back → normal again.</strong> 醒过来, 反应过来, 缓过来</td></tr>
+      <tr><td>过去</td><td><strong>away → out of normal.</strong> 昏过去, 晕过去</td></tr>
+      <tr><td>order</td><td>Concrete object splits 起…来: 拿<u>起</u>书<u>来</u>, 唱<u>起</u>歌<u>来</u> · Abstract recall stays whole: 想起来这件事 / 把这件事想起来 · Can/can’t: 想<u>得/不</u>起来, 看<u>得/不</u>出来</td></tr>
+    </table>
+  </div>
+</section></main>
+
+<footer>
+  Made for Paul’s HSK 3 prep · 趋向补语的引申义 (extended directional complements) ·
+  Tap 🔊 to hear sentences (uses your device’s Chinese voice if installed)
+</footer>
+
+<script>
+(function(){
+"use strict";
+
+/* ---------- TTS ---------- */
+function speak(text){
+  if(!("speechSynthesis" in window) || !text) return;
+  try{
+    window.speechSynthesis.cancel();
+    var u = new SpeechSynthesisUtterance(text);
+    u.lang="zh-CN"; u.rate=0.82;
+    var vs=window.speechSynthesis.getVoices();
+    for(var i=0;i<vs.length;i++){ if(vs[i].lang && vs[i].lang.toLowerCase().indexOf("zh")===0){ u.voice=vs[i]; break; } }
+    window.speechSynthesis.speak(u);
+  }catch(e){}
+}
+if("speechSynthesis" in window){
+  window.speechSynthesis.getVoices();
+  if(window.speechSynthesis.addEventListener) window.speechSynthesis.addEventListener("voiceschanged",function(){});
+}else{
+  document.querySelectorAll(".speak").forEach(function(b){ b.style.display="none"; });
+}
+document.addEventListener("click", function(e){
+  var b=e.target.closest(".speak");
+  if(b && b.dataset.say) speak(b.dataset.say);
+});
+function spk(say){ return ("speechSynthesis" in window) ? ' <button class="speak" data-say="'+say+'" aria-label="Listen">🔊</button>' : ''; }
+function tagZh(root){ (root||document).querySelectorAll(".zh,.zh-line,.sick,.good").forEach(function(el){ el.setAttribute("lang","zh-Hans"); }); }
+
+/* ---------- toggles ---------- */
+function wireToggle(id,cls,label){
+  var b=document.getElementById(id);
+  b.addEventListener("click",function(){
+    var off=document.body.classList.toggle(cls);
+    b.classList.toggle("on",!off); b.setAttribute("aria-pressed",String(!off));
+    b.textContent=label+": "+(off?"OFF":"ON");
+  });
+}
+wireToggle("togglePy","hide-py","Pīnyīn");
+wireToggle("toggleEn","hide-en","English");
+
+/* ---------- nav highlight ---------- */
+var navLinks=document.querySelectorAll("nav a");
+if("IntersectionObserver" in window){
+  var io=new IntersectionObserver(function(es){
+    es.forEach(function(en){ if(en.isIntersecting){
+      navLinks.forEach(function(a){
+        var on=a.getAttribute("href")==="#"+en.target.id;
+        a.classList.toggle("active",on);
+        if(on && a.scrollIntoView) a.scrollIntoView({block:"nearest",inline:"center"});
+      });
+    }});
+  },{rootMargin:"-25% 0px -65% 0px"});
+  document.querySelectorAll("main section").forEach(function(s){ io.observe(s); });
+}
+function shuffle(a){ a=a.slice(); for(var i=a.length-1;i>0;i--){ var j=Math.floor(Math.random()*(i+1)),t=a[i];a[i]=a[j];a[j]=t; } return a; }
+
+/* ============ 1 · METAPHOR ============ */
+var META=[
+  {k:"起来",py:"qǐlái",phys:"站起来",pa:"stand up",abs:"笑起来",cap:"起来 = rise <strong>up</strong>. A feeling can “rise up” into being too — 笑起来 = <em>burst out laughing</em> (the laughter starts).",say:"笑起来"},
+  {k:"下来",py:"xiàlái",phys:"坐下来",pa:"sit down",abs:"安静下来",cap:"下来 = come <strong>down</strong> and settle. A noisy room can “settle down” too — 安静下来 = <em>quiet down</em>.",say:"安静下来"},
+  {k:"下去",py:"xiàqù",phys:"走下去",pa:"walk on down",abs:"说下去",cap:"下去 = keep heading <strong>down / onward</strong>, away from you. An action can keep going onward too — 说下去 = <em>keep talking</em>.",say:"说下去"},
+  {k:"出来",py:"chūlái",phys:"走出来",pa:"walk out",abs:"想出来",cap:"出来 = come <strong>out</strong> into view. An idea can come out of your head too — 想出来 = <em>figure out / come up with</em>.",say:"想出来"},
+  {k:"过来",py:"guòlái",phys:"走过来",pa:"come over",abs:"醒过来",cap:"过来 = turn <strong>back over</strong> toward you / normal. Consciousness can turn back too — 醒过来 = <em>wake up / come to</em>.",say:"醒过来"},
+  {k:"过去",py:"guòqù",phys:"走过去",pa:"walk past",abs:"昏过去",cap:"过去 = pass <strong>away over</strong>, off to the side. Consciousness can pass away too — 昏过去 = <em>faint / pass out</em>.",say:"昏过去"}
+];
+var mTabs=document.getElementById("mTabs"), mPhys=document.getElementById("mPhys"),
+    mAbs=document.getElementById("mAbs"), mCap=document.getElementById("mCap");
+function setMeta(i){
+  var d=META[i];
+  Array.prototype.forEach.call(mTabs.children,function(b,k){
+    b.classList.toggle("on",k===i); b.setAttribute("aria-pressed",String(k===i));
+  });
+  mPhys.textContent=d.phys; mAbs.textContent=d.abs; mCap.innerHTML=d.cap;
+}
+META.forEach(function(d,i){
+  var b=document.createElement("button");
+  b.className="mtab zh"; b.textContent=d.k; b.setAttribute("aria-pressed","false"); b.setAttribute("lang","zh-Hans");
+  b.addEventListener("click",function(){ setMeta(i); speak(d.say); });
+  mTabs.appendChild(b);
+});
+setMeta(0);
+
+/* ============ 2 · MAP ============ */
+var MAP=[
+  {cls:"mc-rise",zh:"起来",py:"qǐlái",arrow:"↑",gloss:"begin · gather · surface",detail:"<strong>Spatial:</strong> rise up (站起来). <strong>Extended:</strong> an action <em>begins</em> (笑起来, 下起雨来), scattered things <em>gather up</em> (收起来, 存起来), a judgment <em>surfaces</em> when you engage a sense (看起来, 听起来), or a memory <em>comes up</em> (想起来)."},
+  {cls:"mc-settle",zh:"下来",py:"xiàlái",arrow:"↓",gloss:"stop · fix · last till now",detail:"<strong>Spatial:</strong> come down (坐下来). <strong>Extended:</strong> motion <em>settles to a stop</em> (停下来, 安静下来), something is <em>fixed in place / recorded</em> (记下来, 写下来), detaches downward (脱下来), or an effort <em>lasts from the past until now</em> (坚持下来了)."},
+  {cls:"mc-flow",zh:"下去",py:"xiàqù",arrow:"⤓",gloss:"keep going onward",detail:"<strong>Spatial:</strong> go down & away (走下去). <strong>Extended:</strong> an already-started action <em>continues into the future</em> — 说下去 (keep talking), 学下去 (keep studying), 坚持下去 (keep at it), 再这样下去… (if this keeps up…)."},
+  {cls:"mc-emerge",zh:"出来",py:"chūlái",arrow:"→",gloss:"produce · detect",detail:"<strong>Spatial:</strong> come out (走出来). <strong>Extended:</strong> something is <em>produced out of nothing</em> (想出来, 写出来, 做出来) or a hidden thing becomes <em>recognizable</em> (看出来, 听出来, 认出来)."},
+  {cls:"mc-back",zh:"过来",py:"guòlái",arrow:"↩",gloss:"back to normal",detail:"<strong>Spatial:</strong> come over to you (走过来). <strong>Extended:</strong> return to a <em>normal / correct</em> state — 醒过来 (wake up), 反应过来 (it clicks), 恢复过来 (recover)."},
+  {cls:"mc-away",zh:"过去",py:"guòqù",arrow:"↪",gloss:"out of normal",detail:"<strong>Spatial:</strong> pass by (走过去). <strong>Extended:</strong> slip <em>out of</em> a normal state — 昏过去 (faint), 晕过去 (pass out). Think of it as the opposite of 过来."}
+];
+var mapGrid=document.getElementById("mapGrid"), mapDetail=document.getElementById("mapDetail");
+MAP.forEach(function(d,i){
+  var c=document.createElement("button");
+  c.className="map-cell "+d.cls; c.setAttribute("aria-pressed","false"); c.setAttribute("aria-controls","mapDetail");
+  c.innerHTML='<span class="mc-arrow" aria-hidden="true">'+d.arrow+'</span>'+
+    '<div class="mc-zh zh" lang="zh-Hans">'+d.zh+'</div><div class="mc-py">'+d.py+'</div>'+
+    '<div class="mc-gloss">'+d.gloss+'</div>';
+  c.addEventListener("click",function(){
+    var wasOpen=c.getAttribute("aria-pressed")==="true";
+    Array.prototype.forEach.call(mapGrid.children,function(x){ x.setAttribute("aria-pressed","false"); });
+    if(wasOpen){ mapDetail.classList.remove("show"); mapDetail.innerHTML=""; return; }
+    c.setAttribute("aria-pressed","true");
+    mapDetail.innerHTML='<div class="mc-zh zh" style="font-size:22px" lang="zh-Hans">'+d.zh+' <span style="font-size:13px;color:var(--muted)">'+d.py+'</span></div><p style="margin-top:6px;font-size:14.5px">'+d.detail+'</p>';
+    mapDetail.classList.add("show");
+  });
+  mapGrid.appendChild(c);
+});
+
+/* ============ 3 · DEEP DIVE ============ */
+function E(zh,py,en,say,hl){ return {zh:zh,py:py,en:en,say:say,hl:hl}; }
+var DEEP=[
+  {k:"起来",py:"qǐlái",color:"var(--rise)",lit:"literal: rise up — 站起来 stand up, 拿起来 pick up",senses:[
+    {b:"A",t:"Begin (inchoative)",g:"an action or state starts — and keeps going",ex:[
+      E("听到这个消息，大家都笑<span class='hl' style='background:var(--rise-soft);color:var(--rise)'>起来</span>了。","Tīngdào zhège xiāoxi, dàjiā dōu xiào qǐlái le.","Hearing the news, everyone burst out laughing.","听到这个消息大家都笑起来了"),
+      E("天气慢慢热<span class='hl' style='background:var(--rise-soft);color:var(--rise)'>起来</span>了。","Tiānqì mànmàn rè qǐlái le.","The weather is gradually getting hot.","天气慢慢热起来了"),
+      E("外面下<span class='hl' style='background:var(--rise-soft);color:var(--rise)'>起</span>雨<span class='hl' style='background:var(--rise-soft);color:var(--rise)'>来</span>了。","Wàimiàn xià qǐ yǔ lái le.","It started raining outside.","外面下起雨来了")
+    ]},
+    {b:"B",t:"Gather up / store",g:"scattered things are brought together or put away",ex:[
+      E("请把玩具都收<span class='hl' style='background:var(--rise-soft);color:var(--rise)'>起来</span>。","Qǐng bǎ wánjù dōu shōu qǐlái.","Please put all the toys away.","请把玩具都收起来"),
+      E("他把钱存<span class='hl' style='background:var(--rise-soft);color:var(--rise)'>起来</span>了。","Tā bǎ qián cún qǐlái le.","He saved up the money.","他把钱存起来了")
+    ]},
+    {b:"C",t:"Seem / when you do it",g:"a judgment surfaces once you engage a sense or try the action",ex:[
+      E("这个菜看<span class='hl' style='background:var(--rise-soft);color:var(--rise)'>起来</span>很好吃。","Zhège cài kàn qǐlái hěn hǎochī.","This dish looks delicious.","这个菜看起来很好吃"),
+      E("这个名字听<span class='hl' style='background:var(--rise-soft);color:var(--rise)'>起来</span>很熟悉。","Zhège míngzi tīng qǐlái hěn shúxī.","This name sounds familiar.","这个名字听起来很熟悉"),
+      E("这件事说<span class='hl' style='background:var(--rise-soft);color:var(--rise)'>起来</span>容易，做<span class='hl' style='background:var(--rise-soft);color:var(--rise)'>起来</span>难。","Zhè jiàn shì shuō qǐlái róngyì, zuò qǐlái nán.","This is easy to say but hard to do.","这件事说起来容易做起来难")
+    ]},
+    {b:"D",t:"Recall",g:"a memory you already had rises back up",ex:[
+      E("我想<span class='hl' style='background:var(--rise-soft);color:var(--rise)'>起来</span>了，他是我的同学！","Wǒ xiǎng qǐlái le, tā shì wǒ de tóngxué!","I remember now — he's my classmate!","我想起来了他是我的同学")
+    ]}
+  ]},
+  {k:"下来",py:"xiàlái",color:"var(--settle)",lit:"literal: come down — 坐下来 sit down, 走下来 walk down (toward you)",senses:[
+    {b:"A",t:"Stop / calm down",g:"motion or excitement settles to a halt",ex:[
+      E("车慢慢停<span class='hl' style='background:var(--settle-soft);color:var(--settle)'>下来</span>了。","Chē mànmàn tíng xiàlái le.","The car slowly came to a stop.","车慢慢停下来了"),
+      E("请大家安静<span class='hl' style='background:var(--settle-soft);color:var(--settle)'>下来</span>。","Qǐng dàjiā ānjìng xiàlái.","Everyone please quiet down.","请大家安静下来")
+    ]},
+    {b:"B",t:"Record / fix in place",g:"something is set down and kept",ex:[
+      E("请把这个生词记<span class='hl' style='background:var(--settle-soft);color:var(--settle)'>下来</span>。","Qǐng bǎ zhège shēngcí jì xiàlái.","Please write down this new word.","请把这个生词记下来"),
+      E("这么美的景色，我想拍<span class='hl' style='background:var(--settle-soft);color:var(--settle)'>下来</span>。","Zhème měi de jǐngsè, wǒ xiǎng pāi xiàlái.","Such beautiful scenery — I want to capture it (in a photo).","这么美的景色我想拍下来")
+    ]},
+    {b:"C",t:"Detach (down off)",g:"taking something off, downward",ex:[
+      E("太热了，他把外套脱<span class='hl' style='background:var(--settle-soft);color:var(--settle)'>下来</span>了。","Tài rè le, tā bǎ wàitào tuō xiàlái le.","It's too hot, so he took off his coat.","太热了他把外套脱下来了")
+    ]},
+    {b:"D",t:"Last until now",g:"an effort holds all the way from the past to the present (often + 了)",ex:[
+      E("这么难的工作，他真的坚持<span class='hl' style='background:var(--settle-soft);color:var(--settle)'>下来</span>了。","Zhème nán de gōngzuò, tā zhēnde jiānchí xiàlái le.","Such hard work, yet he really did stick it out (to the end).","这么难的工作他真的坚持下来了")
+    ]}
+  ]},
+  {k:"下去",py:"xiàqù",color:"var(--flow)",lit:"literal: go down and away — 走下去 walk on down, 跳下去 jump down",senses:[
+    {b:"A",t:"Keep going (into the future)",g:"an action already underway continues onward",ex:[
+      E("这个故事很有意思，请你说<span class='hl' style='background:var(--flow-soft);color:var(--flow)'>下去</span>。","Zhège gùshi hěn yǒuyìsi, qǐng nǐ shuō xiàqù.","This story is interesting — please go on.","这个故事很有意思请你说下去"),
+      E("汉语再难，我也要学<span class='hl' style='background:var(--flow-soft);color:var(--flow)'>下去</span>。","Hànyǔ zài nán, wǒ yě yào xué xiàqù.","No matter how hard Chinese is, I'll keep studying it.","汉语再难我也要学下去"),
+      E("再这样<span class='hl' style='background:var(--flow-soft);color:var(--flow)'>下去</span>，身体会出问题。","Zài zhèyàng xiàqù, shēntǐ huì chū wèntí.","If this keeps up, your health will suffer.","再这样下去身体会出问题")
+    ]}
+  ]},
+  {k:"出来",py:"chūlái",color:"var(--emerge)",lit:"literal: come out — 走出来 walk out, 拿出来 take out",senses:[
+    {b:"A",t:"Produce from nothing",g:"a result is created and comes into existence",ex:[
+      E("他终于想<span class='hl' style='background:var(--emerge-soft);color:var(--emerge)'>出来</span>一个好办法。","Tā zhōngyú xiǎng chūlái yí ge hǎo bànfǎ.","He finally came up with a good idea.","他终于想出来一个好办法"),
+      E("这首歌是他自己写<span class='hl' style='background:var(--emerge-soft);color:var(--emerge)'>出来</span>的。","Zhè shǒu gē shì tā zìjǐ xiě chūlái de.","He wrote this song himself.","这首歌是他自己写出来的")
+    ]},
+    {b:"B",t:"Detect the hidden",g:"something unclear becomes recognizable",ex:[
+      E("一听声音，我就听<span class='hl' style='background:var(--emerge-soft);color:var(--emerge)'>出来</span>是你了。","Yì tīng shēngyīn, wǒ jiù tīng chūlái shì nǐ le.","The moment I heard the voice, I could tell it was you.","一听声音我就听出来是你了"),
+      E("你能看<span class='hl' style='background:var(--emerge-soft);color:var(--emerge)'>出来</span>他多大吗？","Nǐ néng kàn chūlái tā duō dà ma?","Can you tell how old he is?","你能看出来他多大吗")
+    ]}
+  ]},
+  {k:"过来",py:"guòlái",color:"var(--back)",lit:"literal: come over (toward you) — 走过来 come over, 拿过来 bring over",senses:[
+    {b:"A",t:"Back to normal",g:"returning to a normal or correct state",ex:[
+      E("他晕倒了，几分钟后才醒<span class='hl' style='background:var(--back-soft);color:var(--back)'>过来</span>。","Tā yūndǎo le, jǐ fēnzhōng hòu cái xǐng guòlái.","He fainted and only came to a few minutes later.","他晕倒了几分钟后才醒过来"),
+      E("我想了半天，终于反应<span class='hl' style='background:var(--back-soft);color:var(--back)'>过来</span>了。","Wǒ xiǎng le bàntiān, zhōngyú fǎnyìng guòlái le.","I puzzled over it for ages, then it finally clicked.","我想了半天终于反应过来了")
+    ]}
+  ]},
+  {k:"过去",py:"guòqù",color:"var(--away)",lit:"literal: pass by / go over (away) — 走过去 walk past, 跑过去 run over",senses:[
+    {b:"A",t:"Out of normal",g:"slipping away from a normal (conscious) state — the opposite of 过来",ex:[
+      E("听到那个坏消息，她难过得晕<span class='hl' style='background:var(--away-soft);color:var(--away)'>过去</span>了。","Tīngdào nàge huài xiāoxi, tā nánguò de yūn guòqù le.","On hearing the bad news, she was so upset she passed out.","听到那个坏消息她难过得晕过去了")
+    ]}
+  ]}
+];
+var deepWrap=document.getElementById("deepWrap");
+DEEP.forEach(function(d){
+  var head=document.createElement("button");
+  head.className="acc-head"; head.setAttribute("aria-expanded","false");
+  head.innerHTML='<span class="ah-zh zh" lang="zh-Hans" style="color:'+d.color+'">'+d.k+'</span>'+
+    '<span class="ah-py">'+d.py+'</span>'+
+    '<span class="ah-lit">'+d.senses.length+' sense'+(d.senses.length>1?'s':'')+'</span>'+
+    '<span class="chev" aria-hidden="true">▸</span>';
+  var body=document.createElement("div");
+  body.className="acc-body";
+  var html='<p style="font-size:13px;color:var(--muted);margin-bottom:6px">'+d.lit+'</p>';
+  d.senses.forEach(function(s){
+    html+='<div class="sense"><div class="badge" style="background:'+d.color+'">'+s.b+'</div><div class="s-body">'+
+      '<div class="s-title">'+s.t+'</div><div class="s-gloss">'+s.g+'</div>';
+    s.ex.forEach(function(x){
+      html+='<div class="ex"><div class="zh-line">'+x.zh+spk(x.say)+'</div><div class="py">'+x.py+'</div><div class="en">'+x.en+'</div></div>';
+    });
+    html+='</div></div>';
+  });
+  body.innerHTML=html;
+  head.addEventListener("click",function(){
+    var open=head.getAttribute("aria-expanded")==="true";
+    head.setAttribute("aria-expanded",String(!open));
+    body.classList.toggle("show",!open);
+  });
+  deepWrap.appendChild(head); deepWrap.appendChild(body);
+});
+tagZh(deepWrap);
+
+/* ============ 4 · CONTRASTS ============ */
+var CONTR=[
+  {tab:"下来 vs 下去",
+   L:{zh:"坚持下来了",tag:"下来 · looking back",mean:"held on all the way <em>until now</em> — and made it",ex:"这份工作他坚持下来了。",py:"Zhè fèn gōngzuò tā jiānchí xiàlái le.",en:"He stuck this job out (and got through it).",say:"这份工作他坚持下来了"},
+   R:{zh:"坚持下去",tag:"下去 · looking forward",mean:"keep holding on <em>from now into the future</em>",ex:"再难也要坚持下去。",py:"Zài nán yě yào jiānchí xiàqù.",en:"However hard, I must keep going.",say:"再难也要坚持下去"},
+   q:"“The movie isn’t over — keep watching.” Which fits?",opts:[{t:"看下去",c:true},{t:"看下来",c:false}],fb:"✓ 看下去 — the action continues onward into the future. 看下来 would mean you watched it all the way through to the end."},
+  {tab:"想起来 vs 想出来",
+   L:{zh:"想出来",tag:"出来 · produce",mean:"<em>come up with</em> something new — an idea, an answer",ex:"我想出来一个好主意。",py:"Wǒ xiǎng chūlái yí ge hǎo zhǔyi.",en:"I came up with a good idea.",say:"我想出来一个好主意"},
+   R:{zh:"想起来",tag:"起来 · recall",mean:"<em>recall</em> something you already knew",ex:"我想起来他的名字了。",py:"Wǒ xiǎng qǐlái tā de míngzi le.",en:"I remembered his name.",say:"我想起来他的名字了"},
+   q:"You forgot your password, then it pops back into your head. Which?",opts:[{t:"想起来",c:true},{t:"想出来",c:false}],fb:"✓ 想起来 — the password is something you already knew, now recalled. 想出来 would mean inventing a brand-new one."},
+  {tab:"看出来 vs 看起来",
+   L:{zh:"看出来",tag:"出来 · detect",mean:"<em>figure out</em> a hidden truth by looking",ex:"我看出来你有心事。",py:"Wǒ kàn chūlái nǐ yǒu xīnshì.",en:"I can tell something's on your mind.",say:"我看出来你有心事"},
+   R:{zh:"看起来",tag:"起来 · seem",mean:"<em>appears / seems</em> on the surface",ex:"你看起来很累。",py:"Nǐ kàn qǐlái hěn lèi.",en:"You look tired.",say:"你看起来很累"},
+   q:"“This watch <u>looks</u> expensive.” (surface impression) Which?",opts:[{t:"看起来",c:true},{t:"看出来",c:false}],fb:"✓ 看起来 — a surface impression. 看出来 would mean you detected its true price that was hidden."},
+  {tab:"过来 vs 过去",
+   L:{zh:"醒过来",tag:"过来 · regain",mean:"return <em>to</em> a normal state — wake / come to",ex:"病人终于醒过来了。",py:"Bìngrén zhōngyú xǐng guòlái le.",en:"The patient finally came to.",say:"病人终于醒过来了"},
+   R:{zh:"昏过去",tag:"过去 · lose",mean:"slip <em>out of</em> a normal state — faint",ex:"他疼得昏过去了。",py:"Tā téng de hūn guòqù le.",en:"He passed out from the pain.",say:"他疼得昏过去了"},
+   q:"“She was so tired she fainted.” Which?",opts:[{t:"晕过去",c:true},{t:"晕过来",c:false}],fb:"✓ 晕过去 — fainting means leaving the normal state, so 过去. 晕过来 would (oddly) mean recovering from dizziness."}
+];
+var cTabs=document.getElementById("cTabs");
+var els={lzh:"vsLZh",ltag:"vsLTag",lmean:"vsLMean",lex:"vsLEx",lpy:"vsLPy",len:"vsLEn",
+         rzh:"vsRZh",rtag:"vsRTag",rmean:"vsRMean",rex:"vsREx",rpy:"vsRPy",ren:"vsREn"};
+var cQText=document.getElementById("cQText"), cQOpts=document.getElementById("cQOpts"), cQFb=document.getElementById("cQFb");
+function setContrast(i){
+  var d=CONTR[i];
+  Array.prototype.forEach.call(cTabs.children,function(b,k){ b.classList.toggle("on",k===i); b.setAttribute("aria-pressed",String(k===i)); });
+  document.getElementById(els.lzh).innerHTML=d.L.zh+spk(d.L.say);
+  document.getElementById(els.ltag).textContent=d.L.tag;
+  document.getElementById(els.lmean).innerHTML=d.L.mean;
+  document.getElementById(els.lex).textContent=d.L.ex;
+  document.getElementById(els.lpy).textContent=d.L.py;
+  document.getElementById(els.len).textContent=d.L.en;
+  document.getElementById(els.rzh).innerHTML=d.R.zh+spk(d.R.say);
+  document.getElementById(els.rtag).textContent=d.R.tag;
+  document.getElementById(els.rmean).innerHTML=d.R.mean;
+  document.getElementById(els.rex).textContent=d.R.ex;
+  document.getElementById(els.rpy).textContent=d.R.py;
+  document.getElementById(els.ren).textContent=d.R.en;
+  cQText.textContent=d.q; cQFb.textContent=""; cQFb.classList.remove("show");
+  cQOpts.innerHTML="";
+  var done=false;
+  shuffle(d.opts.map(function(_,k){return k;})).forEach(function(k){
+    var o=d.opts[k];
+    var btn=document.createElement("button");
+    btn.className="opt zh"; btn.textContent=o.t; btn.setAttribute("lang","zh-Hans");
+    btn.addEventListener("click",function(){
+      if(done) return;
+      if(o.c){ done=true; btn.classList.add("right"); cQFb.textContent=d.fb; cQFb.classList.add("show");
+        Array.prototype.forEach.call(cQOpts.children,function(x){ x.disabled=true; }); speak(o.t);
+      } else { btn.classList.add("wrong"); setTimeout(function(){ btn.classList.remove("wrong"); },500); }
+    });
+    cQOpts.appendChild(btn);
+  });
+  tagZh(document.getElementById("contrasts"));
+}
+CONTR.forEach(function(d,i){
+  var b=document.createElement("button");
+  b.className="ctab zh"; b.textContent=d.tab; b.setAttribute("aria-pressed","false"); b.setAttribute("lang","zh-Hans");
+  b.addEventListener("click",function(){ setContrast(i); });
+  cTabs.appendChild(b);
+});
+setContrast(0);
+
+/* ============ 5 · SPLIT WORKSHOP ============ */
+var splitLine=document.getElementById("splitLine"), splitCap=document.getElementById("splitCap"),
+    splitObj=document.getElementById("splitObj"), splitDone=false;
+function renderSplit(){
+  splitDone=false;
+  splitLine.innerHTML='<span class="tok t-v zh" lang="zh-Hans">拿</span>'+
+    '<span class="tok t-d zh" lang="zh-Hans">起</span>'+
+    '<span class="drop" data-gap="A" role="button" tabindex="0" aria-label="gap before 来">gap A</span>'+
+    '<span class="tok t-d zh" lang="zh-Hans">来</span>'+
+    '<span class="drop" data-gap="B" role="button" tabindex="0" aria-label="gap after 来">gap B</span>';
+  splitCap.innerHTML="Tap the object <span class='zh'>书</span> below, then tap a gap. Where does it go?";
+  splitObj.style.display="inline-block"; splitObj.classList.remove("armed");
+  var armed=false;
+  splitObj.onclick=function(){ armed=true; splitObj.classList.add("armed"); splitCap.textContent="Armed! Now tap gap A or gap B."; };
+  Array.prototype.forEach.call(splitLine.querySelectorAll(".drop"),function(g){
+    function place(){
+      if(splitDone) return;
+      if(!armed){ splitCap.innerHTML="First tap the <span class='zh'>书</span> tile to pick it up."; return; }
+      if(g.dataset.gap==="A"){
+        splitDone=true; splitObj.classList.remove("armed");
+        g.className="drop filled zh"; g.setAttribute("lang","zh-Hans"); g.textContent="书";
+        splitCap.innerHTML="✓ <span class='zh'>拿起书来</span> — the concrete object slips <em>inside</em> the 起…来 split. (Ná qǐ shū lái — “pick up the book”.)";
+        speak("拿起书来");
+      } else {
+        armed=false; splitObj.classList.remove("armed");
+        g.classList.add("incorrect");
+        splitCap.innerHTML="✗ Not after 来. A short concrete object goes <em>inside</em> the split, not after it. Try gap A.";
+        var gg=g; setTimeout(function(){ gg.classList.remove("incorrect"); },500);
+      }
+    }
+    g.addEventListener("click",place);
+    g.addEventListener("keydown",function(e){ if(e.key==="Enter"||e.key===" "){ e.preventDefault(); place(); } });
+  });
+}
+document.getElementById("splitReset").addEventListener("click",renderSplit);
+renderSplit();
+
+/* ============ 6 · POTENTIAL LAB ============ */
+var POT=[
+  {label:"想…起来",v:"想",c:"起来",can:"想得起来",cant:"想不起来",mc:"can recall it",mt:"can’t recall it — it won’t come",lit:"recall"},
+  {label:"看…出来",v:"看",c:"出来",can:"看得出来",cant:"看不出来",mc:"can tell / can spot it",mt:"can’t tell by looking",lit:"detect by sight"},
+  {label:"听…出来",v:"听",c:"出来",can:"听得出来",cant:"听不出来",mc:"can recognize it by ear",mt:"can’t recognize it by ear",lit:"detect by ear"},
+  {label:"说…下去",v:"说",c:"下去",can:"说得下去",cant:"说不下去",mc:"can keep talking",mt:"can’t go on talking",lit:"continue speaking"}
+];
+var potIdx=0, potCan=false;
+var potPick=document.getElementById("potPick"), potLine=document.getElementById("potLine"),
+    potMean=document.getElementById("potMean"), potSpeak=document.getElementById("potSpeak"),
+    potCanBtn=document.getElementById("potCan"), potCantBtn=document.getElementById("potCant");
+function renderPot(){
+  var d=POT[potIdx];
+  var infix=potCan?"得":"不";
+  potLine.innerHTML='<span class="pot-seg zh">'+d.v+'</span><span class="pot-seg pot-infix zh" id="potInfix" role="button" tabindex="0">'+infix+'</span><span class="pot-seg zh">'+d.c+'</span>';
+  potCanBtn.classList.toggle("on",potCan); potCantBtn.classList.toggle("on",!potCan);
+  potMean.innerHTML=potCan?('<strong style="color:var(--green)">'+d.can+'</strong> — '+d.mc):('<strong style="color:var(--red)">'+d.cant+'</strong> — '+d.mt);
+  potSpeak.dataset.say=potCan?d.can:d.cant;
+  var inf=document.getElementById("potInfix");
+  function flip(){ potCan=!potCan; renderPot(); speak(potCan?d.can:d.cant); }
+  inf.addEventListener("click",flip);
+  inf.addEventListener("keydown",function(e){ if(e.key==="Enter"||e.key===" "){ e.preventDefault(); flip(); } });
+  Array.prototype.forEach.call(potPick.children,function(b,k){ b.classList.toggle("on",k===potIdx); });
+}
+POT.forEach(function(d,i){
+  var b=document.createElement("button"); b.className="zh"; b.textContent=d.label; b.setAttribute("lang","zh-Hans");
+  b.addEventListener("click",function(){ potIdx=i; renderPot(); });
+  potPick.appendChild(b);
+});
+potCanBtn.addEventListener("click",function(){ potCan=true; renderPot(); speak(POT[potIdx].can); });
+potCantBtn.addEventListener("click",function(){ potCan=false; renderPot(); speak(POT[potIdx].cant); });
+renderPot();
+
+/* ============ 7 · ERROR ER ============ */
+var ER_DIAG=[
+  "Continue onward → 下去, not 下来",
+  "Recall a known thing → 想起来, not 想出来",
+  "Pass out (leave normal) → 过去, not 过来",
+  "Detect the hidden → 看出来, not 看起来",
+  "Begin / increase → 起来, not 下来",
+  "Record & fix in place → 下来, not 下去"
+];
+var PATIENTS=[
+  {sick:"这个故事很好，请你说下来。",hint:"Trying to say: “…please go on telling it.”",a:0,
+   good:"这个故事很好，请你说下去。",py:"Zhège gùshi hěn hǎo, qǐng nǐ shuō xiàqù.",en:"This story is great — please go on.",
+   why:"To continue an action into the future, use 下去. 下来 would suggest settling/finishing, not carrying on."},
+  {sick:"我终于想出来他的名字了。",hint:"Trying to say: “I finally remembered his name.”",a:1,
+   good:"我终于想起来他的名字了。",py:"Wǒ zhōngyú xiǎng qǐlái tā de míngzi le.",en:"I finally remembered his name.",
+   why:"A name you already knew is recalled with 想起来. 想出来 is for inventing something new, like an idea."},
+  {sick:"他疼得昏过来了。",hint:"Trying to say: “He passed out from the pain.”",a:2,
+   good:"他疼得昏过去了。",py:"Tā téng de hūn guòqù le.",en:"He passed out from the pain.",
+   why:"Fainting = leaving the normal state, so 过去. 过来 is the opposite — coming back to normal (waking up)."},
+  {sick:"我看起来你在说谎。",hint:"Trying to say: “I can tell you’re lying.”",a:3,
+   good:"我看出来你在说谎。",py:"Wǒ kàn chūlái nǐ zài shuōhuǎng.",en:"I can tell you’re lying.",
+   why:"看出来 is agentive — “I detect / figure out X”. 看起来 only reports how something appears (你看起来很累 = “you look tired”); it has no detecting agent, so it can’t head “我…你在说谎”."},
+  {sick:"天气慢慢冷下来了。",hint:"Trying to say: “The weather is gradually getting cold.”",a:4,
+   good:"天气慢慢冷起来了。",py:"Tiānqì mànmàn lěng qǐlái le.",en:"The weather is gradually getting cold.",
+   why:"A state starting up and growing uses 起来 (冷起来, 热起来). 下来 would mean calming/settling, not intensifying."},
+  {sick:"请把老师的话记下去。",hint:"Trying to say: “Write down what the teacher says.”",a:5,
+   good:"请把老师的话记下来。",py:"Qǐng bǎ lǎoshī de huà jì xiàlái.",en:"Please write down what the teacher says.",
+   why:"Fixing something in place / recording it uses 下来. 下去 only means “keep going”, which doesn’t fit writing-down."}
+];
+var ei=0, erDone=false, erWrongThis=false, erScore=0;
+var erDiag=document.getElementById("erDiag"), erNext=document.getElementById("erNext"), erCure=document.getElementById("erCure");
+function renderER(){
+  var p=PATIENTS[ei]; erDone=false; erWrongThis=false;
+  document.getElementById("erCount").textContent="Patient "+(ei+1)+" of "+PATIENTS.length+"   ·   first-try "+erScore+"/"+PATIENTS.length;
+  document.getElementById("erSick").textContent=p.sick;
+  document.getElementById("erHint").textContent=p.hint+" — which complement is wrong?";
+  erCure.classList.remove("show"); erNext.disabled=true;
+  erNext.textContent=(ei===PATIENTS.length-1)?"Done ✓":"Next patient →";
+  erDiag.innerHTML="";
+  ER_DIAG.forEach(function(txt,idx){
+    var b=document.createElement("button"); b.className="diag-btn"; b.textContent=txt;
+    b.addEventListener("click",function(){
+      if(erDone) return;
+      if(idx===p.a){
+        erDone=true; b.classList.add("right");
+        if(!erWrongThis) erScore++;
+        document.getElementById("erCount").textContent="Patient "+(ei+1)+" of "+PATIENTS.length+"   ·   first-try "+erScore+"/"+PATIENTS.length;
+        Array.prototype.forEach.call(erDiag.children,function(x){ if(x!==b) x.disabled=true; });
+        document.getElementById("erGoodZh").innerHTML=p.good+spk(p.good.replace(/，|。|？/g,""));
+        document.getElementById("erGoodPy").textContent=p.py;
+        document.getElementById("erGoodEn").textContent=p.en;
+        document.getElementById("erWhy").textContent="💡 "+p.why;
+        erCure.classList.add("show"); erNext.disabled=false; tagZh(erCure);
+      } else { erWrongThis=true; b.classList.add("wrong"); b.disabled=true; }
+    });
+    erDiag.appendChild(b);
+  });
+}
+erNext.addEventListener("click",function(){
+  if(ei===PATIENTS.length-1){
+    var final=erScore;
+    ei=0; erScore=0; renderER();
+    document.getElementById("erCount").textContent="All 6 treated 🎉 — first-try score "+final+"/"+PATIENTS.length+". Round 2: Patient 1 of 6";
+  }
+  else { ei++; renderER(); }
+});
+renderER();
+
+/* ============ 8 · BUILDER ============ */
+var BUILDS=[
+  {en:"I finally remembered his name.",tiles:["我","终于","把","他的名字","想起来","了"],punct:"。",hint:"Recall = 想起来; 把 keeps the complement whole."},
+  {en:"Please write down this new word.",tiles:["请","把","这个生词","记下来"],punct:"。",hint:"Record/fix = 下来, with 请把…"},
+  {en:"The weather is gradually getting warmer.",tiles:["天气","慢慢","热","起来","了"],punct:"。",hint:"A state starting up = 起来 (热 + 起来)."},
+  {en:"You must keep going (persevere).",tiles:["你","一定","要","坚持下去"],punct:"！",hint:"Continue into the future = 坚持下去."},
+  {en:"He fainted from the pain.",tiles:["他","疼得","昏过去","了"],punct:"。",hint:"Pass out = 昏过去 (leaving the normal state)."}
+];
+var bi=0, ans=[];
+var tileTray=document.getElementById("tileTray"), answerLine=document.getElementById("answerLine"),
+    buildFb=document.getElementById("buildFb"), buildNextBtn=document.getElementById("buildNext");
+function renderBuild(){
+  var b=BUILDS[bi]; ans=[];
+  document.getElementById("buildCount").textContent="Sentence "+(bi+1)+" of "+BUILDS.length;
+  document.getElementById("buildTarget").textContent="✍️ "+b.en;
+  buildFb.textContent=""; buildFb.className="build-fb"; answerLine.className="answer-line"; buildNextBtn.style.display="none";
+  var tiles=shuffle(b.tiles);
+  if(tiles.join("")===b.tiles.join("") && b.tiles.length>1) tiles.reverse();
+  tileTray.innerHTML="";
+  tiles.forEach(function(t){
+    var el=document.createElement("button"); el.className="tile zh"; el.textContent=t; el.setAttribute("lang","zh-Hans");
+    el.addEventListener("click",function(){ if(el.classList.contains("used")) return; el.classList.add("used"); ans.push({t:t,src:el}); renderAns(); });
+    tileTray.appendChild(el);
+  });
+  renderAns();
+}
+function renderAns(){
+  answerLine.innerHTML="";
+  if(ans.length===0){ var ph=document.createElement("span"); ph.style.cssText="color:#a9b3a9;font-size:14px;padding:6px"; ph.textContent="Tap tiles below to build the sentence…"; answerLine.appendChild(ph); return; }
+  ans.forEach(function(it,idx){
+    var el=document.createElement("button"); el.className="tile zh in-answer"; el.textContent=it.t; el.title="Remove"; el.setAttribute("lang","zh-Hans");
+    el.addEventListener("click",function(){ ans.splice(idx,1); it.src.classList.remove("used"); renderAns(); answerLine.className="answer-line"; buildFb.textContent=""; buildFb.className="build-fb"; });
+    answerLine.appendChild(el);
+  });
+}
+document.getElementById("buildCheck").addEventListener("click",function(){
+  var b=BUILDS[bi], got=ans.map(function(x){return x.t;}).join("");
+  if(got===b.tiles.join("")){
+    answerLine.className="answer-line correct"; buildFb.className="build-fb ok";
+    buildFb.textContent="✓ Perfect! "+b.tiles.join("")+b.punct; speak(b.tiles.join(""));
+    answerLine.querySelectorAll(".tile").forEach(function(t){ t.disabled=true; });
+    buildNextBtn.style.display="inline-block";
+    buildNextBtn.textContent=(bi<BUILDS.length-1)?"Next →":"↺ Start over";
+    if(bi===BUILDS.length-1) buildFb.textContent+="  — All 5 built. 太棒了!";
+  } else if(ans.length<b.tiles.length){
+    buildFb.className="build-fb no"; buildFb.textContent="Use all the tiles first — "+(b.tiles.length-ans.length)+" left.";
+  } else {
+    answerLine.className="answer-line incorrect"; buildFb.className="build-fb no"; buildFb.textContent="Not yet. Hint: "+b.hint;
+    setTimeout(function(){ answerLine.classList.remove("incorrect"); },500);
+  }
+});
+document.getElementById("buildReset").addEventListener("click",renderBuild);
+buildNextBtn.addEventListener("click",function(){ bi=(bi<BUILDS.length-1)?bi+1:0; renderBuild(); });
+renderBuild();
+
+/* ============ 9 · QUIZ ============ */
+var QUIZ=[
+  {q:"听到这个好消息，大家都笑____了。",r:"qilai",opts:["起来","下来","出来","过去"],a:0,why:"起来 marks the start of an action — the laughter begins. (inchoative)",say:"大家都笑起来了"},
+  {q:"老师说的话，请你们都记____。",r:"xialai",opts:["下来","下去","起来","出来"],a:0,why:"记下来 = write down / fix in place. 下来 settles information so it stays.",say:"请你们都记下来"},
+  {q:"这本书很有意思，我想一直读____。",r:"xiaqu",opts:["下去","下来","起来","出来"],a:0,why:"下去 continues an action onward into the future — keep reading.",say:"我想一直读下去"},
+  {q:"想了很久，他终于想____一个好办法。",r:"chulai",opts:["出来","起来","过来","下来"],a:0,why:"想出来 = come up with / produce a new idea out of nothing.",say:"他终于想出来一个好办法"},
+  {q:"这是谁的声音？我一下子就听____了。",r:"chulai",opts:["出来","起来","下来","过去"],a:0,why:"听出来 = recognize / detect a hidden thing by ear.",say:"我一下子就听出来了"},
+  {q:"我突然想____了，他是我的小学同学！",r:"qilai",opts:["起来","出来","下来","过来"],a:0,why:"想起来 = recall something you already knew (the person), not invent it.",say:"我突然想起来了"},
+  {q:"你今天____很累，多休息吧。",r:"qilai",opts:["看起来","看出来","看下去","看过来"],a:0,why:"看起来 = appears / seems on the surface. (Not detecting a hidden truth.)",say:"你今天看起来很累"},
+  {q:"他晕倒了，几分钟以后才醒____。",r:"guo",opts:["过来","过去","起来","下来"],a:0,why:"醒过来 = come back to a normal state (regain consciousness).",say:"几分钟以后才醒过来"},
+  {q:"听到那个坏消息，她难过得晕____了。",r:"guo",opts:["过去","过来","下来","起来"],a:0,why:"晕过去 = pass out, leaving the normal state — the opposite of 过来.",say:"她难过得晕过去了"},
+  {q:"“pick up the book” — which word order is correct?",r:"order",opts:["拿起书来","拿书起来","起拿书来","拿起来书吗"],a:0,why:"A short concrete object splits 起…来: 拿 + 起 + 书 + 来. (For abstract “recall”, keep it whole: 想起来这件事 / 把这件事想起来。)",say:"拿起书来"},
+  {q:"这个字太难，我怎么也想____他怎么写。",r:"order",opts:["不起来","不出来","不下去","不过来"],a:0,why:"Potential negative 想不起来 = can’t recall. 得/不 go inside the complement.",say:"我怎么也想不起来"},
+  {q:"这么难的工作，他真的坚持____了。",r:"xialai",opts:["下来","下去","起来","出来"],a:0,why:"坚持下来了 = held on all the way until now and made it (past→present, completed).",say:"他真的坚持下来了"}
+];
+var RULE_INFO={
+  qilai:{label:"起来 — begin / gather / seem / recall",href:"#deep"},
+  xialai:{label:"下来 — stop / record / last till now",href:"#deep"},
+  xiaqu:{label:"下去 — keep going onward",href:"#deep"},
+  chulai:{label:"出来 — produce / detect",href:"#deep"},
+  guo:{label:"过来 / 过去 — regain vs lose normal state",href:"#contrasts"},
+  order:{label:"Word order & potential forms (起…来, 得/不)",href:"#split"}
+};
+var missed=[];
+var qi=0, score=0, quizBody=document.getElementById("quizBody"), quizBar=document.getElementById("quizBar");
+function renderQuiz(){
+  if(qi>=QUIZ.length) return renderResult();
+  var q=QUIZ[qi];
+  quizBar.style.width=(qi/QUIZ.length*100)+"%";
+  quizBody.innerHTML="";
+  var head=document.createElement("div");
+  head.innerHTML='<div style="font-size:13px;color:var(--muted);font-weight:700">Question '+(qi+1)+' / '+QUIZ.length+'</div><div class="q-text zh" lang="zh-Hans" style="margin-top:6px">'+q.q+'</div>';
+  quizBody.appendChild(head);
+  var wrap=document.createElement("div"); wrap.className="q-opts";
+  var answered=false, correctBtn=null;
+  shuffle(q.opts.map(function(_,k){return k;})).forEach(function(srcIdx,pos){
+    var b=document.createElement("button"); b.className="q-opt zh"; b.setAttribute("lang","zh-Hans");
+    b.textContent=String.fromCharCode(65+pos)+".  "+q.opts[srcIdx];
+    if(srcIdx===q.a) correctBtn=b;
+    b.addEventListener("click",function(){
+      if(answered) return; answered=true;
+      if(srcIdx===q.a){ score++; b.classList.add("right"); }
+      else { b.classList.add("wrong"); correctBtn.classList.add("right"); missed.push(q.r); }
+      Array.prototype.forEach.call(wrap.children,function(c){ c.disabled=true; });
+      scoreSpan.textContent="Score: "+score;
+      quizBar.style.width=((qi+1)/QUIZ.length*100)+"%";
+      expl.classList.add("show"); if(q.say) speak(q.say); nextB.style.display="inline-block";
+    });
+    wrap.appendChild(b);
+  });
+  quizBody.appendChild(wrap);
+  var expl=document.createElement("div"); expl.className="q-expl"; expl.setAttribute("role","status"); expl.innerHTML="💡 "+q.why;
+  quizBody.appendChild(expl);
+  var foot=document.createElement("div"); foot.className="q-foot";
+  var scoreSpan=document.createElement("span"); scoreSpan.style.cssText="color:var(--muted);font-size:13.5px"; scoreSpan.textContent="Score: "+score;
+  var nextB=document.createElement("button"); nextB.className="btn"; nextB.style.display="none";
+  nextB.textContent=(qi===QUIZ.length-1)?"See result →":"Next →";
+  nextB.addEventListener("click",function(){
+    qi++; renderQuiz();
+    var card=document.getElementById("quizCard");
+    if(card.getBoundingClientRect().top<0 && card.scrollIntoView){ try{ card.scrollIntoView({behavior:"smooth",block:"start"}); }catch(e){} }
+  });
+  foot.appendChild(scoreSpan); foot.appendChild(nextB); quizBody.appendChild(foot);
+}
+function renderResult(){
+  quizBar.style.width="100%";
+  var msg,emoji;
+  if(score>=11){ msg="补语 master! Exam-day form."; emoji="🏆"; }
+  else if(score>=9){ msg="Strong — a quick look at the senses you missed and you're set."; emoji="💪"; }
+  else if(score>=6){ msg="Good base. Re-run the deep dive and the tricky pairs, then retry."; emoji="📖"; }
+  else { msg="No stress — start from the map and the metaphor, then build back up."; emoji="🌱"; }
+  var counts={}; missed.forEach(function(r){ counts[r]=(counts[r]||0)+1; });
+  var rows=Object.keys(counts).map(function(r){
+    var info=RULE_INFO[r];
+    return '<li style="padding:6px 0;border-top:1px dashed var(--line);font-size:14.5px"><a href="'+info.href+'" style="color:var(--teal);font-weight:600">'+info.label+'</a>'+(counts[r]>1?' <span style="color:var(--muted)">× '+counts[r]+'</span>':'')+'</li>';
+  }).join("");
+  var plan=rows?('<div style="max-width:460px;margin:16px auto 0;text-align:left;background:var(--amber-soft);border:1px solid #ecdab4;border-radius:10px;padding:12px 16px"><div style="font-size:13px;font-weight:700;color:#7c5a1d;text-transform:uppercase;letter-spacing:1px">Your study plan — review these:</div><ul style="list-style:none;margin-top:4px">'+rows+'</ul></div>'):'<p style="color:var(--green);font-weight:600;margin-top:12px">No weak spots — every complement held. 🎯</p>';
+  quizBody.innerHTML='<div style="text-align:center;padding:14px 0"><div style="font-size:40px">'+emoji+'</div><div class="score-big">'+score+' / '+QUIZ.length+'</div><p style="color:#414b41;max-width:440px;margin:8px auto 0;font-size:15px">'+msg+'</p>'+plan+'<button class="btn" id="quizRetry" style="margin-top:18px">↺ Try again</button></div>';
+  document.getElementById("quizRetry").addEventListener("click",function(){ qi=0; score=0; missed=[]; renderQuiz(); });
+}
+renderQuiz();
+
+})();
+</script>
+</body>
+</html>
